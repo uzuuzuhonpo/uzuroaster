@@ -1,99 +1,135 @@
-
-  #profileTable {
-	width: 50%;
+/* === 全体フォントとリセット === */
+body {
+  font-family: 'Segoe UI', 'Meiryo', sans-serif;
+  background: #f8f8f8;
+  color: #333;
+  margin: 20px;
 }
 
-    table, th, td {
-      border: 1px solid gray;
-      border-collapse: collapse;
-    }
-    
-    tr, td {
-		margin: 0 auto;
-		padding: 0;
-		text-align: center;
-	}
-    td input {
-		border: 0px;
-		padding: 0;
-		width: 100%;
-		height: 40px;
-		font-size: 100%;
-	}
-    td button, tr button {
-		border: solid 1px;
-		border-radius: 10px;
-		padding: 2px;
-		width: 95%;
-		height: 95%;
-		font-size: 100%;
-		margin: 0 auto;
-	}
-	
-    button {
-      margin: 4px;
-    }
-    th {
-		height: 40px;
-	}
-    .status-indicator {
-      display: inline-block;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-    }
-    .custom-file-button {
-  background: #a85;
-  color: white;
-  padding: 0.5em 1em;
-  border-radius: 5px;
+/* === テーブル === */
+#profileTable {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px 0;
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 8px;
+  text-align: center;
+}
+
+td input {
+  width: 100%;
+  height: 36px;
+  font-size: 16px;
+  border: none;
+  background: #fdfdfd;
+}
+
+/* === ボタン === */
+button, .custom-file-button {
+  background-color: #d06030;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin: 5px;
+}
+
+button:hover, .custom-file-button:hover {
+  background-color: #a94720;
+}
+
+/* ステータス表示ランプ */
+.status-indicator {
   display: inline-block;
-  	}
-  	
- #roasting-indicator {
   width: 16px;
   height: 16px;
-  background-color: #0000ff;
   border-radius: 50%;
-  animation: blink 1s infinite ease-in-out;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* 焙煎中ランプ */
+#roasting-indicator {
+  width: 16px;
+  height: 16px;
+  background-color: #ff0000;
+  border-radius: 50%;
+  animation: blink 1s infinite;
   margin: 8px;
-  }
+}
 
 @keyframes blink {
-  0%   { opacity: 0; }
-  50%  { opacity: 1; }
-  100% { opacity: 0; }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 .hidden {
   display: none;
-  }
-
-  #table_contents {
-	display: flex;
 }
 
-.table-button {
-	height: 40px;
+/* メタデータ入力 */
+.profile-meta {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 #profileTitle, #profileMemo {
-	border-top: none;
-	border-left:none;
-	border-right: none;
-	border-bottom: solid 1.5px #444;
-	width: 300px;
+  width: 100%;
+  max-width: 400px;
+  font-size: 14px;
+  padding: 4px 6px;
+  border: none;
+  border-bottom: 2px solid #888;
+  background: transparent;
 }
 
-.profile-meta {
-		padding: 10px;
+#profileMemo {
+  resize: vertical;
+}
 
+/* 表示エリア */
 #display_area {
-	display: grid;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
 }
+
+#display_area > div {
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 8px;
 }
 
+/* テーブル操作ボタン */
+#table_contents {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-
-
+/* キャンバス */
+canvas#roastChart {
+  margin-top: 20px;
+  border: 1px solid #aaa;
+  background-color: #fff;
+  max-width: 100%;
+  height: auto;
+}
