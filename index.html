@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-<link rel="stylesheet" href="style.css">
-<script src="chart.js"></script>
-<script src="script.js" defer></script>
-<title>焙煎プロファイルエディタ</title>
+    <meta charset="UTF-8" />
+    <title>焙煎プロファイルエディタ</title>
+    <script src="chart.js"></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
-  <h2>うずロースター　Ver 0.0.8β</h2>
-    <div><button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button> <span id="connection-label">未接続</span></div>
-  </div>
-  <div id="roasting-indicator" class="hidden"></div>
-<label for="fileInput" class="custom-file-button">📁 焙煎プロファイル読込</label>
-<input type="file" id="fileInput" style="display: none;"  accept=".json">
-  <button onclick="downloadJSON()"  class="custom-file-button">📁 焙煎プロファイル保存</button>
-<br>
-<button onclick="sendStartCommand()" id="start-button">焙煎スタート</button>
-<button onclick="sendStopCommand()" id="stop-button">焙煎ストップ</button>
-  
-<!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
+    <h2>うずロースター　Ver 0.0.8β</h2>
+    <div>
+        <button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button>
+        <span id="connection-label">未接続</span>
+    </div>
+    <div id="roasting-indicator" class="hidden"></div>
+    <label for="fileInput" class="custom-file-button">📁 焙煎プロファイル読込</label>
+    <input type="file" id="fileInput" style="display: none;"  accept=".json">
+    <button onclick="downloadJSON()"  class="custom-file-button">📁 焙煎プロファイル保存</button>
+    <br>
+    <button onclick="sendStartCommand()" id="start-button">焙煎スタート</button>
+    <button onclick="sendStopCommand()" id="stop-button">焙煎ストップ</button>
 
-  <div class="profile-meta">
-    <label for="profileTitle">タイトル：</label>
-    <input type="text" id="profileTitle" placeholder="タイトルを入力">
+    <div class="profile-meta">
+        <label for="profileTitle">タイトル：</label>
+        <input type="text" id="profileTitle" placeholder="タイトルを入力">
 
-    <label for="profileMemo">メモ：</label>
-    <textarea id="profileMemo" rows="4" placeholder="メモを入力"></textarea>
-  </div>
-  <div id="display_area">
-  <div id="roast_time">0</div>
-  <div id="roast_temperature">0</div>
-  <div id="roast_message">接続待機中</div>
-  </div>
-  <div id="table_contents">
-  <table id="profileTable">
-    <tr>
-      <th>時間 (秒)</th>
-      <th>温度 (℃)</th>
-      <th> <button onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">全削除</button> </th>
-    </tr>
-  </table>
-    <button  class="table-button" onclick="addRow()">行追加</button>
-  <button class="table-button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
-<button  class="table-button" onclick="overwriteTableWithLastRoast();" style="background-color: #ffcc99;">焙煎データ⇒テーブル⇒アップロード</button>
-</div>
-<canvas id="roastChart" width="800" height="300"></canvas>
-
+        <label for="profileMemo">メモ：</label>
+        <textarea id="profileMemo" rows="4" placeholder="メモを入力"></textarea>
+    </div>
+    <div id="display_area">
+        <div id="roast_time">0</div>
+        <div id="roast_temperature">0</div>
+        <div id="roast_message">接続待機中</div>
+    </div>
+    <div id="main_area">
+        <div id="table_wrapper">
+            <table id="profileTable">
+                <tr>
+                    <th>時間 (秒)</th>
+                    <th>温度 (℃)</th>
+                    <th><button onclick="const t = document.getElementById('profileTable'); while (t.rows.length > 1) { t.deleteRow(1); }">全削除</button></th>
+                </tr>
+            </table>
+        </div>
+        <div id="table_contents">
+            <button  class="table-button" onclick="addRow()">行追加</button>
+            <button class="table-button" onclick="sortTable(); updateChartWithProfile(getProfileDataFromTable()); sendCurrentProfile();">テーブル整列⇒アップロード</button>
+            <button  class="table-button" onclick="overwriteTableWithLastRoast();" style="background-color: #ffcc99;">焙煎データ⇒テーブル⇒アップロード</button>
+        </div>
+        <canvas id="roastChart" width="800" height="300"></canvas>
+    </div>
 </body>
 </html>
