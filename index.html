@@ -1,53 +1,333 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <title>焙煎プロファイルエディタ</title>
-    <script src="chart.js"></script>
-    <script src="script.js" defer></script>
+  <meta charset="UTF-8" />
+<script src="chart.js"></script>
+	  <title>UZU ROASTER</title>
+  <style>
+    table, th, td {
+      border: 1px solid gray;
+      border-collapse: collapse;
+    }
+    
+    tr, th, td {
+		margin: 0 auto;
+		padding: 0;
+		text-align: center;
+		height: 20px;
+	}
+    td input {
+		border: 0px;
+		padding: 0;
+		width: 100%;
+		height: 20px;
+		font-size: 100%;
+	}
+    td button, tr button {
+		border: solid 0.5px rgba(0, 0, 0, 0.2);
+		background-color: rgba(0, 0, 0, 0.0);
+		border-radius: 8px;
+		padding: 1px;
+		width: 95%;
+		height: 90%;
+		font-size: 90%;
+		margin: 0 auto;
+	}
+	
+    th {
+		height: 40px;
+	}
+    .status-indicator {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+    
+.generic-button {
+  background-color: #936b68; /* 焙煎した豆っぽい茶色 */
+  color: #fff8f0;
+  padding: 0.2em 0.5em;
+  font-size: 0.8rem;
+  border: solid 1px #333333;;
+  height: 1.5rem;
+  border-radius: 0.75em;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.generic-button:hover {
+  background-color: #da7430; /* 明るめの焦がしキャラメル色 */
+  transform: translateY(-2px);
+}
+
+.generic-button:active {
+  background-color: #8b3c1b; /* 深煎りエスプレッソ色 */
+  transform: scale(0.97);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.thead-button {
+	height: 45%;
+	width: 100px;
+	margin: 0!important;
+	padding; 0px;
+}
+
+ #roasting-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: #0000ff;
+  border-radius: 50%;
+  animation: blink 1s infinite ease-in-out;
+  margin: 8px;
+  }
+
+@keyframes blink {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.hidden {
+  display: none;
+  }
+
+  #table_contents {
+	display: block;
+	  width: 400px;
+
+}
+
+#table-button-area {
+}
+.table-button {
+	height: 20px;
+	text-align: center;
+}
+
+#profileTitle, #profileMemo {
+	border-top: none;
+	border-left:none;
+	border-right: none;
+	border-bottom: solid 1.5px #444;
+	width: 300px;
+}
+
+.profile-meta {
+		padding: 10px;
+
+#display_area {
+	display: grid;
+}
+}
+
+
+#main-area {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  border: solid 1px #888;
+  border-radius: 10px;
+
+}
+
+#chart-area {
+  flex-grow: 1;
+  width: 100%;
+  min-height: 300px; 
+  position: relative; 
+}
+
+#roastChart {
+  width: 100% !important;
+  height: auto !important;
+}
+
+       textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            width: 90%;
+            max-width: 500px;
+            transition: box-shadow 0.3s ease;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        /* ポップアップスタイル */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            width: 95%;
+            max-width: 800px;
+            height: auto; /* 高さ自動調整 */
+            overflow-y: auto; /* 必要に応じてスクロールバーを表示 */
+            max-height: 80vh; /* 最大高さを設定 */
+        }
+
+        .popup textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+                .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9;
+        }
+
+        /* showクラスが付与された際のスタイル */
+        .popup.show, .popup-overlay.show {
+            display: block;
+        }
+        .popup button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .popup button:hover {
+            background-color: #0056b3;
+        }
+
+#table_contents {
+  max-height: 400px; 
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin: 5px;
+}
+#chart-area {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin: 5px;
+}
+
+/* テーブル本体は固定幅 */
+#profileTable {
+  width: 90%;
+  border-collapse: collapse;
+  margin: 5%;
+}
+
+/* ヘッダーを固定する（ブラウザによっては `display: block`が必要） */
+#profileTable thead {
+  position: sticky;
+  top: 0;
+  background-color: white; /* 背景色をつけておくとスクロール時に見やすい */
+  z-index: 1;
+}
+
+
+@media (max-width: 768px) {
+  #main-area {
+    flex-direction: column;
+  }
+
+  #chart-area {
+    width: 100%;
+  }
+
+  #profileTable {
+    width: 100%;
+  }
+}
+
+.fullscreen-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: white; /* 白背景にするのがおすすめ */
+}
+	
+  </style>
 </head>
 <body>
-    <h2>うずロースター　Ver 0.0.8β</h2>
-    <div>
-        <button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button>
-        <span id="connection-label">未接続</span>
-    </div>
-    <div id="roasting-indicator" class="hidden"></div>
-    <label for="fileInput" class="custom-file-button">📁 焙煎プロファイル読込</label>
-    <input type="file" id="fileInput" style="display: none;"  accept=".json">
-    <button onclick="downloadJSON()"  class="custom-file-button">📁 焙煎プロファイル保存</button>
-    <br>
-    <button onclick="sendStartCommand()" id="start-button">焙煎スタート</button>
-    <button onclick="sendStopCommand()" id="stop-button">焙煎ストップ</button>
+    <span><button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button> <span id="connection-label">未接続</span></div>
+  </span>
+  <div id="roasting-indicator" class="hidden"></div>
+<button class="generic-button start-button" onclick="sendStartCommand()" id="start-button">スタート</button>
+<button class="generic-button stop-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
+  
+<!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
 
-    <div class="profile-meta">
-        <label for="profileTitle">タイトル：</label>
-        <input type="text" id="profileTitle" placeholder="タイトルを入力">
+  <span class="profile-meta">
+    <label for="profileTitle">タイトル：</label>
+    <input type="text" id="profileTitle" placeholder="タイトルを入力">
 
-        <label for="profileMemo">メモ：</label>
-        <textarea id="profileMemo" rows="4" placeholder="メモを入力"></textarea>
+    <label for="profileMemo">メモ：</label>
+    <textarea id="profileMemo" rows="1" placeholder="メモを入力"></textarea>
+  </span>
+    <div class="popup" id="popupTextarea">
+        <textarea id="popupText"></textarea>
+        <button id="closePopup">閉じる</button>
+        
     </div>
-    <div id="display_area">
-        <div id="roast_time">0</div>
-        <div id="roast_temperature">0</div>
-        <div id="roast_message">接続待機中</div>
+        <div class="popup-overlay" id="popupOverlay"></div>
+
+  <div id="display_area">
+  <span id="roast_time">0</span>
+  <span id="roast_temperature">0</span>
+  <span id="profile_temperature">0</span>
+  <span id="score">焙煎スコア：100</span>
+  <span id="roast_message">接続待機中</span>
+  </div>
+    <div id="table-button-area">
+	<label for="fileInput" class="generic-button">📁 プロファイル読込</label>
+	<input type="file" id="fileInput" style="display: none;"  accept=".json">
+	<button onclick="downloadJSON()"  class="generic-button">📁 プロファイル保存</button>
+      <button class="generic-button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
+      <button class="generic-button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
     </div>
-    <div id="main_area">
-        <div id="table_wrapper">
-            <table id="profileTable">
-                <tr>
-                    <th>時間 (秒)</th>
-                    <th>温度 (℃)</th>
-                    <th><button onclick="const t = document.getElementById('profileTable'); while (t.rows.length > 1) { t.deleteRow(1); }">全削除</button></th>
-                </tr>
-            </table>
-        </div>
-        <div id="table_contents">
-            <button  class="table-button" onclick="addRow()">行追加</button>
-            <button class="table-button" onclick="sortTable(); updateChartWithProfile(getProfileDataFromTable()); sendCurrentProfile();">テーブル整列⇒アップロード</button>
-            <button  class="table-button" onclick="overwriteTableWithLastRoast();" style="background-color: #ffcc99;">焙煎データ⇒テーブル⇒アップロード</button>
-        </div>
-        <canvas id="roastChart" width="800" height="300"></canvas>
-    </div>
+<div id="main-area">
+  <div id="table_contents">
+    <table id="profileTable">
+      <tr>
+        <th>時間 (秒)</th>
+        <th>温度 (℃)</th>
+        <th><button class="thead-button" onclick="addRow()">行追加</button>
+         <br>
+        <button class="thead-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑ALL</button>
+             
+		</th>
+      </tr>
+      
+    </table>
+  </div>
+
+  <!-- チャートエリア -->
+  <div id="chart-area">
+    <canvas id="roastChart"></canvas>
+  </div>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
