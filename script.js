@@ -115,7 +115,6 @@ function sendSafe(data) {
   try {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
-      console.log(JSON.stringify(data));
     } else {
       alert("WebSocketが未接続です。\n 再接続してください。");
       // 必要なら再接続処理とかキューに貯める処理もここで
@@ -190,47 +189,69 @@ function sendStopCommand() {
  
 }
 
-function sendCurrentProfile() {
-  sortTable();
-  const profileData = getProfileDataFromTable(); // テーブルから取得
+function sendProfilePoint(index, profile, id) {
+  const point = profile[index];
+  const message = {
+    command: "profile_point",
+    id: id,
+    index: index,
+    count: profile.length,
+    point: point
+  };
+  sendSafe(message);
+}
 
-  if (!profileData || profileData.length === 0) {
-    alert("焙煎プロファイルがありません。\nテーブルを確認してください。");
+async function sendProfileInChunks(profileData) {
+  const id = generateUniqueId();
+  const acked = new Set();
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error("プロファイル送信がタイムアウトしました。\nWiFi接続を確認してください。"));
+    }, 60000);
+
+    // WebSocket応答ハンドラ
+    const onMessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.command === "ack" && data.id === id) {
+        acked.add(data.index);
+
+        // 全ACK揃ったら完了
+        if (acked.size === profileData.length) {
+          clearTimeout(timeout);
+          socket.removeEventListener("message", onMessage);
+          resolve("送信成功！");
+        }
+      }
+    };
+
+    socket.addEventListener("message", onMessage);
+
+    // 全point送信
+    profileData.forEach((_, i) => sendProfilePoint(i, profileData, id));
+  });
+}
+
+async function sendCurrentProfile() {
+  sortTable();
+  const rawProfile = getProfileDataFromTable();
+  if (!rawProfile || rawProfile.length === 0) {
+    alert("有効なプロファイルがありません。");
     return;
   }
 
-  // ESP32側が {x, y} を期待してるから変換
-	const converted = profileData.map(p => {
-	  return {
-	    x: Math.round(p.time),                  // 時間は整数に
-	    y: Math.round(p.temp * 10) / 10         // 温度は小数第一位に
-	  };
-	});
-	
-   const id = generateUniqueId(); // 一意なIDをつける
-  const message = { command: "generic", id: id, type: "profile_upload", profile: converted };
-  sendSafe(message);
-  console.log("プロファイルアップロードコマンド送信");
-  
-   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      pendingResponses.delete(id);
-      alert("プロファイルのアップロードがタイムアウトしました。\nWiFi接続を確認してください。");
-      reject(new Error("タイムアウト"));
-    }, 3000); 
+  const converted = rawProfile.map(p => ({
+    x: Math.round(p.time),
+    y: Math.round(p.temp * 10) / 10
+  }));
 
-    pendingResponses.set(id, (response) => {
-      clearTimeout(timeout);
-      if (response.status === "ok") {
-        console.log("うずロースターにプロファイルをアップロードしました。");
-
-        resolve(response);
-      } else {
-        alert("プロファイルのアップロードに失敗しました。\nWiFi接続を確認してください。\nアップロード失敗:" + response.message);
-        reject(new Error("プロファイルアップロード失敗: " + response.message));
-      }
-    });
-  });
+  try {
+    await sendProfileInChunks(converted);
+    console.log("プロファイル送信成功");
+    alert("送信成功！！！！！！！！！！！！！！！！！！！！");
+  } catch (err) {
+    alert("プロファイル送信に失敗しました: " + err.message);
+  }
 }
 
 function overwriteTableWithLastRoast() {
