@@ -1,7 +1,53 @@
+        const textarea = document.getElementById('profileMemo');
+        const popup = document.getElementById('popupTextarea');
+        const popupText = document.getElementById('popupText');
+        const closeButton = document.getElementById('closePopup');
+        const popupOverlay = document.getElementById('popupOverlay');
+
+window.addEventListener('resize', () => {
+  if (chart) {
+    chart.resize();
+  }
+});
+
+let isFullscreen = false;
+const chartCanvas = document.getElementById('roastChart');
+chartCanvas.addEventListener('click', () => {
+  if (!isFullscreen) {
+    document.getElementById('table_contents').style.display="none";
+    isFullscreen = true;
+	const targetDOMRect = chartCanvas.getBoundingClientRect();
+	const targetTop = targetDOMRect.top + window.pageYOffset;
+	document.documentElement.scrollTop = targetTop;
+  } else {
+    document.getElementById('table_contents').style.display="block";
+    isFullscreen = false;
+  }
+});
+
+        textarea.addEventListener('click', () => {
+            popupText.value = textarea.value;
+            popup.classList.add('show');
+            popupOverlay.classList.add('show');
+            // ポップアップ表示時にテキストエリアにフォーカスを当てる
+            popupText.focus();
+        });
+
+        closeButton.addEventListener('click', () => {
+            textarea.value = popupText.value;
+            popup.classList.remove('show');
+            popupOverlay.classList.remove('show');
+        });
+
+        popupOverlay.addEventListener('click', () => {
+            textarea.value = popupText.value;
+            popup.classList.remove('show');
+            popupOverlay.classList.remove('show');
+        });
+
 let socket = null;
 connectWebSocket();
-	const pendingResponses = new Map();
-
+const pendingResponses = new Map();
 const liveData = [];
 let isRoasting = false;
 
@@ -16,10 +62,15 @@ socket.onclose = () => {
 socket.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
-    if ("time" in data && "temp" in data) {
+    if ("time" in data && "temp" in data && "temp_prof" in data) {
       addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
 	  document.getElementById('roast_time').textContent = data.time + "[秒]";
-	  document.getElementById('roast_temperature').textContent = data.temp + "[℃]";
+	  document.getElementById('roast_temperature').textContent = "現在温度" + data.temp + "[℃]";
+	  document.getElementById('profile_temperature').textContent = "理想温度" + data.temp_prof + "[℃]";
+	  
+	  if (data.time >= 1800 - 1) {
+		sendStopCommand();
+	  }
   	}   
   	
 	else if ("msg" in data) {
@@ -64,6 +115,7 @@ function sendSafe(data) {
   try {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
+      console.log(JSON.stringify(data));
     } else {
       alert("WebSocketが未接続です。\n 再接続してください。");
       // 必要なら再接続処理とかキューに貯める処理もここで
@@ -148,10 +200,13 @@ function sendCurrentProfile() {
   }
 
   // ESP32側が {x, y} を期待してるから変換
-  const converted = profileData.map(p => {
-    return { x: p.time, y: p.temp };
-  });
-
+	const converted = profileData.map(p => {
+	  return {
+	    x: Math.round(p.time),                  // 時間は整数に
+	    y: Math.round(p.temp * 10) / 10         // 温度は小数第一位に
+	  };
+	});
+	
    const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "generic", id: id, type: "profile_upload", profile: converted };
   sendSafe(message);
@@ -230,8 +285,9 @@ function addLiveDataPoint(chart, time, temp) {
       });
     }
 
+	chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
     chart.data.datasets[1].data.push(newPoint);
-    chart.update('none'); // ← 'none' にするとアニメーションもカットできるずら
+    chart.update(); // ← 'none' にするとアニメーションもカット
   }
 }
 
@@ -243,9 +299,9 @@ function addRow(time = '', temp = '') {
   const tempCell = row.insertCell(1);
   const deleteCell = row.insertCell(2);
 
-  timeCell.innerHTML = `<input type="number" value="${time}" oninput="this.value = Math.max( 0, Math.min( this.value, 1800 ) )">`;
+  timeCell.innerHTML = `<input type="number" value="${time}" oninput="this.value = Math.max( 0, Math.min( this.value, 1799 ) )">`;
   tempCell.innerHTML = `<input type="number" value="${temp}" oninput="this.value = Math.max( 0, Math.min( this.value, 300 ) )">`;
-  deleteCell.innerHTML = `<button onclick="this.parentNode.parentNode.remove()">削除</button>`;
+  deleteCell.innerHTML = `<button onclick="this.parentNode.parentNode.remove()">🗑</button>`;
 }
 
 function sortTable() {
@@ -259,7 +315,7 @@ function sortTable() {
     let time = parseFloat(row.cells[0].firstChild.value);
     let temp = parseFloat(row.cells[1].firstChild.value);
     if (time < 0) time = 0;
-    else if (time > 1800) time = 1800;
+    else if (time > 1800 - 1) time = 1800 - 1;
     if (temp < 0) temp = 0;
     else if (temp > 300) temp = 300;
     
@@ -292,7 +348,7 @@ function sortTable() {
 
 function createDeleteButton() {
   const button = document.createElement("button");
-  button.textContent = "削除";
+  button.textContent = "🗑";
   button.addEventListener("click", function () {
     const row = button.closest("tr");
     if (row) {
@@ -427,6 +483,27 @@ function updateChartWithProfile(profileData) {
   roastChart.update();
 }
 
+const verticalLinePlugin = {
+  id: 'verticalLinePlugin',
+  beforeDraw(chart, args, options) {
+    const { ctx, chartArea: { left, right, top, bottom }, scales: { x } } = chart;
+    const xValue = options.xValue;
+
+    // x座標を取得
+    const xPos = x.getPixelForValue(xValue);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(xPos, top);
+    ctx.lineTo(xPos, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = options.color || 'red';
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+
 function initChart() {
   const ctx = document.getElementById('roastChart').getContext('2d');
 
@@ -453,6 +530,12 @@ roastChart = new Chart(ctx, {
     }]
   },
   options: {
+    plugins: {
+      verticalLinePlugin: {
+        xValue: 0,	 // ←ここに現在の時間
+        color: 'rgba(0,0,100,0.3)'
+      }
+    },
     responsive: true,
     scales: {
       x: {
@@ -464,10 +547,11 @@ roastChart = new Chart(ctx, {
       y: {
         title: { display: true, text: '温度（℃）' },
         min: 0,
-        max: 250
+        max: 300
       }
     }
-  }
+  },
+  plugins: [verticalLinePlugin]
 });
 
 }
@@ -478,5 +562,6 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('stop-button').disabled = true;
 
 });
+
 
 
