@@ -15,6 +15,7 @@
 		padding: 0;
 		text-align: center;
 		height: 20px;
+		width: 100px;
 	}
     td input {
 		border: 0px;
@@ -49,7 +50,7 @@
   color: #fff8f0;
   padding: 0.2em 0.5em;
   font-size: 0.8rem;
-  border: solid 1px #333333;;
+  border: solid 1px #333333;
   height: 1.5rem;
   border-radius: 0.75em;
   cursor: pointer;
@@ -59,7 +60,7 @@
 
 .generic-button:hover {
   background-color: #da7430; /* 明るめの焦がしキャラメル色 */
-  transform: translateY(-2px);
+  transform: scale(1.03);
 }
 
 .generic-button:active {
@@ -68,10 +69,26 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.generic-button:disabled {
+  background-color: #ccc; /* 無効時の背景色（灰色など） */
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ホバー・アクティブを無効時に無効化 */
+.generic-button:disabled:hover,
+.generic-button:disabled:active {
+  background-color: #ccc;
+  transform: none;
+  box-shadow: none;
+}
+
 .thead-button {
-	height: 45%;
-	width: 100px;
-	margin: 0!important;
+	height: 75%;
+	width: 90px;
+	margin: 0px 2px!important;
 	padding; 0px;
 }
 
@@ -92,7 +109,7 @@
 }
 
 .hidden {
-  display: none;
+  visibility: hidden;
   }
 
   #table_contents {
@@ -116,12 +133,16 @@
 	width: 300px;
 }
 
+#top-overall {
+	display: flex;
+}
 .profile-meta {
 		padding: 10px;
+	display: flex;
+}
 
 #display_area {
 	display: grid;
-}
 }
 
 
@@ -151,14 +172,13 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             resize: none;
-            width: 90%;
-            max-width: 500px;
+            width: 95%;
             transition: box-shadow 0.3s ease;
         }
         textarea:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            border-color: #aa3b3f;
+            box-shadow: 0 0 8px rgba(33, 33, 33, 0.5);
         }
 
         /* ポップアップスタイル */
@@ -170,7 +190,7 @@
             transform: translate(-50%, -50%);
             background-color: white;
             padding: 20px;
-            border: 1px solid #007bff;
+            border: 1px solid #443b2f;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             z-index: 10;
@@ -182,11 +202,11 @@
         }
 
         .popup textarea {
-            width: 100%;
             height: 200px;
-            margin-bottom: 10px;
+            margin: 10px;
+            border: 1px solid #443b2f;
         }
-                .popup-overlay {
+         .popup-overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -196,28 +216,32 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 9;
         }
+        #popup-button-area {
+			text-align: right;
+		}
 
         /* showクラスが付与された際のスタイル */
         .popup.show, .popup-overlay.show {
             display: block;
         }
         .popup button {
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 10px 10px;
+            background-color: #8f334b;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            text-align: right;
         }
 
         .popup button:hover {
-            background-color: #0056b3;
+            background-color: #b30056;
         }
 
 #table_contents {
-  max-height: 400px; 
-  overflow-y: auto;
+  max-height: 500px; 
+  overflow-y: scroll;
   border: 1px solid #ccc;
   border-radius: 10px;
   margin: 5px;
@@ -267,28 +291,87 @@
   z-index: 9999;
   background: white; /* 白背景にするのがおすすめ */
 }
+
+#all-delete-button {
+	display: none;
+}
+
+#uploadOverlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#uploadModal {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 5px solid #ccc;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#chart-area {
+  transition: transform 0.5s ease-in-out;
+  transform-origin: top center;
+}
+
+#chart-area.fullscreen {
+  transform: scale(1.5); /* 好きな倍率に調整 */
+  z-index: 10;
+}
 	
-  </style>
+</style>
 </head>
 <body>
-    <span><button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button> <span id="connection-label">未接続</span></div>
-  </span>
+<!-- モーダル（非表示時は display: none） -->
+<div id="uploadOverlay" style="display: none;">
+  <div id="uploadModal">
+    <div class="spinner"></div>
+    <p>プロファイル送信中...</p>
+  </div>
+</div>
+
+<div id="top-overall">
+    <div><button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button> <span id="connection-label">未接続</span></div>
+  </div>
   <div id="roasting-indicator" class="hidden"></div>
-<button class="generic-button start-button" onclick="sendStartCommand()" id="start-button">スタート</button>
+<div><button class="generic-button start-button" onclick="sendStartCommand()" id="start-button">スタート</button>
 <button class="generic-button stop-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
-  
+  </div>
 <!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
 
-  <span class="profile-meta">
+  <div class="profile-meta">
+    <div class="together">
     <label for="profileTitle">タイトル：</label>
     <input type="text" id="profileTitle" placeholder="タイトルを入力">
-
+	</div>
+    <div class="together">
     <label for="profileMemo">メモ：</label>
     <textarea id="profileMemo" rows="1" placeholder="メモを入力"></textarea>
-  </span>
-    <div class="popup" id="popupTextarea">
+    </div>
+  </div>
+    <div class="popup" id="popupTextarea">焙煎メモ<br>
         <textarea id="popupText"></textarea>
-        <button id="closePopup">閉じる</button>
+        <div id="popup-button-area"><button id="closePopup">閉じる</button></div>
         
     </div>
         <div class="popup-overlay" id="popupOverlay"></div>
@@ -315,7 +398,7 @@
         <th>温度 (℃)</th>
         <th><button class="thead-button" onclick="addRow()">行追加</button>
          <br>
-        <button class="thead-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑ALL</button>
+        <button id="all-delete-button" class="thead-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑ALL</button>
              
 		</th>
       </tr>

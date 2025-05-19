@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <title>焙煎プロファイルエディタ</title>
+    <script src="chart.js"></script>
+    <script src="script.js" defer></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        #socket-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            background-color: #cccccc; /* デフォルトカラー */
+        }
+
+        #socket-status.connected {
+            background-color: #28a745; /* 接続時のカラー */
+        }
+
+        #connection-label {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        #roasting-indicator {
+            width: 18px;
+            height: 18px;
+            background-color: #007bff;
+            border-radius: 50%;
+            animation: blink 1.2s infinite ease-in-out;
+            margin: 10px auto;
+            display: none;
+        }
+
+        @keyframes blink {
+            0%    { opacity: 0; }
+            50%   { opacity: 1; }
+            100%  { opacity: 0; }
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 8px 0;
+        }
+
+        .custom-file-button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            margin: 8px;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-file-button:hover {
+            background-color: #0056b3;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #start-button, #stop-button {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        #start-button:hover, #stop-button:hover {
+            background-color: #218838;
+        }
+
+        #stop-button {
+            background-color: #dc3545;
+        }
+
+        #stop-button:hover {
+            background-color: #c82333;
+        }
+
+        .profile-meta {
+            padding: 16px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profile-meta label {
+            margin-right: 8px;
+            font-size: 0.9em;
+            color: #495057;
+            margin-bottom: 3px;
+        }
+
+        #profileTitle, #profileMemo {
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+
+        #profileTitle:focus, #profileMemo:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        #profileMemo {
+            resize: vertical;
+            height: 60px;
+        }
+
+        #display_area {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 16px;
+            width: 60%;
+        }
+
+        #display_area div {
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1em;
+            color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 80px;
+        }
+
+        #main_area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            margin-top: 16px;
+        }
+
+        #table_wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #profileTable {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        #profileTable th, #profileTable td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        #profileTable th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        #profileTable td input {
+            border: 1px solid #ddd;
+            padding: 6px;
+            width: 100%;
+            font-size: 0.9em;
+            border-radius: 5px;
+            height: 30px;
+        }
+
+        #profileTable td input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        #profileTable td button, #profileTable tr button {
+            border: none;
+            border-radius: 5px;
+            padding: 6px 10px;
+            width: 100%;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            background-color: #e7e7e7;
+            color: #333;
+            height: 30px;
+        }
+
+        #profileTable td button:hover, #profileTable tr button:hover {
+            background-color: #d0d0d0;
+        }
+
+        #profileTable tr button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #profileTable tr button:hover {
+            background-color: #c82333;
+        }
+
+        #table_contents {
+            display: flex;
+            justify-content: center;
+            margin-top: 16px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .table-button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            margin: 8px;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .table-button:hover {
+            background-color: #0056b3;
+        }
+
+        .table-button:last-child {
+            background-color: #28a745;
+        }
+
+        .table-button:last-child:hover {
+            background-color: #218838;
+        }
+
+        #roastChart {
+            width: 70%;
+            height: auto;
+            max-height: 300px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 16px;
+        }
+
+        @media (max-width: 768px) {
+            #main_area {
+                width: 95%;
+            }
+
+            #display_area{
+                width: 95%;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #table_contents {
+                flex-direction: column;
+            }
+
+            .table-button{
+                margin: 8px 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            #profileTable {
+                width: 100%;
+            }
+
+             .profile-meta{
+                width: 95%;
+                flex-direction: column;
+             }
+
+            #roastChart {
+                width: 100%;
+            }
+
+            #table_wrapper {
+                width: 100%;
+            }
+            .table-chart-container {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        .table-chart-container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-between;
+            align-items: stretch;
+        }
+
+        #table_wrapper {
+            width: 30%;
+        }
+
+        .profile-meta-group {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            width: 60%;
+            margin-bottom: 16px;
+        }
+
+        .profile-meta-group .profile-meta {
+            width: 48%;
+            margin-right: 0;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-meta-group {
+            display: flex;
+            justify-content: space-between;
+            width: 60%;
+            margin-bottom: 16px;
+            flex-direction: row;
+            align-items: flex-start;
+        }
+
+        .profile-meta-group .profile-meta {
+            width: 49%;
+            margin-right: 0;
+            margin-bottom: 0;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            margin-bottom: 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h2>うずロースター　Ver 0.0.8β</h2>
+        <div>
+            <button onclick="connectWebSocket()" id="socket-status" class="status-indicator"></button>
+            <span id="connection-label">未接続</span>
+        </div>
+    </div>
+    <div id="roasting-indicator" class="hidden"></div>
+    <div class="button-group">
+        <label for="fileInput" class="custom-file-button">📁 焙煎プロファイル読込</label>
+        <input type="file" id="fileInput" style="display: none;"  accept=".json">
+        <button onclick="downloadJSON()"  class="custom-file-button">📁 焙煎プロファイル保存</button>
+        <button onclick="sendStartCommand()" id="start-button">焙煎スタート</button>
+        <button onclick="sendStopCommand()" id="stop-button">焙煎ストップ</button>
+    </div>
+
+    <div class="profile-meta-group">
+        <div class="profile-meta">
+            <label for="profileTitle">タイトル：</label>
+            <input type="text" id="profileTitle" placeholder="タイトルを入力">
+        </div>
+
+        <div class="profile-meta">
+            <label for="profileMemo">メモ：</label>
+            <textarea id="profileMemo" rows="4" placeholder="メモを入力"></textarea>
+        </div>
+    </div>
+
+    <div id="display_area">
+        <div id="roast_time">0</div>
+        <div id="roast_temperature">0</div>
+        <div id="roast_message">接続待機中</div>
+    </div>
+    <div id="main_area">
+        <div class="table-chart-container">
+            <div id="table_wrapper">
+                <table id="profileTable">
+                    <tr>
+                        <th>時間 (秒)</th>
+                        <th>温度 (℃)</th>
+                        <th><button onclick="const t = document.getElementById('profileTable'); while (t.rows.length > 1) { t.deleteRow(1); }">全削除</button></th>
+                    </tr>
+                </table>
+            </div>
+            <canvas id="roastChart" width="800" height="300"></canvas>
+        </div>
+        <div id="table_contents">
+            <button  class="table-button" onclick="addRow()">行追加</button>
+            <button class="table-button" onclick="sortTable(); updateChartWithProfile(getProfileDataFromTable()); sendCurrentProfile();">テーブル整列⇒アップロード</button>
+            <button  class="table-button" onclick="overwriteTableWithLastRoast();" style="background-color: #ffcc99;">焙煎データ⇒テーブル⇒アップロード</button>
+        </div>
+    </div>
+    <script>
+        const socketStatusButton = document.getElementById('socket-status');
+        const connectionLabel = document.getElementById('connection-label');
+        let websocket;
+
+        function connectWebSocket() {
+            const host = window.location.hostname;
+            const port = 8080;
+            websocket = new WebSocket(`ws://${host}:${port}`);
+
+            websocket.onopen = () => {
+                console.log('connected to websocket');
+                socketStatusButton.classList.remove('disconnected');
+                socketStatusButton.classList.add('connected');
+                connectionLabel.textContent = '接続';
+                connectionLabel.style.color = '#28a745';
+            };
+
+            websocket.onclose = () => {
+                console.log('disconnected from websocket');
+                socketStatusButton.classList.remove('connected');
+                socketStatusButton.classList.add('disconnected');
+                connectionLabel.textContent = '未接続';
+                connectionLabel.style.color = '#555';
+            };
+
+            websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.time && data.temp) {
+                    document.getElementById('roast_time').textContent = `焙煎時間: ${data.time} 秒`;
+                    document.getElementById('roast_temperature').textContent = `温度: ${data.temp} ℃`;
+                    updateChart(data.time, data.temp);
+                }
+                if (data.message) {
+                    document.getElementById('roast_message').textContent = data.message;
+                }
+            };
+
+            websocket.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+                connectionLabel.textContent = 'エラー';
+                connectionLabel.style.color = '#dc3545';
+            };
+        }
+
+        function sendStartCommand() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({ command: 'start' }));
+                document.getElementById('roasting-indicator').style.display = 'block';
+            } else {
+                alert('WebSocket接続が開いていません。');
+            }
+        }
+
+        function sendStopCommand() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({ command: 'stop' }));
+                document.getElementById('roasting-indicator').style.display = 'none';
+            } else {
+                alert('WebSocket接続が開いていません。');
+            }
+        }
+
+        function sendCurrentProfile() {
+            const table = document.getElementById('profileTable');
+            const data = [];
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const time = row.cells[0].querySelector('input').value;
+                const temp = row.cells[1].querySelector('input').value;
+                if (time && temp) {
+                    data.push({ time: parseFloat(time), temp: parseFloat(temp) });
+                }
+            }
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+              const title = document.getElementById('profileTitle').value;
+              const memo = document.getElementById('profileMemo').value;
+                websocket.send(JSON.stringify({ command: 'update_profile', profile_data: data, title: title, memo: memo }));
+            } else {
+                alert('WebSocket接続が開いていません。');
+            }
+        }
+
+
+
+        let chartInstance = null;
+        function updateChart(time, temp) {
+            const ctx = document.getElementById('roastChart').getContext('2d');
+            if (!chartInstance) {
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [time],
+                        datasets: [{
+                            label: '温度 (℃)',
+                            data: [temp],
+                            borderColor: '#ff6384',
+                            backgroundColor: 'transparent',
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: '時間 (秒)'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: '温度 (℃)'
+                                },
+                                suggestedMin: 0,
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false,
+                            }
+                        }
+                    }
+                });
+            } else {
+                chartInstance.data.labels.push(time);
+                chartInstance.data.datasets[0].data.push(temp);
+                chartInstance.update();
+            }
+        }
+
+        function addRow() {
+            const table = document.getElementById('profileTable');
+            const row = table.insertRow(-1);
+            const timeCell = row.insertCell();
+            const tempCell = row.insertCell();
+            const deleteCell = row.insertCell();
+
+            timeCell.innerHTML = '<input type="number" value="">';
+            tempCell.innerHTML = '<input type="number" value="">';
+            deleteCell.innerHTML = '<button onclick="this.parentNode.parentNode.remove()">削除</button>';
+        }
+
+        function getProfileDataFromTable() {
+            const table = document.getElementById('profileTable');
+            const data = [];
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const time = row.cells[0].querySelector('input').value;
+                const temp = row.cells[1].querySelector('input').value;
+                if (time && temp) {
+                    data.push({ time: parseFloat(time), temp: parseFloat(temp) });
+                }
+            }
+            return data;
+        }
+
+        function updateChartWithProfile(data) {
+            const ctx = document.getElementById('roastChart').getContext('2d');
+            const initialData = {
+                labels: data.map(item => item.time),
+                datasets: [{
+                    label: '温度 (℃)',
+                    data: data.map(item => item.temp),
+                    borderColor: '#ff6384',
+                    backgroundColor: 'transparent',
+                    pointRadius: 0
+                }]
+            };
+
+            if (!chartInstance) {
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: initialData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: '時間 (秒)'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: '温度 (℃)'
+                                },
+                                suggestedMin: 0,
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false,
+                            }
+                        }
+                    }
+                });
+            } else {
+                chartInstance.data = initialData;
+                chartInstance.update();
+            }
+        }
+
+        function sortTable() {
+            const table = document.getElementById('profileTable');
+            const rows = Array.from(table.rows).slice(1);
+
+            rows.sort((a, b) => {
+                const timeA = parseFloat(a.cells[0].querySelector('input').value);
+                const timeB = parseFloat(b.cells[0].querySelector('input').value);
+                return timeA - timeB;
+            });
+
+            rows.forEach(row => table.appendChild(row));
+        }
+
+        function downloadJSON() {
+            const title = document.getElementById('profileTitle').value;
+            const memo = document.getElementById('profileMemo').value;
+            const data = getProfileDataFromTable();
+            const jsonData = {
+                title: title,
+                memo: memo,
+                profile_data: data
+            };
+            const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'roast_profile.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function overwriteTableWithLastRoast() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({ command: 'request_last_roast' }));
+            } else {
+                alert('WebSocket接続が開いていません。');
+            }
+        }
+
+        window.onload = function () {
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>

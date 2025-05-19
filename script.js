@@ -6,19 +6,33 @@
 
 window.addEventListener('resize', () => {
   if (chart) {
-    chart.resize();
+    setTimeout(() => {
+    	chart.resize();
+    },50);
   }
 });
 
+/*
+let isFullscreen2 = false;
+const chartWrapper = document.getElementById('chart-area');
+const tableContents = document.getElementById('table_contents');
+chartWrapper.addEventListener('click', () => {
+  isFullscreen2 = !isFullscreen2;
+  chartWrapper.classList.toggle('fullscreen', isFullscreen2);
+  tableContents.style.display = isFullscreen2 ? 'none' : 'block';
+});
+*/
 let isFullscreen = false;
-const chartCanvas = document.getElementById('roastChart');
+const chartCanvas = document.getElementById('chart-area');
 chartCanvas.addEventListener('click', () => {
   if (!isFullscreen) {
     document.getElementById('table_contents').style.display="none";
     isFullscreen = true;
 	const targetDOMRect = chartCanvas.getBoundingClientRect();
 	const targetTop = targetDOMRect.top + window.pageYOffset;
-	document.documentElement.scrollTop = targetTop;
+setTimeout(() => {
+  window.scrollTo({ top: targetTop, behavior: 'smooth' });
+}, 100); // 100msくらいが安定
   } else {
     document.getElementById('table_contents').style.display="block";
     isFullscreen = false;
@@ -189,69 +203,79 @@ function sendStopCommand() {
  
 }
 
-function sendProfilePoint(index, profile, id) {
-  const point = profile[index];
-  const message = {
-    command: "profile_point",
-    id: id,
-    index: index,
-    count: profile.length,
-    point: point
-  };
-  sendSafe(message);
-}
-
-async function sendProfileInChunks(profileData) {
+function sendProfileInBatches(profileData) {
+  const BATCH_SIZE = 100;
+  const totalBatches = Math.ceil(profileData.length / BATCH_SIZE);
   const id = generateUniqueId();
-  const acked = new Set();
 
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error("プロファイル送信がタイムアウトしました。\nWiFi接続を確認してください。"));
-    }, 60000);
+  return new Promise(async (resolve, reject) => {
+    let batchIndex = 0;
 
-    // WebSocket応答ハンドラ
-    const onMessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.command === "ack" && data.id === id) {
-        acked.add(data.index);
+    const sendNextBatch = () => {
+      if (batchIndex >= totalBatches) return;
 
-        // 全ACK揃ったら完了
-        if (acked.size === profileData.length) {
-          clearTimeout(timeout);
-          socket.removeEventListener("message", onMessage);
-          resolve("送信成功！");
+      const start = batchIndex * BATCH_SIZE;
+      const batch = profileData.slice(start, start + BATCH_SIZE);
+
+      const message = {
+        command: "generic",
+        id: id,
+        type: "profile_upload_batch",
+        part: batchIndex,
+        isLast: batchIndex === totalBatches - 1,
+        profile: batch
+      };
+
+      sendSafe(message);
+
+      const timeout = setTimeout(() => {
+        pendingResponses.delete(`${id}_${batchIndex}`);
+        reject(new Error(`バッチ ${batchIndex} のACKが来てません`));
+      }, 3000);
+
+      pendingResponses.set(`${id}_${batchIndex}`, (response) => {
+        clearTimeout(timeout);
+        if (response.status === "ok") {
+          batchIndex++;
+          if (batchIndex === totalBatches) {
+            resolve(response); // 最後まで完了！
+          } else {
+            sendNextBatch(); // 次へ
+          }
+        } else {
+          reject(new Error(`アップロード失敗: ${response.message}`));
         }
-      }
+      });
     };
 
-    socket.addEventListener("message", onMessage);
-
-    // 全point送信
-    profileData.forEach((_, i) => sendProfilePoint(i, profileData, id));
+    sendNextBatch();
   });
 }
 
-async function sendCurrentProfile() {
+function sendCurrentProfile() {
   sortTable();
-  const rawProfile = getProfileDataFromTable();
-  if (!rawProfile || rawProfile.length === 0) {
-    alert("有効なプロファイルがありません。");
+  const profileData = getProfileDataFromTable();
+
+  if (!profileData || profileData.length === 0) {
+    alert("焙煎プロファイルがありません。");
     return;
   }
 
-  const converted = rawProfile.map(p => ({
+ showUploadOverlay();
+ 
+  const converted = profileData.map(p => ({
     x: Math.round(p.time),
     y: Math.round(p.temp * 10) / 10
   }));
 
-  try {
-    await sendProfileInChunks(converted);
-    console.log("プロファイル送信成功");
-    alert("送信成功！！！！！！！！！！！！！！！！！！！！");
-  } catch (err) {
-    alert("プロファイル送信に失敗しました: " + err.message);
-  }
+  sendProfileInBatches(converted)
+    .then(() => {
+         hideUploadOverlay(); // 成功
+		})
+    .catch(err => {
+        hideUploadOverlay(); 
+		alert("\nWiFi接続、うずロースターの電源を確認してください。\nアップロード失敗: " + err.message);
+		});
 }
 
 function overwriteTableWithLastRoast() {
@@ -286,6 +310,14 @@ function overwriteTableWithLastRoast() {
   sendCurrentProfile();
 }
 
+function showUploadOverlay() {
+  document.getElementById("uploadOverlay").style.display = "flex";
+}
+
+function hideUploadOverlay() {
+  document.getElementById("uploadOverlay").style.display = "none";
+}
+
 function addLiveDataPoint(chart, time, temp) {
   if (typeof time === 'number' && typeof temp === 'number') {
     const newPoint = { x: time, y: temp };
@@ -308,7 +340,7 @@ function addLiveDataPoint(chart, time, temp) {
 
 	chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
     chart.data.datasets[1].data.push(newPoint);
-    chart.update(); // ← 'none' にするとアニメーションもカット
+    chart.update('none'); // ← 'none' にするとアニメーションもカット
   }
 }
 
