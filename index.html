@@ -5,6 +5,270 @@
 <script src="chart.js"></script>
 	  <title>UZU ROASTER</title>
   <style>
+    :root {
+      --primary-color: #8b5d3b;
+      --primary-hover: #ba7d4d;
+      --primary-active: #6a452c;
+      --accent-color: #aa3b3f;
+      --text-light: #fff8f0;
+      --text-dark: #333333;
+      --border-color: #ccc;
+      --background-light: #fff;
+      --background-medium: #f9f5f0;
+      --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 5px;
+      background-color: var(--background-light);
+      color: var(--text-dark);
+    }
+
+/*********************************************************************************************/
+    /* Header Section */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 5px 5px;
+      border-bottom: 1px solid var(--primary-color);
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+    }
+
+    .roast-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #roasting-indicator {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background-color: #0066ff;
+      border-radius: 50%;
+      animation: blink 1s infinite ease-in-out;
+      margin-right: 10px;
+    }
+
+    @keyframes blink {
+      0%   { opacity: 0; }
+      50%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Buttons */
+    .button {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      padding: 8px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+    }
+
+    .button:hover {
+      background-color: var(--primary-hover);
+  	  transform: scale(1.03);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:active {
+      background-color: var(--primary-active);
+  	  transform: scale(0.97);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    
+    #start-button {
+      background-color: #2e9d32;
+      color: #eeeeee;
+    }
+    
+    #start-button:hover {
+      background-color: #388e3c;
+    }
+    .red-button {
+      color: #eeeeee;
+      background-color: #c62828;
+    }
+    
+    .red-button:hover {
+      background-color: #d32f2f;
+    }
+
+    .header-button {
+		min-width: 100px;
+	}
+
+
+/* ホバー・アクティブを無効時に無効化 */
+	button:disabled,
+	button:disabled:hover,
+	button:disabled:active {
+	  background-color: #ccc!important;
+	  transform: none;
+	  box-shadow: none;
+      cursor: not-allowed;
+	}
+
+
+
+     /* Profile Metadata */
+    .profile-meta {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .meta-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .meta-field input, 
+    .meta-field textarea {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .meta-field input:focus, 
+    .meta-field textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(139, 93, 59, 0.2);
+    }
+
+    #profileTitle {
+      height: 36px;
+    }
+
+    #profileMemo {
+      height: 36px;
+      resize: none;
+    }
+
+    /* Display Information */
+    .display-area {
+      display: flex;
+      background-color: var(--background-medium);
+      border-radius: 8px;
+      padding: 8px 20px;
+      margin-bottom: 8px;
+      gap: 30px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+      border: solid 1px var(--primary-active);
+
+    }
+
+    .display-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .display-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .display-value {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    #roast_message {
+      flex-grow: 1;
+      text-align: right;
+      font-weight: bold;
+      color: var(--accent-color);
+      font-size: 16px;
+      align-self: center;
+    }
+
+    /* Table Controls */
+    .table-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+/*****************************************************************************/
+    /* Main Content */
+    .main-area {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+      height: 500px;
+    }
+
+    /* Table Section */
+    .table-section {
+      flex: 1;
+      min-width: 300px;
+      max-width: 500px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      max-height: 500px;
+      scrollbar-width: none;
+      height: 100%;
+    }
+
+    .table-container {
+      flex: 1;
+      overflow-y: scroll;
+      max-height: 400px;
+      margin: 10px;
+      height: 100%;
+    }
+
     table, th, td {
       border: 1px solid gray;
       border-collapse: collapse;
@@ -13,9 +277,6 @@
     tr, th, td {
 		margin: 0 auto;
 		padding: 0;
-		text-align: center;
-		height: 20px;
-		width: 100px;
 	}
     td input {
 		border: 0px;
@@ -35,9 +296,191 @@
 		margin: 0 auto;
 	}
 	
+
+    table {
+      width: 90%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 2px 15px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+		height: 20px;
+		width: 100px;
+    }
+
     th {
-		height: 40px;
-	}
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 30px;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    tr:hover {
+      background-color: rgba(139, 93, 59, 0.05);
+    }
+
+    td input {
+      max-width: 100%;
+      padding: 0px 5px;
+      border: 1px solid transparent;
+      text-align: center;
+      background-color: transparent;
+    }
+
+    td input:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      background-color: var(--background-light);
+    }
+
+    .table-action-button {
+      padding: 4px 8px;
+      background-color: transparent;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .table-action-button:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+/*****************************************************************************/
+    /* Chart Section */
+    .chart-section {
+      flex: 2;
+      min-width: 500px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      min-height: 500px;
+    }
+
+    .chart-container {
+      width: 95%;
+      height: 100%;
+    }
+
+/****************** Popup/Modal *******************************/
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      width: 90%;
+      max-width: 600px;
+      display: none;
+    }
+
+    .popup h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+
+    .popup textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      margin: 15px 0;
+      resize: vertical;
+    }
+
+    .popup-actions {
+      text-align: right;
+    }
+
+    /* Loading Overlay */
+    #uploadOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #uploadModal {
+      background-color: var(--background-light);
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 5px solid #ddd;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .main-area {
+        flex-direction: column;
+      }
+
+      .table-section,
+      .chart-section {
+        max-width: 100%;
+        width: 100%;
+      }
+      .profileTtable {
+		width: 90%;
+		
+	  }
+	  th,td {
+		max-width: 100px;
+	  }
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+/**************************************************************************************************/
+
     .status-indicator {
       display: inline-block;
       width: 15px;
@@ -45,45 +488,6 @@
       border-radius: 50%;
     }
     
-.generic-button {
-  background-color: #936b68; /* 焙煎した豆っぽい茶色 */
-  color: #fff8f0;
-  padding: 0.2em 0.5em;
-  font-size: 0.8rem;
-  border: solid 1px #333333;
-  height: 1.5rem;
-  border-radius: 0.75em;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-.generic-button:hover {
-  background-color: #da7430; /* 明るめの焦がしキャラメル色 */
-  transform: scale(1.03);
-}
-
-.generic-button:active {
-  background-color: #8b3c1b; /* 深煎りエスプレッソ色 */
-  transform: scale(0.97);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.generic-button:disabled {
-  background-color: #ccc; /* 無効時の背景色（灰色など） */
-  color: #666;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* ホバー・アクティブを無効時に無効化 */
-.generic-button:disabled:hover,
-.generic-button:disabled:active {
-  background-color: #ccc;
-  transform: none;
-  box-shadow: none;
-}
 
 .thead-button {
 	height: 75%;
@@ -112,11 +516,6 @@
   visibility: hidden;
   }
 
-  #table_contents {
-	display: block;
-	  width: 400px;
-
-}
 
 #table-button-area {
 }
@@ -136,15 +535,6 @@
 #top-overall {
 	display: flex;
 }
-.profile-meta {
-		padding: 10px;
-	display: flex;
-}
-
-#display_area {
-	display: grid;
-}
-
 
 #main-area {
   display: flex;
@@ -193,7 +583,7 @@
             border: 1px solid #443b2f;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
+            z-index: 1010;
             width: 95%;
             max-width: 800px;
             height: auto; /* 高さ自動調整 */
@@ -214,7 +604,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            z-index: 9;
+            z-index: 1009;
         }
         #popup-button-area {
 			text-align: right;
@@ -244,12 +634,12 @@
   overflow-y: scroll;
   border: 1px solid #ccc;
   border-radius: 10px;
-  margin: 5px;
+  margin: 0px 2px 0px 5px;
 }
 #chart-area {
   border: 1px solid #ccc;
   border-radius: 10px;
-  margin: 5px;
+  margin: 0px 5px 0px 2px;
 }
 
 /* テーブル本体は固定幅 */
@@ -290,10 +680,6 @@
   height: 100vh;
   z-index: 9999;
   background: white; /* 白背景にするのがおすすめ */
-}
-
-#all-delete-button {
-	display: none;
 }
 
 #uploadOverlay {
@@ -350,25 +736,32 @@
   </div>
 </div>
 
-<div id="top-overall">
-    <div><button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button> <span id="connection-label">未接続</span></div>
-  </div>
-  <div id="roasting-indicator" class="hidden"></div>
-<div><button class="generic-button start-button" onclick="sendStartCommand()" id="start-button">スタート</button>
-<button class="generic-button stop-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
-  </div>
+    <!-- ヘッダー部分 -->
+    <div class="header">
+      <div class="connection-status">
+        <button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button>
+        <span id="connection-label">未接続</span>
+      </div>
+    <!-- プロファイルメタデータ -->
+    <div class="profile-meta">
+      <div class="meta-field">
+        <label for="profileTitle">タイトル：</label>
+        <input type="text" id="profileTitle" placeholder="タイトルを入力">
+      </div>
+      <div class="meta-field">
+        <label for="profileMemo">メモ：</label>
+        <textarea id="profileMemo" rows="1" placeholder="メモを入力"></textarea>
+      </div>
+    </div>
+      <div class="roast-controls">
+        <div id="roasting-indicator" class="hidden"></div>
+        <button class="button header-button" onclick="sendStartCommand()" id="start-button">スタート</button>
+        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
+      </div>
+    </div>
+
 <!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
 
-  <div class="profile-meta">
-    <div class="together">
-    <label for="profileTitle">タイトル：</label>
-    <input type="text" id="profileTitle" placeholder="タイトルを入力">
-	</div>
-    <div class="together">
-    <label for="profileMemo">メモ：</label>
-    <textarea id="profileMemo" rows="1" placeholder="メモを入力"></textarea>
-    </div>
-  </div>
     <div class="popup" id="popupTextarea">焙煎メモ<br>
         <textarea id="popupText"></textarea>
         <div id="popup-button-area"><button id="closePopup">閉じる</button></div>
@@ -376,41 +769,70 @@
     </div>
         <div class="popup-overlay" id="popupOverlay"></div>
 
-  <div id="display_area">
-  <span id="roast_time">0</span>
-  <span id="roast_temperature">0</span>
-  <span id="profile_temperature">0</span>
-  <span id="score">焙煎スコア：100</span>
-  <span id="roast_message">接続待機中</span>
-  </div>
-    <div id="table-button-area">
-	<label for="fileInput" class="generic-button">📁 プロファイル読込</label>
-	<input type="file" id="fileInput" style="display: none;"  accept=".json">
-	<button onclick="downloadJSON()"  class="generic-button">📁 プロファイル保存</button>
-      <button class="generic-button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
-      <button class="generic-button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
+      <!-- 表示エリア -->
+    <div class="display-area">
+      <div class="display-item">
+        <div class="display-label">経過時間</div>
+        <div class="display-value" id="roast_time">0 秒</div>
+      </div>
+      <div class="display-item">
+        <div class="display-label">現在温度</div>
+        <div class="display-value" id="roast_temperature">0 ℃</div>
+      </div>
+      <div class="display-item">
+        <div class="display-label">目標温度</div>
+        <div class="display-value" id="profile_temperature">0 ℃</div>
+      </div>
+      <div class="display-item">
+        <div class="display-label">評価</div>
+        <div class="display-value" id="score">焙煎スコア：100</div>
+      </div>
+      <div id="roast_message">接続待機中</div>
     </div>
-<div id="main-area">
-  <div id="table_contents">
-    <table id="profileTable">
-      <tr>
-        <th>時間 (秒)</th>
-        <th>温度 (℃)</th>
-        <th><button class="thead-button" onclick="addRow()">行追加</button>
-         <br>
-        <button id="all-delete-button" class="thead-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑ALL</button>
-             
-		</th>
-      </tr>
-      
-    </table>
-  </div>
 
-  <!-- チャートエリア -->
-  <div id="chart-area">
-    <canvas id="roastChart"></canvas>
-  </div>
-</div>
+    <!-- テーブル操作ボタン -->
+    <div class="table-controls">
+      <label for="fileInput" class="button">
+        <span>📁 プロファイル読込</span>
+      </label>
+      <input type="file" id="fileInput" accept=".json">
+      <button onclick="downloadJSON()" class="button">📁 プロファイル保存</button>
+      <button class="button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
+      <button class="button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
+    </div>
+    
+    <!-- メインコンテンツエリア -->
+    <div class="main-area" id="main-area2">
+      <!-- テーブルセクション -->
+      <div class="table-section" id="table_contents">
+        <div class="table-container">
+          <table id="profileTable">
+            <thead>
+              <tr>
+                <th>時間 (秒)</th>
+                <th>温度 (℃)</th>
+                <th>🗑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- テーブル内容はJavaScriptで動的に生成 -->
+            </tbody>
+          </table>
+         </div> 
+        <div style="padding: 10px; text-align: center; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
+          <button class="button" onclick="addRow()">行追加</button>
+          <button id="all-delete-button" class="button button-accent red-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
+        </div>
+      </div>
+
+      <!-- チャートセクション -->
+      <div class="chart-section">
+        <div class="chart-container" id="chart-area">
+          <canvas id="roastChart"></canvas>
+        </div>
+      </div>
+    </div>
+
 <script src="script.js"></script>
 </body>
 </html>

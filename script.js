@@ -27,6 +27,7 @@ const chartCanvas = document.getElementById('chart-area');
 chartCanvas.addEventListener('click', () => {
   if (!isFullscreen) {
     document.getElementById('table_contents').style.display="none";
+    document.getElementById('main-area2').style.height="100%";
     isFullscreen = true;
 	const targetDOMRect = chartCanvas.getBoundingClientRect();
 	const targetTop = targetDOMRect.top + window.pageYOffset;
@@ -34,7 +35,8 @@ setTimeout(() => {
   window.scrollTo({ top: targetTop, behavior: 'smooth' });
 }, 100); // 100msくらいが安定
   } else {
-    document.getElementById('table_contents').style.display="block";
+    document.getElementById('table_contents').style.display="flex";
+    document.getElementById('main-area2').style.height="500px";
     isFullscreen = false;
   }
 });
@@ -77,18 +79,41 @@ socket.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     if ("time" in data && "temp" in data && "temp_prof" in data) {
-      addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
-	  document.getElementById('roast_time').textContent = data.time + "[秒]";
-	  document.getElementById('roast_temperature').textContent = "現在温度" + data.temp + "[℃]";
-	  document.getElementById('profile_temperature').textContent = "理想温度" + data.temp_prof + "[℃]";
+	  if (data.time > -1 && isRoasting) {
+		 addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
+		 document.getElementById('roast_time').textContent = data.time + "[秒]";
+		  document.getElementById('roast_temperature').textContent = data.temp + "[℃]";
+		 if (roastChart.data.datasets[0].data.length === 0) {
+		   document.getElementById('profile_temperature').textContent = "--[℃]";
+	    }
+		else {	
+		  document.getElementById('profile_temperature').textContent = data.temp_prof + "[℃]";
+		}
+	  }
+	  else {	//焙煎中以外は現在温度のみ表示
+		 document.getElementById('roast_time').textContent = "--[秒]";
+		  document.getElementById('roast_temperature').textContent = data.temp + "[℃]";
+		  document.getElementById('profile_temperature').textContent = "--[℃]";
+	  }
 	  
-	  if (data.time >= 1800 - 1) {
+	  if (isRoasting == true && data.time >= 1800 - 1) {
 		sendStopCommand();
 	  }
   	}   
   	
 	else if ("msg" in data) {
-	  document.getElementById('roast_message').textContent = data.msg;
+	  if (isRoasting) {
+  		if (roastChart.data.datasets[0].data.length === 0) {
+
+		  document.getElementById('roast_message').textContent = "焙煎中";
+		}
+		else {
+		  document.getElementById('roast_message').textContent = data.msg;
+		}
+	  }
+	  else {
+		  //document.getElementById('roast_message').textContent = "焙煎停止中";
+	  }
 	}
     else if (data.id && pendingResponses.has(data.id)) {
     	pendingResponses.get(data.id)(data);
@@ -239,6 +264,7 @@ function sendProfileInBatches(profileData) {
           batchIndex++;
           if (batchIndex === totalBatches) {
             resolve(response); // 最後まで完了！
+		    document.getElementById('roast_message').textContent = "プロファイルをアップロードしました";
           } else {
             sendNextBatch(); // 次へ
           }
@@ -334,7 +360,7 @@ function addLiveDataPoint(chart, time, temp) {
         order: 10,
     backgroundColor: 'rgba(255, 66, 99, 0.8)',
     pointRadius: 3,       // 点の大きさ（デフォルトは3）
-    pointHoverRadius: 4   // ホバー時の大きさ
+    pointHoverRadius: 8   // ホバー時の大きさ
       });
     }
 
@@ -464,6 +490,8 @@ function downloadJSON() {
   a.download = "roast_profile.json";
   a.click();
   URL.revokeObjectURL(url);
+
+  document.getElementById('roast_message').textContent = "プロファイルを保存ドしました";
 }
 
 document.getElementById("fileInput").addEventListener("change", (event) => {
@@ -562,8 +590,9 @@ function initChart() {
 
 // グラデーション作成（縦方向）
 const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-gradient.addColorStop(0, 'rgba(100, 100, 100, 0.5)');
-gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+gradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
+gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
+gradient.addColorStop(1, 'rgba(0, 0, 0, 0.03)');
 
 roastChart = new Chart(ctx, {
   type: 'line',
@@ -579,7 +608,7 @@ roastChart = new Chart(ctx, {
       fill: true,
       order: 1,
       pointRadius: 2,
-      pointHoverRadius: 4
+      pointHoverRadius: 8
     }]
   },
   options: {
