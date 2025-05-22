@@ -1,8 +1,12 @@
-        const textarea = document.getElementById('profileMemo');
-        const popup = document.getElementById('popupTextarea');
-        const popupText = document.getElementById('popupText');
-        const closeButton = document.getElementById('closePopup');
-        const popupOverlay = document.getElementById('popupOverlay');
+const textarea = document.getElementById('profileMemo');
+const popup = document.getElementById('popupTextarea');
+const popupText = document.getElementById('popupText');
+const closeButton = document.getElementById('closePopup');
+const popupOverlay = document.getElementById('popupOverlay');
+
+let roastChart = null;
+let profData = null;
+let chart; // グローバルで持つ
 
 window.addEventListener('resize', () => {
   if (chart) {
@@ -542,8 +546,6 @@ document.getElementById("fileInput").addEventListener("change", (event) => {
 });
 
 
-let chart; // グローバルで持つ
-
 function getProfileDataFromTable() {
     const table = document.getElementById('profileTable');
     const rows = table.getElementsByTagName('tr');
@@ -564,8 +566,6 @@ function getProfileDataFromTable() {
 
     return profile;
 }
-
-let roastChart = null;
 
 function updateChartWithProfile(profileData) {
   if (!roastChart) return;
@@ -620,85 +620,111 @@ const verticalLinePlugin = {
 function initChart() {
   const ctx = document.getElementById('roastChart').getContext('2d');
 
-// グラデーション作成（縦方向）
-const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-gradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
-gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
-gradient.addColorStop(1, 'rgba(0, 0, 0, 0.03)');
-
-roastChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [{
-      label: '焙煎プロファイル',
-      data: [],
-      borderColor: 'rgba(100,100,100,0.5)',
-      backgroundColor: gradient, 
-      borderWidth: 1,
-      tension: 0.01,
-      fill: true,
-      order: 1,
-      pointRadius: 2,
-      pointHoverRadius: 8
-    }]
-  },
-  options: {
-    plugins: {
-      verticalLinePlugin: {
-        xValue: 0,	 // ←ここに現在の時間
-        color: 'rgba(0,0,100,0.3)'
-      }
-    },
-    responsive: true,
-    maintainAspectRatio: false, // レスポンシブとセットで大事！
-    scales: {
-      x: {
-        type: 'linear',
-        title: { display: true, text: '時間（秒）' },
-        min: 0,
-        max: 1800
+  // グラデーション作成（縦方向）
+  const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
+  gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.03)');
+  profData = getProfileDataFromTable();
+  // --- Chart.js初期化部分 (抜粋) ---
+  const roastChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: profData.map(p => p.time), // profileDataは既存のHTMLから取得する必要がある
+          datasets: [{
+              label: '設定温度',
+              data: profData.map(p => p.temp), // profileDataをロードしておく
+              borderColor: 'rgba(75, 192, 192, 1)',
+              fill: false,
+              tension: 0.2,
+              order: 20, // リアルタイム温度より下に表示
+              backgroundColor: 'rgba(75, 192, 192, 0.8)',
+              pointRadius: 0, // 設定温度は点なしでも良い
+              pointHoverRadius: 0
+          }, {
+              label: 'リアルタイム温度',
+              data: [], // ここを最初から空配列に
+              borderColor: 'rgba(255, 66, 99, 1)',
+              fill: false,
+              tension: 0.2,
+              order: 10,
+              backgroundColor: 'rgba(255, 66, 99, 0.8)',
+              pointRadius: 3,
+              pointHoverRadius: 8
+          }, {
+              // **RoR (Rate of Rise) データセットを追加**
+              label: 'RoR (Rate of Rise)',
+              data: [],
+              borderColor: 'rgba(255, 159, 64, 1)', // RoR用の色
+              backgroundColor: 'rgba(255, 159, 64, 0.5)',
+              fill: false,
+              tension: 0.2,
+              yAxisID: 'y1', // 別のY軸を使う
+              order: 5, // 一番上に表示
+              pointRadius: 3,
+              pointHoverRadius: 8
+          }]
       },
-      y: {
-        title: { display: true, text: '温度（℃）' },
-        min: 0,
-        max: 300
-      }
-    },
-    animations: {
-      //  '*:': {
-      //      duration: 0, // 全てのアニメーションを0ms (無効) に設定
-      //  },
-
-        scales: {
-            properties: ['x', 'y'], // x軸とy軸のスケール変化を対象にする
-            type: 'number', // 数値プロパティのアニメーション
-            easing: 'easeOutQuart', // アニメーションのイージング
-            duration: 500, // アニメーションの時間（例: 500ms）
-        },
-        y: { // y軸の値（データポイント）のアニメーション設定
-            properties: ['y'],
-            type: 'number',
-            duration: 0, // 0ms (無効)
-        },
-    },
-    transitions: {
-        active: {
-            animation: {
-                duration: 400, // ホバー時のアニメーションは400ms
-            }
-        },
-        // 'resize' (リサイズ時)
-        resize: {
-            animation: {
-                duration: 500, // リサイズアニメーションは500ms
-            }
-        }
-    },
-  },
-  plugins: [verticalLinePlugin]
-});
-
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false, // グローバルアニメーションをオフに
+          animations: {
+              '*:': { duration: 0 }, // 全てのアニメーションを0msに
+              scales: { // スケールのアニメーション
+                  properties: ['min', 'max'],
+                  duration: 500,
+                  easing: 'easeOutQuart'
+              }
+          },
+          transitions: { // デフォルトのトランジションも設定
+              'default': {
+                  animations: {
+                      scales: {
+                          properties: ['min', 'max'],
+                          duration: 500,
+                          easing: 'easeOutQuart'
+                      }
+                  }
+              }
+          },
+          scales: {
+              x: {
+                  type: 'linear', // 時間を数値として扱う
+                  position: 'bottom',
+                  title: { display: true, text: '経過時間 (秒)' },
+                  min: 0,
+                  max: 1800 // 30分
+              },
+              y: { // 左側のY軸（温度用）
+                  type: 'linear',
+                  position: 'left',
+                  title: { display: true, text: '温度 (°C)' },
+                  min: 0,
+                  max: 250
+              },
+              y1: { // **右側のY軸（RoR用）**
+                  type: 'linear',
+                  position: 'right',
+                  title: { display: true, text: 'RoR (°C/分)' },
+                  grid: { drawOnChartArea: false }, // メインのグリッド線を引かない
+                  min: 0,
+                  max: 30 // RoRの適切な最大値を設定
+              }
+          },
+          plugins: {
+              legend: { display: true },
+              verticalLinePlugin: { xValue: null } // カスタムプラグインの設定
+          },
+          // onComplete: drawHeatmapOverlay // ヒートマップは今回は不要、または描画を調整
+      },
+      plugins: [
+          // カスタムプラグインをここに登録
+          verticalLinePlugin, // 既存の縦線プラグイン
+          smartAIIndicatorPlugin // 追加するスマートAIインジケータープラグイン
+      ]
+  });
+  // --- Chart.js初期化部分 終了 ---
 }
 
 // ページ読み込み時に実行
@@ -739,3 +765,145 @@ function parseAlogManualScan(alogText, title = "未設定", memo = "") {
   };
 }
 
+// --- ここから追加するコード ---
+
+// SmartAIIndicator プラグイン
+const smartAIIndicatorPlugin = {
+    id: 'smartAIIndicator',
+    // グラフの描画後に実行されるフック
+    afterDraw(chart, args, options) {
+        const { ctx, chartArea, scales } = chart;
+        const profileDataset = chart.data.datasets[0]; // 設定温度プロファイル (roastData)
+        const liveTempDataset = chart.data.datasets[1]; // リアルタイム温度
+
+        // リアルタイムデータが存在しない、またはデータポイントが少なすぎる場合は何もしない
+        if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
+            return;
+        }
+
+        // 最新のリアルタイムデータポイントを取得
+        const latestLivePoint = liveTempDataset.data[liveTempDataset.data.length - 1];
+        const currentTime = latestLivePoint.x;
+        const currentTemp = latestLivePoint.y;
+
+        // 現在時間に対応する設定温度を補間して取得
+        const targetTemp = getInterpolatedProfileTemp(profileDataset.data, currentTime);
+
+        // targetTempがnullの場合も描画しない
+        if (targetTemp === null) {
+            return;
+        }
+
+        // 温度差を計算
+        const tempDifference = currentTemp - targetTemp; // 正なら設定より高い、負なら低い
+
+        // 円の色と半径を計算
+        const indicatorColor = getColorForTemperatureDifference(tempDifference);
+        const indicatorRadius = getRadiusForTemperatureDifference(tempDifference);
+
+        // --- 描画開始 ---
+        ctx.save(); // 現在の描画状態を保存
+
+        // Chart.jsの描画エリアの左上隅にCanvasの原点を移動
+        ctx.translate(chartArea.left, chartArea.top);
+
+        // 現在のデータポイントのピクセル座標（ChartArea内での相対座標）
+        const pixelX = scales.x.getPixelForValue(currentTime) - chartArea.left;
+        const pixelY = scales.y.getPixelForValue(currentTemp) - chartArea.top;
+
+        // 1. ヒートマップ円の描画
+        ctx.beginPath();
+        ctx.arc(pixelX, pixelY, indicatorRadius, 0, Math.PI * 2);
+        ctx.fillStyle = indicatorColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; // 白い枠線で目立たせる
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 2. 将来の矢印描画のためにtranslateを戻す（この時点では矢印は描かない）
+        // ctx.translate(-pixelX, -pixelY); // 矢印の原点移動を戻す
+
+        ctx.restore(); // 保存した描画状態を元に戻す（重要！）
+    }
+};
+
+// SmartAIIndicator プラグインをChart.jsに登録
+Chart.register(smartAIIndicatorPlugin);
+
+
+// --- ヘルパー関数 ---
+/**
+ * プロファイルデータから指定された時間における温度を線形補間して取得します。
+ * @param {Array<Object>} profileData - { x: time, y: temp } 形式のプロファイルデータ配列。
+ * @param {number} currentTime - 補間したい時間。
+ * @returns {number|null} 補間された温度、またはデータ不足の場合はnull。
+ */
+function getInterpolatedProfileTemp(profileData, currentTime) {
+    if (profileData.length === 0) return null;
+
+    // 現在時間がプロファイル開始前なら最初の温度
+    if (currentTime <= profileData[0].x) {
+        return profileData[0].y;
+    }
+    // 現在時間がプロファイル終了後なら最後の温度
+    if (currentTime >= profileData[profileData.length - 1].x) {
+        return profileData[profileData.length - 1].y;
+    }
+
+    // 線形補間
+    for (let i = 0; i < profileData.length - 1; i++) {
+        const p1 = profileData[i];
+        const p2 = profileData[i + 1];
+        if (currentTime >= p1.x && currentTime <= p2.x) {
+            const ratio = (currentTime - p1.x) / (p2.x - p1.x);
+            return p1.y + (p2.y - p1.y) * ratio;
+        }
+    }
+    return null; // 予期せぬエラー
+}
+
+/**
+ * 温度差に基づいてHSLカラーコードを生成します。
+ * 緑（G）が適温、正の差は赤（R）へ、負の差は青（B）へ近づきます。
+ * @param {number} tempDiff - リアルタイム温度と目標温度の差。
+ * @returns {string} HSLカラーコード文字列。
+ */
+function getColorForTemperatureDifference(tempDiff) {
+    const maxDiff = 10; // ±10度で色が大きく変化すると仮定 (調整可能)
+    const minDiff = -10;
+
+    // 差を-1から1の範囲に正規化
+    let normalizedDiff = (tempDiff - minDiff) / (maxDiff - minDiff);
+    normalizedDiff = Math.max(0, Math.min(1, normalizedDiff)); // 0から1にクランプ
+
+    // HSLの色相(Hue)を計算
+    // 0(赤) -- 120(緑) -- 240(青)
+    // 0.5（適温）が緑(120)、1（高温）が赤(0)、0（低温）が青(240) になるようにマッピング
+    // Hueは角度なので、円形に変化させる（例：240を起点に-120～+120の範囲で）
+    const hue = (1 - normalizedDiff) * 240; // 0が青(240)、0.5が緑(120)、1が赤(0)
+
+    // 彩度と明度を固定 (必要に応じて調整)
+    const saturation = '100%';
+    const lightness = '50%'; // 明るさ
+    
+    return `hsl(${hue.toFixed(0)}, ${saturation}, ${lightness})`;
+}
+
+/**
+ * 温度差に基づいて円の半径を計算します。
+ * 差の絶対値が大きいほど半径が大きくなります。
+ * @param {number} tempDiff - 温度差。
+ * @returns {number} 円の半径（ピクセル）。
+ */
+function getRadiusForTemperatureDifference(tempDiff) {
+    const absDiff = Math.abs(tempDiff);
+    const minRadius = 5;  // 適温時の最小半径
+    const maxRadius = 20; // 最大乖離時の最大半径
+    const diffScale = 5;  // この値で乖離の大きさが半径に与える影響を調整
+
+    // 差が小さいときは最小半径、差が大きいほど最大半径に近づく
+    // 線形に増加させる
+    return Math.min(maxRadius, minRadius + (absDiff / diffScale) * (maxRadius - minRadius));
+}
+
+// --- ここまで追加するコード ---
