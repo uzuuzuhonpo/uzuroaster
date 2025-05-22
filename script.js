@@ -77,39 +77,39 @@ socket.onclose = () => {
 	};
 socket.onmessage = (event) => {
   try {
+    
     const data = JSON.parse(event.data);
     if ("time" in data && "temp" in data && "temp_prof" in data) {
-	  if (data.time > -1 && isRoasting) {
-		 addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
-		 document.getElementById('roast_time').textContent = data.time + "[秒]";
-		  document.getElementById('roast_temperature').textContent = data.temp + "[℃]";
-		 if (roastChart.data.datasets[0].data.length === 0) {
-		   document.getElementById('profile_temperature').textContent = "--[℃]";
-	    }
-		else {	
-		  document.getElementById('profile_temperature').textContent = data.temp_prof + "[℃]";
-		}
+      if (data.time > -1 && isRoasting) {
+        addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
+        document.getElementById('roast_time').textContent = data.time + "[秒]";
+        document.getElementById('roast_temperature').textContent = data.temp.toFixed(1) + "[℃]";
+      if (roastChart.data.datasets[0].data.length === 0) {
+        document.getElementById('profile_temperature').textContent = "--[℃]";
+        }
+      else {	
+        document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+      }
 	  }
 	  else {	//焙煎中以外は現在温度のみ表示
-		 document.getElementById('roast_time').textContent = "--[秒]";
-		  document.getElementById('roast_temperature').textContent = data.temp + "[℃]";
+		  document.getElementById('roast_time').textContent = "--[秒]";
+		  document.getElementById('roast_temperature').textContent = data.temp.toFixed(1) + "[℃]";
 		  document.getElementById('profile_temperature').textContent = "--[℃]";
 	  }
 	  
 	  if (isRoasting == true && data.time >= 1800 - 1) {
-		sendStopCommand();
+		  sendStopCommand();
 	  }
   	}   
   	
 	else if ("msg" in data) {
 	  if (isRoasting) {
   		if (roastChart.data.datasets[0].data.length === 0) {
-
-		  document.getElementById('roast_message').textContent = "焙煎中";
-		}
-		else {
-		  document.getElementById('roast_message').textContent = data.msg;
-		}
+		    document.getElementById('roast_message').textContent = "焙煎中";
+		  }
+		  else {
+        document.getElementById('roast_message').textContent = data.msg;
+      }
 	  }
 	  else {
 		  //document.getElementById('roast_message').textContent = "焙煎停止中";
@@ -347,26 +347,28 @@ function hideUploadOverlay() {
 function addLiveDataPoint(chart, time, temp) {
   if (typeof time === 'number' && typeof temp === 'number') {
     const newPoint = { x: time, y: temp };
-      console.log("data:", time, temp);
+    console.log("data:", time, temp);
 
     // 直接 datasets[1].data に push（liveData 経由じゃなく）
     if (chart.data.datasets.length < 2) {
-      chart.data.datasets.push({
-        label: 'リアルタイム温度',
-        data: [], // ここを最初から空配列に
-        borderColor: 'rgba(255, 66, 99, 1)',
-        fill: false,
-        tension: 0.2,
-        order: 10,
-    backgroundColor: 'rgba(255, 66, 99, 0.8)',
-    pointRadius: 3,       // 点の大きさ（デフォルトは3）
-    pointHoverRadius: 8   // ホバー時の大きさ
-      });
+        chart.data.datasets.push({
+          label: 'リアルタイム温度',
+          data: [], // ここを最初から空配列に
+          borderColor: 'rgba(255, 66, 99, 1)',
+          fill: false,
+          tension: 0.2,
+          order: 10,
+          backgroundColor: 'rgba(255, 66, 99, 0.8)',
+          pointRadius: 3,       // 点の大きさ（デフォルトは3）
+          pointHoverRadius: 8   // ホバー時の大きさ
+        });
     }
 
-	chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
+    chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
     chart.data.datasets[1].data.push(newPoint);
-    chart.update('none'); // ← 'none' にするとアニメーションもカット
+
+    AutoChartWidthAdjustment(roastChart, 0); // 最大値+1で表示範囲を調整
+    chart.update(); // ← 'none' にするとアニメーションもカット
   }
 }
 
@@ -497,33 +499,45 @@ function downloadJSON() {
 document.getElementById("fileInput").addEventListener("change", (event) => {
   const file = event.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const json = JSON.parse(e.target.result);
-      if (!Array.isArray(json.profile)) throw "Invalid format";
+      let result;
 
-         // タイトルとメモを反映
-          document.getElementById("profileTitle").value = json.title || "";
-          document.getElementById("profileMemo").value = json.memo || "";
+      // ファイル拡張子で判定（.alogか.jsonか）
+      if (file.name.endsWith(".alog")) {
+        // alog形式 → JSON変換
+        const alogText = e.target.result;
+        result = parseAlogManualScan(alogText, "", "");
+      } else {
+        // 通常のJSONパース
+        result = JSON.parse(e.target.result);
+        if (!Array.isArray(result.profile)) throw "Invalid format";
+      }
+
+      // タイトルとメモを反映
+      document.getElementById("profileTitle").value = result.title || "";
+      document.getElementById("profileMemo").value = result.memo || "";
 
       // テーブル初期化
       const table = document.getElementById('profileTable');
       while (table.rows.length > 1) table.deleteRow(1);
 
-      json.profile.forEach(entry => {
+      result.profile.forEach(entry => {
         addRow(entry.time, entry.temp);
       });
-      
-        sortTable();
-	 	updateChartWithProfile(getProfileDataFromTable());
-	 	  event.target.value = "";	// 同じファイルを選んでもイベント発火するように
-	 	  sendCurrentProfile();
+
+      sortTable();
+      updateChartWithProfile(getProfileDataFromTable());
+      event.target.value = ""; // 同じファイルでもイベント発火させるため
+      sendCurrentProfile();
 
     } catch (err) {
-      alert("JSONの読み込みに失敗しました: " + err);
+      alert("プロファイル読み込みに失敗しました: " + err);
     }
   };
+
   reader.readAsText(file);
 });
 
@@ -561,7 +575,25 @@ function updateChartWithProfile(profileData) {
 
   roastChart.data.labels = times;
   roastChart.data.datasets[0].data = temps;
+  AutoChartWidthAdjustment(roastChart, 0); // 最大値+1で表示範囲を調整
   roastChart.update();
+}
+
+function AutoChartWidthAdjustment(chart, minTime, maxTime = 1800) {
+  let x = 0;
+  let x1 = 0;
+  let profile = getProfileDataFromTable();
+  if (profile.length > 0) {
+    x = profile[profile.length - 1].time;
+  } 
+  if (chart.data.datasets[1]) {
+    x1 = chart.data.datasets[1].data[chart.data.datasets[1].data.length - 1].x;
+  }
+  //const total = Math.min(Math.floor(((x + x1) / 300)) * 300 + 300, 1800);
+  const total = Math.min(x + x1 + 200, 1800);
+
+  chart.options.scales.x.min = minTime;
+  chart.options.scales.x.max = total;
 }
 
 const verticalLinePlugin = {
@@ -619,6 +651,7 @@ roastChart = new Chart(ctx, {
       }
     },
     responsive: true,
+    maintainAspectRatio: false, // レスポンシブとセットで大事！
     scales: {
       x: {
         type: 'linear',
@@ -631,7 +664,37 @@ roastChart = new Chart(ctx, {
         min: 0,
         max: 300
       }
-    }
+    },
+    animations: {
+      //  '*:': {
+      //      duration: 0, // 全てのアニメーションを0ms (無効) に設定
+      //  },
+
+        scales: {
+            properties: ['x', 'y'], // x軸とy軸のスケール変化を対象にする
+            type: 'number', // 数値プロパティのアニメーション
+            easing: 'easeOutQuart', // アニメーションのイージング
+            duration: 500, // アニメーションの時間（例: 500ms）
+        },
+        y: { // y軸の値（データポイント）のアニメーション設定
+            properties: ['y'],
+            type: 'number',
+            duration: 0, // 0ms (無効)
+        },
+    },
+    transitions: {
+        active: {
+            animation: {
+                duration: 400, // ホバー時のアニメーションは400ms
+            }
+        },
+        // 'resize' (リサイズ時)
+        resize: {
+            animation: {
+                duration: 500, // リサイズアニメーションは500ms
+            }
+        }
+    },
   },
   plugins: [verticalLinePlugin]
 });
@@ -642,8 +705,37 @@ roastChart = new Chart(ctx, {
 window.addEventListener('DOMContentLoaded', () => {
   initChart();
   document.getElementById('stop-button').disabled = true;
-
+  roastChart.resize();
 });
 
+function parseAlogManualScan(alogText, title = "未設定", memo = "") {
+  function extractArray(key) {
+    const pattern = new RegExp(`'${key}'\\s*:\\s*\\[(.*?)\\]`, 's');
+    const match = alogText.match(pattern);
+    if (!match) return [];
+    return match[1]
+      .split(',')
+      .map(s => parseFloat(s.trim()))
+      .filter(v => !isNaN(v));
+  }
 
+  const timexArray = extractArray("timex");
+  const temp1Array = extractArray("temp1");
+  const length = Math.min(timexArray.length, temp1Array.length, 1799);
+
+  const profile = [];
+  for (let i = 0; i < length; i++) {
+    profile.push({
+      time: Math.round(timexArray[i]),
+      temp: Math.round(temp1Array[i] * 10) / 10
+    });
+  }
+
+  return {
+    type: "roast_profile",
+    title: title,
+    memo: memo,
+    profile: profile
+  };
+}
 
