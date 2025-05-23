@@ -5,14 +5,10 @@ const closeButton = document.getElementById('closePopup');
 const popupOverlay = document.getElementById('popupOverlay');
 
 let roastChart = null;
-let profData = null;
-let chart; // グローバルで持つ
 
 window.addEventListener('resize', () => {
-  if (chart) {
-    setTimeout(() => {
-    	chart.resize();
-    },50);
+  if (roastChart) {
+    roastChart.resize();
   }
 });
 
@@ -371,7 +367,7 @@ function addLiveDataPoint(chart, time, temp) {
     chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
     chart.data.datasets[1].data.push(newPoint);
 
-    AutoChartWidthAdjustment(roastChart, 0); // 最大値+1で表示範囲を調整
+    AutoChartWidthAdjustment(chart, 0); // 最大値+1で表示範囲を調整
     chart.update(); // ← 'none' にするとアニメーションもカット
   }
 }
@@ -586,7 +582,7 @@ function AutoChartWidthAdjustment(chart, minTime, maxTime = 1800) {
   if (profile.length > 0) {
     x = profile[profile.length - 1].time;
   } 
-  if (chart.data.datasets[1]) {
+  if (chart.data.datasets[1] && chart.data.datasets[1].data.length > 0) { 
     x1 = chart.data.datasets[1].data[chart.data.datasets[1].data.length - 1].x;
   }
   //const total = Math.min(Math.floor(((x + x1) / 300)) * 300 + 300, 1800);
@@ -610,7 +606,7 @@ const verticalLinePlugin = {
     ctx.moveTo(xPos, top);
     ctx.lineTo(xPos, bottom);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = options.color || 'red';
+    ctx.strokeStyle = options.color || 'rgba(0,0,100,0.3)';
     ctx.stroke();
     ctx.restore();
   }
@@ -625,22 +621,22 @@ function initChart() {
   gradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
   gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.1)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0.03)');
-  profData = getProfileDataFromTable();
   // --- Chart.js初期化部分 (抜粋) ---
-  const roastChart = new Chart(ctx, {
+  roastChart = new Chart(ctx, {
       type: 'line',
       data: {
-          labels: profData.map(p => p.time), // profileDataは既存のHTMLから取得する必要がある
+          labels: [], // profileDataは既存のHTMLから取得する必要がある
           datasets: [{
-              label: '設定温度',
-              data: profData.map(p => p.temp), // profileDataをロードしておく
-              borderColor: 'rgba(75, 192, 192, 1)',
-              fill: false,
-              tension: 0.2,
+              label: '焙煎プロファイル温度',
+              data: [],
+              borderColor: 'rgba(80,80,80,0.4)',
+              fill: true,
+              tension: 0.01,
               order: 20, // リアルタイム温度より下に表示
-              backgroundColor: 'rgba(75, 192, 192, 0.8)',
-              pointRadius: 0, // 設定温度は点なしでも良い
-              pointHoverRadius: 0
+              backgroundColor: gradient, 
+              borderWidth: 1,
+              pointRadius: 2, 
+              pointHoverRadius: 8
           }, {
               label: 'リアルタイム温度',
               data: [], // ここを最初から空配列に
@@ -668,23 +664,29 @@ function initChart() {
       options: {
           responsive: true,
           maintainAspectRatio: false,
-          animation: false, // グローバルアニメーションをオフに
           animations: {
-              '*:': { duration: 0 }, // 全てのアニメーションを0msに
-              scales: { // スケールのアニメーション
-                  properties: ['min', 'max'],
-                  duration: 500,
-                  easing: 'easeOutQuart'
-              }
+            scales: {
+                properties: ['x', 'y'], // x軸とy軸のスケール変化を対象にする
+                type: 'number', // 数値プロパティのアニメーション
+                easing: 'easeOutQuart', // アニメーションのイージング
+                duration: 500, // アニメーションの時間（例: 500ms）
+            },
+            y: { // y軸の値（データポイント）のアニメーション設定
+                properties: ['y'],
+                type: 'number',
+                duration: 0, // 0ms (無効)
+            },
           },
-          transitions: { // デフォルトのトランジションも設定
-              'default': {
-                  animations: {
-                      scales: {
-                          properties: ['min', 'max'],
-                          duration: 500,
-                          easing: 'easeOutQuart'
-                      }
+          transitions: {
+              active: {
+                  animation: {
+                      duration: 400, // ホバー時のアニメーションは400ms
+                  }
+              },
+              // 'resize' (リサイズ時)
+              resize: {
+                  animation: {
+                      duration: 500, // リサイズアニメーションは500ms
                   }
               }
           },
@@ -701,7 +703,7 @@ function initChart() {
                   position: 'left',
                   title: { display: true, text: '温度 (°C)' },
                   min: 0,
-                  max: 250
+                  max: 300
               },
               y1: { // **右側のY軸（RoR用）**
                   type: 'linear',
@@ -787,7 +789,7 @@ const smartAIIndicatorPlugin = {
         const currentTemp = latestLivePoint.y;
 
         // 現在時間に対応する設定温度を補間して取得
-        const targetTemp = getInterpolatedProfileTemp(profileDataset.data, currentTime);
+        const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
 
         // targetTempがnullの場合も描画しない
         if (targetTemp === null) {
@@ -816,8 +818,10 @@ const smartAIIndicatorPlugin = {
         ctx.arc(pixelX, pixelY, indicatorRadius, 0, Math.PI * 2);
         ctx.fillStyle = indicatorColor;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; // 白い枠線で目立たせる
-        ctx.lineWidth = 2;
+        const strokeRadius = indicatorRadius;//indicatorRadius + radi / 2;
+        ctx.arc(pixelX, pixelY, strokeRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = setHslaAlpha(indicatorColor, 0.2);
+        ctx.lineWidth = indicatorRadius * 1.05;
         ctx.stroke();
 
         // 2. 将来の矢印描画のためにtranslateを戻す（この時点では矢印は描かない）
@@ -842,21 +846,21 @@ function getInterpolatedProfileTemp(profileData, currentTime) {
     if (profileData.length === 0) return null;
 
     // 現在時間がプロファイル開始前なら最初の温度
-    if (currentTime <= profileData[0].x) {
-        return profileData[0].y;
+    if (currentTime <= profileData[0].time) {
+        return profileData[0].temp;
     }
     // 現在時間がプロファイル終了後なら最後の温度
-    if (currentTime >= profileData[profileData.length - 1].x) {
-        return profileData[profileData.length - 1].y;
+    if (currentTime >= profileData[profileData.length - 1].time) {
+        return profileData[profileData.length - 1].temp;
     }
 
     // 線形補間
     for (let i = 0; i < profileData.length - 1; i++) {
         const p1 = profileData[i];
         const p2 = profileData[i + 1];
-        if (currentTime >= p1.x && currentTime <= p2.x) {
-            const ratio = (currentTime - p1.x) / (p2.x - p1.x);
-            return p1.y + (p2.y - p1.y) * ratio;
+        if (currentTime >= p1.time && currentTime <= p2.time) {
+            const ratio = (currentTime - p1.time) / (p2.time - p1.time);
+            return p1.temp + (p2.temp - p1.temp) * ratio;
         }
     }
     return null; // 予期せぬエラー
@@ -869,8 +873,8 @@ function getInterpolatedProfileTemp(profileData, currentTime) {
  * @returns {string} HSLカラーコード文字列。
  */
 function getColorForTemperatureDifference(tempDiff) {
-    const maxDiff = 10; // ±10度で色が大きく変化すると仮定 (調整可能)
-    const minDiff = -10;
+    const maxDiff = 20; // ±10度で色が大きく変化すると仮定 (調整可能)
+    const minDiff = -20;
 
     // 差を-1から1の範囲に正規化
     let normalizedDiff = (tempDiff - minDiff) / (maxDiff - minDiff);
@@ -886,7 +890,33 @@ function getColorForTemperatureDifference(tempDiff) {
     const saturation = '100%';
     const lightness = '50%'; // 明るさ
     
-    return `hsl(${hue.toFixed(0)}, ${saturation}, ${lightness})`;
+    return `hsl(${hue.toFixed(0)}, ${saturation}, ${lightness}, 0.6)`;
+}
+
+/**
+ * hsl() または hsla() カラーコード文字列の透明度 (アルファ値) を変更します。
+ * 既存のアルファ値があれば上書きし、なければ新たにアルファ値を追加します。
+ *
+ * @param {string} hslColorString - 変更したい 'hsl(...)' または 'hsla(...)' 形式の文字列。
+ * @param {number} newAlpha - 設定したい新しい透明度 (0.0 から 1.0 の範囲)。
+ * @returns {string} 新しい 'hsla(...)' 形式の文字列。
+ */
+function setHslaAlpha(hslColorString, newAlpha) {
+    // 正規表現で hsl() または hsla() の括弧内の値 (H, S, L, [A]) を抽出
+    const match = hslColorString.match(/hsla?\((\d+),\s*([\d.]+%?),\s*([\d.]+%?)(?:,\s*([\d.]+))?\)/);
+
+    if (!match) {
+        console.error("Invalid HSL/HSLA color string format:", hslColorString);
+        return hslColorString; // 無効なフォーマットの場合は元の文字列を返す
+    }
+
+    // 抽出した値を変数に格納
+    const hue = match[1];
+    const saturation = match[2];
+    const lightness = match[3];
+
+    // 新しいアルファ値で hsla() 文字列を構築
+    return `hsla(${hue}, ${saturation}, ${lightness}, ${newAlpha})`;
 }
 
 /**
@@ -899,7 +929,7 @@ function getRadiusForTemperatureDifference(tempDiff) {
     const absDiff = Math.abs(tempDiff);
     const minRadius = 5;  // 適温時の最小半径
     const maxRadius = 20; // 最大乖離時の最大半径
-    const diffScale = 5;  // この値で乖離の大きさが半径に与える影響を調整
+    const diffScale = 20;  // この値で乖離の大きさが半径に与える影響を調整
 
     // 差が小さいときは最小半径、差が大きいほど最大半径に近づく
     // 線形に増加させる
