@@ -5,6 +5,8 @@ const closeButton = document.getElementById('closePopup');
 const popupOverlay = document.getElementById('popupOverlay');
 
 let roastChart = null;
+const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
+const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
 
 window.addEventListener('resize', () => {
   if (roastChart) {
@@ -165,15 +167,12 @@ function sendSafe(data) {
 }
 
 function sendStartCommand() {
-  	roastChart.destroy();
-	initChart();
+  LiveData = [];
 	sortTable();
-	updateChartWithProfile(getProfileDataFromTable());
-   const id = generateUniqueId(); // 一意なIDをつける
+  const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "start", id: id  };
   sendSafe(message);
   console.log("スタートコマンド送信");
-  SetRoastingState(true);
 
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -187,11 +186,15 @@ function sendStartCommand() {
       clearTimeout(timeout);
       if (response.status === "ok") {
         console.log("焙煎スタートACK受信", response);
+        roastChart.destroy();
+        initChart();
+	      updateChartWithProfile(getProfileDataFromTable());
+        SetRoastingState(true);
         resolve(response);
       } 
       else {
         alert("焙煎スタートに失敗しました。\nWiFi接続を確認してください。\nスタート失敗:" + response.message);
-  		SetRoastingState(false);
+  		  SetRoastingState(false);
         reject(new Error("スタート失敗: " + response.message));
       }
     });
@@ -287,7 +290,7 @@ function sendCurrentProfile() {
     return;
   }
 
- showUploadOverlay();
+  showUploadOverlay();
  
   const converted = profileData.map(p => ({
     x: Math.round(p.time),
@@ -296,12 +299,16 @@ function sendCurrentProfile() {
 
   sendProfileInBatches(converted)
     .then(() => {
-         hideUploadOverlay(); // 成功
-		})
+      hideUploadOverlay(); // 成功
+      roastChart.data.datasets[0].borderColor = active_profile_color
+      roastChart.update();
+    })
     .catch(err => {
-        hideUploadOverlay(); 
-		alert("\nWiFi接続、うずロースターの電源を確認してください。\nアップロード失敗: " + err.message);
-		});
+      hideUploadOverlay(); 
+		  alert("\nWiFi接続、うずロースターの電源を確認してください。\nアップロード失敗: " + err.message);
+      roastChart.data.datasets[0].borderColor = profile_color;
+      roastChart.update();
+	});
 }
 
 function overwriteTableWithLastRoast() {
@@ -320,7 +327,7 @@ function overwriteTableWithLastRoast() {
     table.deleteRow(1);
   }
   
-  // リアルタイムデータをテーブルに追加
+    // リアルタイムデータをテーブルに追加
   realTimeData.forEach(point => {
     // データポイントは{x: time, y: temp}形式
     addRow(point.x, point.y);
@@ -344,29 +351,22 @@ function hideUploadOverlay() {
   document.getElementById("uploadOverlay").style.display = "none";
 }
 
+let LiveData = [];
 function addLiveDataPoint(chart, time, temp) {
   if (typeof time === 'number' && typeof temp === 'number') {
     const newPoint = { x: time, y: temp };
     console.log("data:", time, temp);
+    LiveData.push(newPoint);
 
-    // 直接 datasets[1].data に push（liveData 経由じゃなく）
-    if (chart.data.datasets.length < 2) {
-        chart.data.datasets.push({
-          label: 'リアルタイム温度',
-          data: [], // ここを最初から空配列に
-          borderColor: 'rgba(255, 66, 99, 1)',
-          fill: false,
-          tension: 0.2,
-          order: 10,
-          backgroundColor: 'rgba(255, 66, 99, 0.8)',
-          pointRadius: 3,       // 点の大きさ（デフォルトは3）
-          pointHoverRadius: 8   // ホバー時の大きさ
-        });
+    chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸
+    let lastPoint = { x: 0, y: 0 };
+    if (LiveData.length > 1) {
+      lastPoint = LiveData[LiveData.length - 1];
     }
-
-    chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸 
+    else {
+      lastPoint = newPoint;
+    }
     chart.data.datasets[1].data.push(newPoint);
-
     AutoChartWidthAdjustment(chart, 0); // 最大値+1で表示範囲を調整
     chart.update(); // ← 'none' にするとアニメーションもカット
   }
@@ -380,9 +380,26 @@ function addRow(time = '', temp = '') {
   const tempCell = row.insertCell(1);
   const deleteCell = row.insertCell(2);
 
-  timeCell.innerHTML = `<input type="number" value="${time}" oninput="this.value = Math.max( 0, Math.min( this.value, 1799 ) )">`;
-  tempCell.innerHTML = `<input type="number" value="${temp}" oninput="this.value = Math.max( 0, Math.min( this.value, 300 ) )">`;
+  timeCell.innerHTML = `<input type="number" value="${time}" min="0" max="1799" oninput="validateInput(this, 0, 1799)">`;
+  tempCell.innerHTML = `<input type="number" value="${temp}" min="0" max="260" oninput="validateInput(this, 0, 260)">`;
   deleteCell.innerHTML = `<button onclick="this.parentNode.parentNode.remove()">🗑</button>`;
+}
+
+function validateInput(input, min, max) {
+  let value = parseFloat(input.value);
+  
+  // 数値でない場合は空文字にする
+  if (isNaN(value)) {
+    input.value = '';
+    return;
+  }
+  
+  // 範囲外の場合は制限する
+  if (value < min) {
+    input.value = min.toString();
+  } else if (value > max) {
+    input.value = max.toString();
+  }
 }
 
 function sortTable() {
@@ -398,7 +415,7 @@ function sortTable() {
     if (time < 0) time = 0;
     else if (time > 1800 - 1) time = 1800 - 1;
     if (temp < 0) temp = 0;
-    else if (temp > 300) temp = 300;
+    else if (temp > 260) temp = 260;
     
     if (!isNaN(time) && !isNaN(temp)) {
       latestEntries.set(time, { time, temp });
@@ -415,15 +432,7 @@ function sortTable() {
 
   // テーブル再描画（削除ボタン付き）
   sorted.forEach(({ time, temp }) => {
-    const row = table.insertRow();
-    const timeCell = row.insertCell(0);
-    const tempCell = row.insertCell(1);
-    const deleteCell = row.insertCell(2);
-
-    timeCell.innerHTML = `<input type="number" value="${time}" />`;
-    tempCell.innerHTML = `<input type="number" value="${temp}" />`;
-    const deleteBtn = createDeleteButton();
-	deleteCell.appendChild(deleteBtn);
+    addRow(time, temp);
   });
 }
 
@@ -629,7 +638,7 @@ function initChart() {
           datasets: [{
               label: '焙煎プロファイル温度',
               data: [],
-              borderColor: 'rgba(80,80,80,0.4)',
+              borderColor: active_profile_color,
               fill: true,
               tension: 0.01,
               order: 20, // リアルタイム温度より下に表示
@@ -703,7 +712,7 @@ function initChart() {
                   position: 'left',
                   title: { display: true, text: '温度 (°C)' },
                   min: 0,
-                  max: 300
+                  max: 260
               },
               y1: { // **右側のY軸（RoR用）**
                   type: 'linear',
@@ -767,10 +776,115 @@ function parseAlogManualScan(alogText, title = "未設定", memo = "") {
   };
 }
 
-// --- ここから追加するコード ---
-
 // SmartAIIndicator プラグイン
 const smartAIIndicatorPlugin = {
+    id: 'smartAIIndicator',
+    afterDraw(chart, args, options) {
+        const { ctx, chartArea, scales } = chart;
+        const profileDataset = chart.data.datasets[0]; // 設定温度プロファイル
+        const liveTempDataset = chart.data.datasets[1]; // リアルタイム温度
+        const rorDataset = chart.data.datasets[2]; // RoRデータセット
+
+        if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
+            return;
+        }
+
+        // const heatmapCanvas = document.getElementById("heatmap");
+        // heatmapCanvas.width = chart.width;
+        // heatmapCanvas.height = chart.height;
+
+        const heatmapCtx = ctx; //heatmapCanvas.getContext('2d');
+        //heatmapCtx.clearRect(0, 0, chart.width, chart.height); //heatmapCanvas.width, heatmapCtx.height);
+
+        heatmapCtx.save();
+        heatmapCtx.translate(chartArea.left, chartArea.top);
+
+        const latestLivePoint = liveTempDataset.data[liveTempDataset.data.length - 1];
+        const currentTime = latestLivePoint.x;
+        const currentTemp = latestLivePoint.y;
+
+        const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
+        const targetRoR = getInterpolatedProfileRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
+        const currentRoR = calculateCurrentRoR(liveTempDataset.data, 30); // 現在のRoRを取得
+        const acceleration = calculateAcceleration(liveTempDataset.data, 30, 60); // 加速度を取得
+
+        // if (targetTemp === null || targetRoR === null) {
+        //     heatmapCtx.restore();
+        //     return;
+        // }
+
+        const tempDifference = currentTemp - targetTemp;
+        const indicatorColor = getColorForTemperatureDifference(tempDifference); // ここで透明度を調整しない
+        const indicatorRadius = getRadiusForTemperatureDifference(tempDifference);
+
+        const pixelX = scales.x.getPixelForValue(currentTime) - chartArea.left;
+        const pixelY = scales.y.getPixelForValue(currentTemp) - chartArea.top;
+
+        // 1. ヒートマップ円の描画
+        ctx.beginPath();
+        ctx.arc(pixelX, pixelY, indicatorRadius, 0, Math.PI * 2);
+        ctx.fillStyle = indicatorColor;
+        ctx.fill();
+        const strokeRadius = indicatorRadius;//indicatorRadius + radi / 2;
+        ctx.arc(pixelX, pixelY, strokeRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = setHslaAlpha(indicatorColor, 0.2);
+        ctx.lineWidth = indicatorRadius * 1.05;
+        ctx.stroke();
+
+        // 2. 将来の矢印描画のためにtranslateを戻す（この時点では矢印は描かない）
+        // ctx.translate(-pixelX, -pixelY); // 矢印の原点移動を戻す
+
+        ctx.restore(); // 保存した描画状態を元に戻す（重要！）
+
+
+
+        // --- 矢印の描画 ---
+        const { length: arrowLength, angle: arrowAngle } = calculateArrowVector(
+            currentTemp, targetTemp, currentRoR, targetRoR, acceleration
+        );
+
+        heatmapCtx.beginPath();
+        // 矢印の開始点を円の中心、または円の端から少し離す（調整可能）
+        const arrowStartOffset = indicatorRadius + 5; // 円の外側から少し離す
+        
+        // 矢印の始点 (円の中心からの相対位置)
+        // 角度0度が右なので、cos(angle) がX、sin(angle) がY
+        const startX = pixelX + Math.cos(arrowAngle) * arrowStartOffset;
+        const startY = pixelY + Math.sin(arrowAngle) * arrowStartOffset;
+
+        // 矢印の終点
+        const endX = pixelX + Math.cos(arrowAngle) * (arrowStartOffset + arrowLength);
+        const endY = pixelY + Math.sin(arrowAngle) * (arrowStartOffset + arrowLength);
+
+        heatmapCtx.moveTo(startX, startY);
+        heatmapCtx.lineTo(endX, endY);
+
+        // 矢印の羽根（ヘッド）
+        const headLength = 10; // 羽根の長さ
+        const headAngle = Math.PI / 6; // 羽根の開き角度 (30度)
+
+        // 終点から羽根の始点を計算
+        heatmapCtx.lineTo(
+            endX - headLength * Math.cos(arrowAngle - headAngle),
+            endY - headLength * Math.sin(arrowAngle - headAngle)
+        );
+        heatmapCtx.moveTo(endX, endY); // もう一度終点に戻る
+        heatmapCtx.lineTo(
+            endX - headLength * Math.cos(arrowAngle + headAngle),
+            endY - headLength * Math.sin(arrowAngle + headAngle)
+        );
+
+        heatmapCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; // 矢印の色 (黒、少し透明)
+        heatmapCtx.lineWidth = 2; // 矢印の線幅
+        heatmapCtx.stroke();
+        // --- 矢印の描画 終了 ---
+
+        heatmapCtx.restore();
+    }
+};
+
+// SmartAIIndicator プラグイン
+const smartAIIndicatorPlugin2 = {
     id: 'smartAIIndicator',
     // グラフの描画後に実行されるフック
     afterDraw(chart, args, options) {
@@ -936,4 +1050,204 @@ function getRadiusForTemperatureDifference(tempDiff) {
     return Math.min(maxRadius, minRadius + (absDiff / diffScale) * (maxRadius - minRadius));
 }
 
-// --- ここまで追加するコード ---
+/**
+ * プロファイルデータから指定された時間における目標RoRを線形補間して取得します。
+ * これはプロファイル曲線のその点での傾きに相当します。
+ * @param {Array<Object>} profileData - { x: time, y: temp } 形式のプロファイルデータ配列。
+ * @param {number} currentTime - 補間したい時間。
+ * @returns {number|null} 補間されたRoR (°C/min)、またはデータ不足の場合はnull。
+ */
+function getInterpolatedProfileRoR(profileData, currentTime) {
+    if (profileData.length < 2) return null;
+
+    // 現在時間がプロファイル開始前なら最初のRoR (または0)
+    if (currentTime <= profileData[0].x) {
+        // 最初の2点間のRoRを返すか、初期RoRとして定義された値を返す
+        const p1 = profileData[0];
+        const p2 = profileData[1];
+        const dt = p2.x - p1.x;
+        const dT = p2.y - p1.y;
+        return dt > 0 ? (dT / dt) * 60 : 0;
+    }
+    // 現在時間がプロファイル終了後なら最後のRoR
+    if (currentTime >= profileData[profileData.length - 1].x) {
+        const p1 = profileData[profileData.length - 2];
+        const p2 = profileData[profileData.length - 1];
+        const dt = p2.x - p1.x;
+        const dT = p2.y - p1.y;
+        return dt > 0 ? (dT / dt) * 60 : 0;
+    }
+
+    // 線形補間して、その点での傾きを計算
+    for (let i = 0; i < profileData.length - 1; i++) {
+        const p1 = profileData[i];
+        const p2 = profileData[i + 1];
+        if (currentTime >= p1.x && currentTime <= p2.x) {
+            // 現在の時間がこの区間にある場合、この区間の傾きが目標RoR
+            const dt = p2.x - p1.x;
+            const dT = p2.y - p1.y;
+            return dt > 0 ? (dT / dt) * 60 : 0; // °C/min に変換
+        }
+    }
+    return null;
+}
+
+/**
+ * リアルタイム温度データから現在のRoRを計算します。
+ * (例: 直近30秒間の平均RoR)
+ * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
+ * @param {number} periodSeconds - RoR計算に使う期間（秒）。
+ * @returns {number} 現在のRoR (°C/min)。データ不足の場合は0。
+ */
+function calculateCurrentRoR(liveData, periodSeconds = 30) {
+    if (liveData.length < 2) return 0;
+
+    const currentPoint = liveData[liveData.length - 1];
+    let pastPoint = null;
+
+    // periodSeconds 前のデータポイントを探す
+    for (let i = liveData.length - 2; i >= 0; i--) {
+        if (currentPoint.x - liveData[i].x >= periodSeconds) {
+            pastPoint = liveData[i];
+            break;
+        }
+    }
+
+    if (!pastPoint) { // 十分な過去データがない場合は、利用可能な最新2点を使う
+        pastPoint = liveData[0];
+    }
+
+    const timeElapsed = currentPoint.x - pastPoint.x;
+    const tempChange = currentPoint.y - pastPoint.y;
+
+    return timeElapsed > 0 ? (tempChange / timeElapsed) * 60 : 0; // °C/min
+}
+
+/**
+ * リアルタイム温度データから加速度を計算します。
+ * (RoRのRoR、つまりRoRの変化率)
+ * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
+ * @param {number} rorPeriodSeconds - RoR計算に使う期間（秒）。
+ * @param {number} accelerationPeriodSeconds - 加速度計算に使うRoRの期間（秒）。
+ * @returns {number} 加速度 (°C/min^2)。データ不足の場合は0。
+ */
+function calculateAcceleration(liveData, rorPeriodSeconds = 30, accelerationPeriodSeconds = 60) {
+    if (liveData.length < 3) return 0; // 加速度計算には最低3点（RoRを2回計算するため）
+
+    // 現在のRoR
+    const currentRoR = calculateCurrentRoR(liveData, rorPeriodSeconds);
+
+    // 加速度計算のために、少し前の時点でのRoRを計算
+    const currentPointTime = liveData[liveData.length - 1].x;
+    let pastTimeForRoR = null;
+
+    for (let i = liveData.length - 2; i >= 0; i--) {
+        if (currentPointTime - liveData[i].x >= accelerationPeriodSeconds) {
+            pastTimeForRoR = liveData[i].x;
+            break;
+        }
+    }
+
+    if (pastTimeForRoR === null) return 0; // 十分な過去データがない
+
+    // 過去のRoR計算に必要なデータ点をフィルタリング
+    const pastRoRData = liveData.filter(p => p.x <= pastTimeForRoR);
+    if (pastRoRData.length < 2) return 0;
+
+    const prevRoR = calculateCurrentRoR(pastRoRData, rorPeriodSeconds);
+
+    const timeDiffRoR = currentPointTime - pastTimeForRoR; // RoR間の時間差（秒）
+    
+    return timeDiffRoR > 0 ? (currentRoR - prevRoR) / (timeDiffRoR / 60) : 0; // °C/min^2
+}
+
+/**
+ * 矢印の長さと角度を計算します。
+ * @param {number} currentTemp - 現在のリアルタイム温度。
+ * @param {number} targetTemp - 目標プロファイル温度。
+ * @param {number} currentRoR - 現在のリアルタイムRoR。
+ * @param {number} targetRoR - 目標プロファイルRoR。
+ * @param {number} acceleration - 現在のRoRの加速度。
+ * @returns {{length: number, angle: number}} 矢印の長さ（ピクセル）と角度（ラジアン）。
+ */
+function calculateArrowVector(currentTemp, targetTemp, currentRoR, targetRoR, acceleration) {
+    const maxArrowLength = 60; // 矢印の最大長さ (ピクセル)
+    const minArrowLength = 10; // 矢印の最小長さ (適温時)
+    
+    let length = minArrowLength;
+    let angleDegrees = 0; // 初期角度：0度 = 右方向（時間軸の正方向）
+
+    // --- 1. 温度差に基づく基本の角度と長さ ---
+    const tempDiff = currentTemp - targetTemp; // 正なら高い、負なら低い
+    const tempDiffThreshold = 2; // ±2度以内は「適温」とみなす閾値
+
+    if (Math.abs(tempDiff) > tempDiffThreshold) {
+        // 温度差が大きいほど矢印を長くする
+        length = Math.min(maxArrowLength, minArrowLength + Math.abs(tempDiff) * 5);
+
+        if (tempDiff < 0) { // 現在温度が目標より低い（上げる必要がある）
+            angleDegrees = -90; // 基本は上向き
+        } else { // 現在温度が目標より高い（下げる必要がある）
+            angleDegrees = 90; // 基本は下向き
+        }
+    } else {
+        // 適温範囲内では、長さは最小、角度はRoRに基づいて調整
+        length = minArrowLength;
+        angleDegrees = 0; // 基本は横向き
+    }
+
+    // --- 2. RoR差に基づく角度の調整 ---
+    const rorDiff = currentRoR - targetRoR; // 正ならRoRが高い、負なら低い
+    const rorDiffThreshold = 1; // ±1°C/min 以内は許容範囲
+
+    if (Math.abs(rorDiff) > rorDiffThreshold) {
+        // RoR差が大きいほど矢印の長さをさらに伸ばす
+        length = Math.min(maxArrowLength, length + Math.abs(rorDiff) * 3);
+
+        // RoRが目標より低いのに、温度も低いなら、さらに上方向へ
+        // RoRが目標より高いのに、温度も高いなら、さらに下方向へ
+        // （つまり、乖離方向とRoR乖離方向が一致するなら、その方向を強める）
+        if (tempDiff < 0 && rorDiff < 0) { // 温度もRoRも低い
+            angleDegrees = Math.max(-135, angleDegrees - 30); // さらに上向きに
+        } else if (tempDiff > 0 && rorDiff > 0) { // 温度もRoRも高い
+            angleDegrees = Math.min(135, angleDegrees + 30); // さらに下向きに
+        } else if (tempDiff < 0 && rorDiff > 0) { // 温度低いがRoR高い (RoR下げて温度上げたい)
+            // 少し斜め上右のような調整
+            angleDegrees = Math.min(-30, angleDegrees + 10); // 上向きだが少し傾ける
+        } else if (tempDiff > 0 && rorDiff < 0) { // 温度高いがRoR低い (RoR上げて温度下げたい)
+            // 少し斜め下右のような調整
+            angleDegrees = Math.max(30, angleDegrees - 10); // 下向きだが少し傾ける
+        } else {
+            // 温度が適温だがRoRが乖離している場合
+            if (rorDiff < 0) angleDegrees = -45; // RoR低いなら斜め上右
+            if (rorDiff > 0) angleDegrees = 45; // RoR高いなら斜め下右
+        }
+    }
+
+    // --- 3. 加速度に基づく調整 (微調整) ---
+    // 加速度は、RoRが目標に「近づいている」か「遠ざかっている」かの傾向を示す
+    const accelerationThreshold = 0.5; // °C/min^2
+    if (Math.abs(acceleration) > accelerationThreshold) {
+        // RoRが目標より低い (-rorDiff) のに、加速中 (+acceleration) なら、矢印を少し緩める
+        // RoRが目標より高い (+rorDiff) のに、減速中 (-acceleration) なら、矢印を少し緩める
+        // つまり、RoRが目標に向かって変化しているなら、矢印の緊急度を少し下げる
+        if (rorDiff < 0 && acceleration > 0) { // RoR低いが加速中
+            length = Math.max(minArrowLength, length - 10); // 少し短く
+            // angleDegrees = Math.max(-110, angleDegrees + 10); // 少し上向きを緩める
+        } else if (rorDiff > 0 && acceleration < 0) { // RoR高いが減速中
+            length = Math.max(minArrowLength, length - 10); // 少し短く
+            // angleDegrees = Math.min(110, angleDegrees - 10); // 少し下向きを緩める
+        } else if (rorDiff < 0 && acceleration < 0) { // RoR低く、さらに減速中（緊急！）
+            length = Math.min(maxArrowLength, length + 10); // さらに長く
+            // angleDegrees = Math.min(-140, angleDegrees - 10); // さらに上向きに
+        } else if (rorDiff > 0 && acceleration > 0) { // RoR高く、さらに加速中（緊急！）
+            length = Math.min(maxArrowLength, length + 10); // さらに長く
+            // angleDegrees = Math.max(140, angleDegrees + 10); // さらに下向きに
+        }
+    }
+
+    // 最終的な角度をラジアンに変換
+    const angleRadians = angleDegrees * (Math.PI / 180);
+
+    return { length, angle: angleRadians };
+}
