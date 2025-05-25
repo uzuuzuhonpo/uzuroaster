@@ -7,6 +7,7 @@ const popupOverlay = document.getElementById('popupOverlay');
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
+let isMinutesSecondsFormat = false; // 初期値は秒表示
 
 window.addEventListener('resize', () => {
   if (roastChart) {
@@ -79,13 +80,14 @@ socket.onclose = () => {
 	};
 socket.onmessage = (event) => {
   try {
-    
     const data = JSON.parse(event.data);
+    const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
+    const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
     if ("time" in data && "temp" in data && "temp_prof" in data) {
       if (data.time > -1 && isRoasting) {
-        addLiveDataPoint(roastChart, data.time, data.temp); // グラフ追加関数
-        document.getElementById('roast_time').textContent = data.time + "[秒]";
-        document.getElementById('roast_temperature').textContent = data.temp.toFixed(1) + "[℃]";
+        addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
+        document.getElementById('roast_time').textContent = formatSecondsToMinutesSeconds(data.time);  // + "[秒]";
+        document.getElementById('roast_temperature').textContent = temp + "[℃]";
       if (roastChart.data.datasets[0].data.length === 0) {
         document.getElementById('profile_temperature').textContent = "--[℃]";
         }
@@ -94,8 +96,8 @@ socket.onmessage = (event) => {
       }
 	  }
 	  else {	//焙煎中以外は現在温度のみ表示
-		  document.getElementById('roast_time').textContent = "--[秒]";
-		  document.getElementById('roast_temperature').textContent = data.temp.toFixed(1) + "[℃]";
+		  document.getElementById('roast_time').textContent = "--";
+		  document.getElementById('roast_temperature').textContent = temp + "[℃]";
 		  document.getElementById('profile_temperature').textContent = "--[℃]";
 	  }
 	  
@@ -126,8 +128,14 @@ socket.onmessage = (event) => {
     }
   } catch (e) {
     console.error("JSON解析エラー", e);
+    hideUploadOverlay(); 
   }
 };
+
+let TemperatureOffset = 0;
+function OffsetIncrement(offset){
+  TemperatureOffset += offset;
+}
 
 function connectWebSocket() {
 	socket = new WebSocket("ws://192.168.4.1:81/"); 
@@ -162,6 +170,7 @@ function sendSafe(data) {
     }
   } catch (err) {
     alert("WebSocketに異常があります。\n再接続してください\nエラーコード：", err);
+    hideUploadOverlay(); 
     // エラー処理（UIに通知とか、ログに出すとか）入れてもOK
   }
 }
@@ -282,15 +291,17 @@ function sendProfileInBatches(profileData) {
 }
 
 function sendCurrentProfile() {
+  showUploadOverlay();
   sortTable();
   const profileData = getProfileDataFromTable();
+  updateChartWithProfile(profileData);
 
   if (!profileData || profileData.length === 0) {
     alert("焙煎プロファイルがありません。");
+    hideUploadOverlay(); 
     return;
   }
 
-  showUploadOverlay();
  
   const converted = profileData.map(p => ({
     x: Math.round(p.time),
@@ -333,12 +344,6 @@ function overwriteTableWithLastRoast() {
     addRow(point.x, point.y);
   });
   
-  // テーブルを時間順にソート
-  sortTable();
-  
-  // チャートを更新
-  updateChartWithProfile(getProfileDataFromTable());
-  
   console.log("直前の焙煎データでテーブルを上書きしました", realTimeData.length + "ポイント");
   sendCurrentProfile();
 }
@@ -349,6 +354,27 @@ function showUploadOverlay() {
 
 function hideUploadOverlay() {
   document.getElementById("uploadOverlay").style.display = "none";
+}
+
+/**
+ * 秒数を「分:秒」形式の文字列に変換します。
+ * 例: 90秒 -> "1:30"
+ * @param {number} totalSeconds - 合計秒数。
+ * @returns {string} 分:秒形式の文字列。
+ */
+function formatSecondsToMinutesSeconds(totalSeconds) {
+    if (!isMinutesSecondsFormat) {
+      return totalSeconds + "[秒]"; // 秒表示
+    }
+    if (totalSeconds < 0) totalSeconds = 0; // 負の値は0として扱う
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60); // 小数点以下は切り捨てて秒にする
+
+    // 秒が1桁の場合に先頭に0を追加 (例: 1:05)
+    const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
+
+    return `${minutes}:${formattedSeconds}`;
 }
 
 let LiveData = [];
@@ -366,7 +392,9 @@ function addLiveDataPoint(chart, time, temp) {
     else {
       lastPoint = newPoint;
     }
+    const RoR = { x: time, y: calculateCurrentRoR(LiveData) };
     chart.data.datasets[1].data.push(newPoint);
+    chart.data.datasets[3].data.push(RoR);
     AutoChartWidthAdjustment(chart, 0); // 最大値+1で表示範囲を調整
     chart.update(); // ← 'none' にするとアニメーションもカット
   }
@@ -380,12 +408,12 @@ function addRow(time = '', temp = '') {
   const tempCell = row.insertCell(1);
   const deleteCell = row.insertCell(2);
 
-  timeCell.innerHTML = `<input type="number" value="${time}" min="0" max="1799" oninput="validateInput(this, 0, 1799)">`;
-  tempCell.innerHTML = `<input type="number" value="${temp}" min="0" max="260" oninput="validateInput(this, 0, 260)">`;
+  timeCell.innerHTML = `<input type="number" value="${time}" step="1" min="0" max="1799" oninput="validateInput_time(this, 0, 1799)">`;
+  tempCell.innerHTML = `<input type="number" value="${temp}" min="0" max="260" oninput="validateInput_temperature(this, 0, 260)">`;
   deleteCell.innerHTML = `<button onclick="this.parentNode.parentNode.remove()">🗑</button>`;
 }
 
-function validateInput(input, min, max) {
+function validateInput_temperature(input, min, max) {
   let value = parseFloat(input.value);
   
   // 数値でない場合は空文字にする
@@ -400,6 +428,26 @@ function validateInput(input, min, max) {
   } else if (value > max) {
     input.value = max.toString();
   }
+}
+function validateInput_time(input, min, max) {
+  let value = parseInt(input.value);
+  
+  // 数値でない場合は空文字にする
+  if (isNaN(value)) {
+    input.value = '';
+    return;
+  }
+  
+  // 範囲外の場合は制限する
+  if (value < min) {
+    input.value = min.toString();
+    return;
+  } else if (value > max) {
+    input.value = max.toString();
+    return;
+  }
+  input.value = value.toString();
+
 }
 
 function sortTable() {
@@ -519,7 +567,12 @@ document.getElementById("fileInput").addEventListener("change", (event) => {
         // alog形式 → JSON変換
         const alogText = e.target.result;
         result = parseAlogManualScan(alogText, "", "");
-      } else {
+      } 
+      else if (file.name.endsWith(".csv")) {
+        const csvText = e.target.result;
+        result = parseCSV(csvText);
+      } 
+      else {
         // 通常のJSONパース
         result = JSON.parse(e.target.result);
         if (!Array.isArray(result.profile)) throw "Invalid format";
@@ -537,13 +590,12 @@ document.getElementById("fileInput").addEventListener("change", (event) => {
         addRow(entry.time, entry.temp);
       });
 
-      sortTable();
-      updateChartWithProfile(getProfileDataFromTable());
       event.target.value = ""; // 同じファイルでもイベント発火させるため
       sendCurrentProfile();
 
     } catch (err) {
       alert("プロファイル読み込みに失敗しました: " + err);
+      hideUploadOverlay(); 
     }
   };
 
@@ -561,7 +613,7 @@ function getProfileDataFromTable() {
         if (cells.length < 2) continue;
 
         const time = parseInt(cells[0].querySelector('input')?.value);
-        const temp = parseInt(cells[1].querySelector('input')?.value);
+        const temp = cells[1].querySelector('input')?.value;
 
         // 空白・NaNは無視
         if (isNaN(time) || isNaN(temp)) continue;
@@ -570,6 +622,35 @@ function getProfileDataFromTable() {
     }
 
     return profile;
+}
+
+/**
+ * 不規則な時間間隔のプロファイルデータから、1秒間隔で補間されたプロファイルデータセットを生成します。
+ *
+ * @param {Array<Object>} originalProfileData - 元の不規則な時間間隔のプロファイルデータ ({ time: number, temp: number })。
+ * @returns {Array<Object>} 1秒間隔で補間されたプロファイルデータ ({ time: number, temp: number })。
+ */
+function getOneSecondIntervalProfile(originalProfileData) {
+    if (originalProfileData.length < 2) {
+        return originalProfileData; // データが少ない場合はそのまま返す
+    }
+
+    const firstTime = originalProfileData[0].time;
+    const lastTime = originalProfileData[originalProfileData.length - 1].time;
+
+    const oneSecondIntervalData = [];
+
+    // 開始時間から終了時間まで1秒刻みでループ
+    for (let t = firstTime; t <= lastTime; t++) {
+        // 各時間 t における温度を線形補間して取得
+        // getInterpolatedProfileTemp は丸め処理を含んでいるものを使用
+        const temp = getInterpolatedProfileTemp(originalProfileData, t);
+
+        if (temp !== null) {
+            oneSecondIntervalData.push({ time: t, temp: temp });
+        }
+    }
+    return oneSecondIntervalData;
 }
 
 function updateChartWithProfile(profileData) {
@@ -581,6 +662,15 @@ function updateChartWithProfile(profileData) {
   roastChart.data.labels = times;
   roastChart.data.datasets[0].data = temps;
   AutoChartWidthAdjustment(roastChart, 0); // 最大値+1で表示範囲を調整
+  const prof_sec_data = getOneSecondIntervalProfile(profileData);
+   roastChart.data.datasets[2].data = [];
+  for (let i = 0; i < prof_sec_data.length; i++) {
+    const t = getInterpolatedProfileRoR(prof_sec_data, i); // RoRを計算してデータセットに追加
+    if (t != null) {
+      roastChart.data.datasets[2].data[i] = t;
+    }
+  }
+
   roastChart.update();
 }
 
@@ -594,7 +684,6 @@ function AutoChartWidthAdjustment(chart, minTime, maxTime = 1800) {
   if (chart.data.datasets[1] && chart.data.datasets[1].data.length > 0) { 
     x1 = chart.data.datasets[1].data[chart.data.datasets[1].data.length - 1].x;
   }
-  //const total = Math.min(Math.floor(((x + x1) / 300)) * 300 + 300, 1800);
   const total = Math.min(x + x1 + 200, 1800);
 
   chart.options.scales.x.min = minTime;
@@ -636,7 +725,7 @@ function initChart() {
       data: {
           labels: [], // profileDataは既存のHTMLから取得する必要がある
           datasets: [{
-              label: '焙煎プロファイル温度',
+              label: 'プロファイル温度',
               data: [],
               borderColor: active_profile_color,
               fill: true,
@@ -652,21 +741,34 @@ function initChart() {
               borderColor: 'rgba(255, 66, 99, 1)',
               fill: false,
               tension: 0.2,
-              order: 10,
+              order: 1,
               backgroundColor: 'rgba(255, 66, 99, 0.8)',
-              pointRadius: 3,
+              borderWidth: 3,
+              pointRadius: 2,
               pointHoverRadius: 8
           }, {
-              // **RoR (Rate of Rise) データセットを追加**
-              label: 'RoR (Rate of Rise)',
+              label: 'RoR (プロファイル温度用）',
               data: [],
-              borderColor: 'rgba(255, 159, 64, 1)', // RoR用の色
-              backgroundColor: 'rgba(255, 159, 64, 0.5)',
+              borderSColor: 'rgba(159, 152, 255, 0.5)', 
+              backgroundColor: 'rgba(157, 132, 255, 0.5)',
               fill: false,
               tension: 0.2,
               yAxisID: 'y1', // 別のY軸を使う
-              order: 5, // 一番上に表示
-              pointRadius: 3,
+              order: 5, 
+              borderWidth: 1,
+              pointRadius: 1,
+              pointHoverRadius: 8
+          },{
+              label: 'RoR (リアルタイム温度用)',
+              data: [],
+              borderColor: 'rgba(194, 120, 29, 0.5)', 
+              backgroundColor: 'rgba(255, 223, 61, 0.5)',
+              fill: false,
+              tension: 0.2,
+              yAxisID: 'y1', // 別のY軸を使う
+              order: 10, // 一番上に表示
+              borderWidth: 1,
+              pointRadius: 1,
               pointHoverRadius: 8
           }]
       },
@@ -719,8 +821,8 @@ function initChart() {
                   position: 'right',
                   title: { display: true, text: 'RoR (°C/分)' },
                   grid: { drawOnChartArea: false }, // メインのグリッド線を引かない
-                  min: 0,
-                  max: 30 // RoRの適切な最大値を設定
+                  min: -10,
+                  max: 50 // RoRの適切な最大値を設定
               }
           },
           plugins: {
@@ -735,15 +837,48 @@ function initChart() {
           smartAIIndicatorPlugin // 追加するスマートAIインジケータープラグイン
       ]
   });
-  // --- Chart.js初期化部分 終了 ---
 }
 
 // ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', () => {
+  const roastTimeDisplay = document.getElementById('roast_time_area');
+  if (roastTimeDisplay) {
+    roastTimeDisplay.addEventListener('click', () => {
+      isMinutesSecondsFormat = !isMinutesSecondsFormat;
+    });
+  }
   initChart();
   document.getElementById('stop-button').disabled = true;
   roastChart.resize();
 });
+
+function parseCSV(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) throw "CSVに有効なデータがありません";
+
+  const header = lines[0].trim().split(/[\s,]+/);
+  if (header.length < 2 || !header[0].toLowerCase().includes("time") || !header[1].toLowerCase().includes("temp")) {
+    throw "CSVのヘッダーが 'time temp' 形式ではありません";
+  }
+
+  const profile = lines.slice(1).map((line, idx) => {
+    const parts = line.trim().split(/[\s,]+/);
+    if (parts.length < 2) throw `CSVの${idx + 2}行目に問題があります`;
+
+    const time = parseFloat(parts[0]);
+    const temp = parseFloat(parts[1]);
+
+    if (isNaN(time) || isNaN(temp)) throw `${idx + 2}行目に数値でない値があります`;
+
+    return { time, temp };
+  });
+
+  return {
+    title: "",
+    memo: "",
+    profile
+  };
+}
 
 function parseAlogManualScan(alogText, title = "未設定", memo = "") {
   function extractArray(key) {
@@ -783,21 +918,14 @@ const smartAIIndicatorPlugin = {
         const { ctx, chartArea, scales } = chart;
         const profileDataset = chart.data.datasets[0]; // 設定温度プロファイル
         const liveTempDataset = chart.data.datasets[1]; // リアルタイム温度
-        const rorDataset = chart.data.datasets[2]; // RoRデータセット
+        const rorDataset = chart.data.datasets[3]; // RoRデータセット
 
         if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
             return;
         }
 
-        // const heatmapCanvas = document.getElementById("heatmap");
-        // heatmapCanvas.width = chart.width;
-        // heatmapCanvas.height = chart.height;
-
-        const heatmapCtx = ctx; //heatmapCanvas.getContext('2d');
-        //heatmapCtx.clearRect(0, 0, chart.width, chart.height); //heatmapCanvas.width, heatmapCtx.height);
-
-        heatmapCtx.save();
-        heatmapCtx.translate(chartArea.left, chartArea.top);
+        ctx.save();
+        ctx.translate(chartArea.left, chartArea.top);
 
         const latestLivePoint = liveTempDataset.data[liveTempDataset.data.length - 1];
         const currentTime = latestLivePoint.x;
@@ -805,11 +933,11 @@ const smartAIIndicatorPlugin = {
 
         const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
         const targetRoR = getInterpolatedProfileRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
-        const currentRoR = calculateCurrentRoR(liveTempDataset.data, 30); // 現在のRoRを取得
+        const currentRoR = calculateCurrentRoR(liveTempDataset.data); 
         const acceleration = calculateAcceleration(liveTempDataset.data, 30, 60); // 加速度を取得
 
         // if (targetTemp === null || targetRoR === null) {
-        //     heatmapCtx.restore();
+        //     ctx.restore();
         //     return;
         // }
 
@@ -843,7 +971,7 @@ const smartAIIndicatorPlugin = {
             currentTemp, targetTemp, currentRoR, targetRoR, acceleration
         );
 
-        heatmapCtx.beginPath();
+        ctx.beginPath();
         // 矢印の開始点を円の中心、または円の端から少し離す（調整可能）
         const arrowStartOffset = indicatorRadius + 5; // 円の外側から少し離す
         
@@ -856,30 +984,30 @@ const smartAIIndicatorPlugin = {
         const endX = pixelX + Math.cos(arrowAngle) * (arrowStartOffset + arrowLength);
         const endY = pixelY + Math.sin(arrowAngle) * (arrowStartOffset + arrowLength);
 
-        heatmapCtx.moveTo(startX, startY);
-        heatmapCtx.lineTo(endX, endY);
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
 
         // 矢印の羽根（ヘッド）
         const headLength = 10; // 羽根の長さ
         const headAngle = Math.PI / 6; // 羽根の開き角度 (30度)
 
         // 終点から羽根の始点を計算
-        heatmapCtx.lineTo(
+        ctx.lineTo(
             endX - headLength * Math.cos(arrowAngle - headAngle),
             endY - headLength * Math.sin(arrowAngle - headAngle)
         );
-        heatmapCtx.moveTo(endX, endY); // もう一度終点に戻る
-        heatmapCtx.lineTo(
+        ctx.moveTo(endX, endY); // もう一度終点に戻る
+        ctx.lineTo(
             endX - headLength * Math.cos(arrowAngle + headAngle),
             endY - headLength * Math.sin(arrowAngle + headAngle)
         );
 
-        heatmapCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; // 矢印の色 (黒、少し透明)
-        heatmapCtx.lineWidth = 2; // 矢印の線幅
-        heatmapCtx.stroke();
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'; // 矢印の色 (黒、少し透明)
+        ctx.lineWidth = 2; // 矢印の線幅
+        ctx.stroke();
         // --- 矢印の描画 終了 ---
 
-        heatmapCtx.restore();
+        ctx.restore();
     }
 };
 
@@ -957,27 +1085,28 @@ Chart.register(smartAIIndicatorPlugin);
  * @returns {number|null} 補間された温度、またはデータ不足の場合はnull。
  */
 function getInterpolatedProfileTemp(profileData, currentTime) {
-    if (profileData.length === 0) return null;
+  if (profileData.length === 0) return null;
 
-    // 現在時間がプロファイル開始前なら最初の温度
-    if (currentTime <= profileData[0].time) {
-        return profileData[0].temp;
-    }
-    // 現在時間がプロファイル終了後なら最後の温度
-    if (currentTime >= profileData[profileData.length - 1].time) {
-        return profileData[profileData.length - 1].temp;
-    }
+  if (currentTime <= profileData[0].time) {
+      return parseFloat(profileData[0].temp);
+  }
+  if (currentTime >= profileData[profileData.length - 1].time) {
+      return parseFloat(profileData[profileData.length - 1].temp);
+  }
 
-    // 線形補間
-    for (let i = 0; i < profileData.length - 1; i++) {
-        const p1 = profileData[i];
-        const p2 = profileData[i + 1];
-        if (currentTime >= p1.time && currentTime <= p2.time) {
-            const ratio = (currentTime - p1.time) / (p2.time - p1.time);
-            return p1.temp + (p2.temp - p1.temp) * ratio;
-        }
+  for (let i = 0; i < profileData.length - 1; i++) {
+    const p1 = profileData[i];
+    const p2 = profileData[i + 1];
+    if (currentTime >= p1.time && currentTime <= p2.time) {
+        const t1 = parseFloat(p1.temp);
+        const t2 = parseFloat(p2.temp);
+        const ratio = (currentTime - p1.time) / (p2.time - p1.time);
+        const res = t1 + (t2 - t1) * ratio;
+        return res;
     }
-    return null; // 予期せぬエラー
+  }
+
+  return null;
 }
 
 /**
@@ -1051,45 +1180,119 @@ function getRadiusForTemperatureDifference(tempDiff) {
 }
 
 /**
- * プロファイルデータから指定された時間における目標RoRを線形補間して取得します。
- * これはプロファイル曲線のその点での傾きに相当します。
- * @param {Array<Object>} profileData - { x: time, y: temp } 形式のプロファイルデータ配列。
- * @param {number} currentTime - 補間したい時間。
- * @returns {number|null} 補間されたRoR (°C/min)、またはデータ不足の場合はnull。
+ * プロファイルデータから指定された時間におけるRoRをN秒間の移動平均で取得します。
+ * 現在時間とその前後を含めたN秒間のデータを使って平均RoRを計算します。
+ *
+ * @param {Array<Object>} profileData - { time: number, temp: number } 形式のプロファイルデータ配列。
+ * @param {number} currentTime - 目標RoRを計算したい現在の時間 (秒)。
+ * @param {number} periodSeconds - 移動平均RoRの計算に使う期間 (秒)。デフォルトは30秒。
+ * @returns {number|null} 計算されたRoR (°C/分)、またはデータ不足の場合はnull。
  */
-function getInterpolatedProfileRoR(profileData, currentTime) {
+function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20) {
     if (profileData.length < 2) return null;
 
-    // 現在時間がプロファイル開始前なら最初のRoR (または0)
-    if (currentTime <= profileData[0].x) {
-        // 最初の2点間のRoRを返すか、初期RoRとして定義された値を返す
-        const p1 = profileData[0];
-        const p2 = profileData[1];
-        const dt = p2.x - p1.x;
-        const dT = p2.y - p1.y;
-        return dt > 0 ? (dT / dt) * 60 : 0;
+    const halfPeriod = periodSeconds / 2;
+    // RoR計算の開始時間と終了時間
+    const startTime = (currentTime - halfPeriod).toFixed(0);
+    const endTime = (currentTime + halfPeriod).toFixed(0);
+
+    if (startTime < 1) {
+      return null;
     }
-    // 現在時間がプロファイル終了後なら最後のRoR
-    if (currentTime >= profileData[profileData.length - 1].x) {
-        const p1 = profileData[profileData.length - 2];
-        const p2 = profileData[profileData.length - 1];
-        const dt = p2.x - p1.x;
-        const dT = p2.y - p1.y;
-        return dt > 0 ? (dT / dt) * 60 : 0;
+    else if (endTime > profileData.length - 1) {
+      return null;
     }
 
-    // 線形補間して、その点での傾きを計算
-    for (let i = 0; i < profileData.length - 1; i++) {
-        const p1 = profileData[i];
-        const p2 = profileData[i + 1];
-        if (currentTime >= p1.x && currentTime <= p2.x) {
-            // 現在の時間がこの区間にある場合、この区間の傾きが目標RoR
-            const dt = p2.x - p1.x;
-            const dT = p2.y - p1.y;
-            return dt > 0 ? (dT / dt) * 60 : 0; // °C/min に変換
+    // 計算期間内のデータポイントをフィルタリング
+    // 期間内の最初の点と最後の点を確実に見つけるために、フィルタリング範囲を広げる
+    const relevantPoints = profileData.filter(p => p.time >= startTime - 1 && p.time <= endTime + 1);
+
+    // フィルタリングされたデータがRoR計算に不十分な場合
+    if (relevantPoints.length < 2) {
+        // 例えば、プロファイルの最初や最後でデータが不足する場合
+        if (currentTime <= profileData[0].time + halfPeriod) {
+            // プロファイルの最初から periodSeconds 以内の場合、最初の2点を使う
+            const p1 = profileData[0];
+            const p2 = profileData[1];
+            const dt = p2.time - p1.time;
+            const dT = p2.temp - p1.temp;
+            return null; //dt > 0 ? (dT / dt) * 60 : 0;
+        } else if (currentTime >= profileData[profileData.length - 1].time - halfPeriod) {
+            // プロファイルの最後から periodSeconds 以内の場合、最後の2点を使う
+            const p1 = profileData[profileData.length - 2];
+            const p2 = profileData[profileData.length - 1];
+            const dt = p2.time - p1.time;
+            const dT = p2.temp - p1.temp;
+            return null; // dt > 0 ? (dT / dt) * 60 : 0;
         }
+        return null; // それでもデータが不十分ならnull
     }
-    return null;
+
+    // 計算期間内の最初の点と最後の点の時間と温度を補間して取得
+    // これにより、正確に startTime と endTime における温度が得られる
+    const startTemp = getInterpolatedProfileTemp(profileData, startTime);
+    const endTemp = getInterpolatedProfileTemp(profileData, endTime);
+
+    // RoR計算の期間が0になるのを防ぐ
+    const actualDt = endTime - startTime;
+
+    if (actualDt > 0 && startTemp !== null && endTemp !== null) {
+        const actualDtTemp = endTemp - startTemp;
+        return (actualDtTemp / actualDt) * 60; // °C/min に変換
+    }
+
+    return null; // 計算できない場合は0を返す (またはnull)
+}
+
+/**
+ * リアルタイム温度データから、指定期間（periodSeconds）内のデータに対する線形回帰を用いてRoRを計算します。
+ * これは、N個のデータポイントの移動平均 RoR の一種として機能し、ノイズに強いです。
+ *
+ * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
+ * @param {number} periodSeconds - RoR計算に使う期間（秒）。
+ * @returns {number} 現在のRoR (°C/min)。計算に必要なデータが不足している場合は0。
+ */
+function calculateCurrentRoR(liveData, periodSeconds = 20) {
+    if (liveData.length < 2) return 0; // 最低2点は必要
+
+    const currentPointTime = liveData[liveData.length - 1].x;
+    const startTime = currentPointTime - periodSeconds;
+
+    // 計算期間内のデータポイントをフィルタリング
+    // 線形回帰には少なくとも2点必要
+    const relevantPoints = liveData.filter(p => p.x >= startTime);
+
+    if (relevantPoints.length < 2) {
+        return 0; // データが不足している場合は0を返す
+    }
+
+    // 線形回帰の計算に必要な変数を初期化
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumXX = 0;
+    const n = relevantPoints.length; // データポイントの数
+
+    // 各データポイントに対して計算
+    for (const p of relevantPoints) {
+        sumX += p.x;
+        sumY += p.y;
+        sumXY += p.x * p.y;
+        sumXX += p.x * p.x;
+    }
+
+    // 線形回帰の傾き (b) を計算
+    // b = (n * sum(xy) - sum(x) * sum(y)) / (n * sum(x^2) - (sum(x))^2)
+    const denominator = (n * sumXX - sumX * sumX);
+
+    if (denominator === 0) {
+        return 0; // 分母が0になる場合は傾きを計算できない（すべてのxが同じ値など）
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / denominator;
+
+    // 傾きは °C/秒 なので、°C/分 に変換
+    return slope * 60; // °C/min
 }
 
 /**
@@ -1099,7 +1302,7 @@ function getInterpolatedProfileRoR(profileData, currentTime) {
  * @param {number} periodSeconds - RoR計算に使う期間（秒）。
  * @returns {number} 現在のRoR (°C/min)。データ不足の場合は0。
  */
-function calculateCurrentRoR(liveData, periodSeconds = 30) {
+function calculateCurrentRoR2(liveData, periodSeconds = 30) {
     if (liveData.length < 2) return 0;
 
     const currentPoint = liveData[liveData.length - 1];

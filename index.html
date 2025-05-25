@@ -19,7 +19,7 @@
     }
     * {
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: sans-serif, 'Segoe UI', Tahoma, Geneva, Verdana;
     }
 
     body {
@@ -205,6 +205,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      width: 120px;
     }
 
     .display-label {
@@ -214,7 +215,7 @@
     }
 
     .display-value {
-      font-size: 22px;
+      font-size: 28px;
       font-weight: bold;
       color: var(--text-dark);
     }
@@ -460,11 +461,14 @@
       .main-area {
         flex-direction: column;
       }
-
+      .main-area {
+        height:1500px!important;
+      }
       .table-section,
       .chart-section {
         max-width: 100%;
         width: 100%;
+        max-height: 100%;
       }
       .profileTtable {
 		width: 90%;
@@ -493,7 +497,7 @@
 	height: 75%;
 	width: 90px;
 	margin: 0px 2px!important;
-	padding; 0px;
+	padding: 0px;
 }
 
  #roasting-indicator {
@@ -735,7 +739,14 @@
     <p>プロファイル送信中...</p>
   </div>
 </div>
-
+<div id="debug_console" style="position: fixed; left: 100px; display: block;">
+  <button class="debug_button" onclick="OffsetIncrement(0.1)">+0.1</button>
+  <button class="debug_button" onclick="OffsetIncrement(1)">+1</button>
+  <button class="debug_button" onclick="OffsetIncrement(10)">+10</button><br>
+  <button class="debug_button" onclick="OffsetIncrement(-0.1)">-0.1</button>
+  <button class="debug_button" onclick="OffsetIncrement(-1)">-1</button>
+  <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>
+</div>
     <!-- ヘッダー部分 -->
     <div class="header">
       <div class="connection-status">
@@ -771,7 +782,7 @@
 
       <!-- 表示エリア -->
     <div class="display-area">
-      <div class="display-item">
+      <div class="display-item" id="roast_time_area">
         <div class="display-label">経過時間</div>
         <div class="display-value" id="roast_time">0 秒</div>
       </div>
@@ -785,9 +796,9 @@
       </div>
       <div class="display-item">
         <div class="display-label">評価</div>
-        <div class="display-value" id="score">焙煎スコア：100</div>
+        <div class="display-value" id="score">100</div>
       </div>
-      <div id="roast_message">接続待機中</div>
+      <div id="roast_message">焙煎待機中</div>
     </div>
 
     <!-- テーブル操作ボタン -->
@@ -795,7 +806,7 @@
       <label for="fileInput" class="button">
         <span>📁 プロファイル読込</span>
       </label>
-      <input type="file" id="fileInput" accept=".json">
+      <input type="file" id="fileInput" multiple accept=".json, .alog, .csv">
       <button onclick="downloadJSON()" class="button">📁 プロファイル保存</button>
       <button class="button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
       <button class="button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
