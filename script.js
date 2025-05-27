@@ -8,6 +8,8 @@ let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
 let isMinutesSecondsFormat = false; // 初期値は秒表示
+let widthOffset = 0; // グラフの幅調整用オフセット
+let maxChartWidth = 1800; // グラフの最大幅
 
 window.addEventListener('resize', () => {
   if (roastChart) {
@@ -86,24 +88,41 @@ socket.onmessage = (event) => {
     if ("time" in data && "temp" in data && "temp_prof" in data) {
       if (data.time > -1 && isRoasting) {
         addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
-        document.getElementById('roast_time').textContent = formatSecondsToMinutesSeconds(data.time);  // + "[秒]";
+        document.getElementById('roast_time').textContent = formatSecondsToMinutesSeconds(data.time); 
         document.getElementById('roast_temperature').textContent = temp + "[℃]";
-      if (roastChart.data.datasets[0].data.length === 0) {
-        document.getElementById('profile_temperature').textContent = "--[℃]";
+        if (roastChart.data.datasets[0].data.length === 0) {
+            document.getElementById('profile_temperature').textContent = "--[℃]";
+            document.getElementById('profile_ror').textContent = "--";
         }
-      else {	
-        document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+        else {	
+          document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+          if (roastChart.data.datasets[2].data.length > 0) {
+            if (roastChart.data.datasets[2].data.length > data.time) {
+              document.getElementById('profile_ror').textContent = (roastChart.data.datasets[2].data[data.time].y).toFixed(1);
+            }
+            else {
+              document.getElementById('profile_ror').textContent = "--";
+            }
+          }
+          document.getElementById('roast_ror').textContent = (roastChart.data.datasets[3].data[data.time].y).toFixed(1);
+        }
       }
-	  }
-	  else {	//焙煎中以外は現在温度のみ表示
-		  document.getElementById('roast_time').textContent = "--";
-		  document.getElementById('roast_temperature').textContent = temp + "[℃]";
-		  document.getElementById('profile_temperature').textContent = "--[℃]";
-	  }
-	  
-	  if (isRoasting == true && data.time >= 1800 - 1) {
-		  sendStopCommand();
-	  }
+      else {	//焙煎中以外は現在温度のみ表示
+        if (!isMinutesSecondsFormat) {
+          document.getElementById('roast_time').textContent = "--[秒]";
+        }
+        else {
+          document.getElementById('roast_time').textContent = "--:--"; 
+        }
+        document.getElementById('roast_temperature').textContent = temp + "[℃]";
+        document.getElementById('profile_temperature').textContent = "--[℃]";
+        document.getElementById('profile_ror').textContent = "--";
+        document.getElementById('roast_ror').textContent = "--";        
+      }
+      
+      if (isRoasting == true && data.time >= 1800 - 1) {
+        sendStopCommand();
+      }
   	}   
   	
 	else if ("msg" in data) {
@@ -151,6 +170,27 @@ function SetRoastingState(flag) {
 	  showRoastingIndicator(flag);
 }
 
+document.addEventListener('keydown', function(event) {
+    if (event.code === 'Space') {
+        // イベント発生元が入力要素（input, textarea）でないことを確認
+        // これがないと、入力中にスペースキーを押してもボタンが押されてしまう
+        const tagName = event.target.tagName;
+        if (tagName !== 'INPUT' && tagName !== 'TEXTAREA') {
+          let button;
+          if (!isRoasting) {
+            button = document.getElementById('start-button');
+          }
+          else {
+            button = document.getElementById('stop-button');
+          }
+            if (button) {
+                button.click(); // ボタンのクリックイベントをプログラム的に発火
+                event.preventDefault(); // スペースキーのデフォルト動作（スクロールなど）をキャンセル
+            }
+        }
+    }
+});
+
 function showRoastingIndicator(flag) {
 	if (flag) {
   		document.getElementById("roasting-indicator").classList.remove("hidden");
@@ -175,6 +215,28 @@ function sendSafe(data) {
   }
 }
 
+function configButtonCommand() {
+  alert("設定画面はまだ実装されていません。");
+  // ここに設定画面への遷移や処理を追加することができます
+}
+
+function helpButtonCommand() {
+  window.open("https://uzuuzu.shop", "_blank"); 
+}
+
+function enlargeChart() {
+  widthOffset = 1800;
+}
+function shorenChart() {
+  const latestLivePoint = roastChart.data.datasets[1].data[roastChart.data.datasets[1].data.length - 1];
+  const currentTime = latestLivePoint.x;
+  widthOffset = -maxChartWidth + currentTime + 120; // 現在時間を基準にして、120秒先まで表示
+}
+
+function resetWidthChart() {
+  widthOffset = 0;
+}
+
 function sendStartCommand() {
   LiveData = [];
 	sortTable();
@@ -186,7 +248,7 @@ function sendStartCommand() {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       pendingResponses.delete(id);
-        alert("焙煎スタートがタイムアウトしました。\nWiFi接続を確認してください。");
+      alert("焙煎スタートがタイムアウトしました。\nWiFi接続を確認してください。");
   		SetRoastingState(false);
       reject(new Error("タイムアウト"));
     }, 3000); 
@@ -199,6 +261,10 @@ function sendStartCommand() {
         initChart();
 	      updateChartWithProfile(getProfileDataFromTable());
         SetRoastingState(true);
+        const img = document.getElementById('chart-point');
+        if (img && !img.classList.contains('pointer-animation')) {
+            img.classList.add('pointer-animation');
+        }
         resolve(response);
       } 
       else {
@@ -211,7 +277,7 @@ function sendStartCommand() {
 }
 
 function sendStopCommand() {
-   const id = generateUniqueId(); // 一意なIDをつける
+  const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "stop", id: id  };
   sendSafe(message);
   console.log("ストップコマンド送信");
@@ -228,7 +294,16 @@ function sendStopCommand() {
     pendingResponses.set(id, (response) => {
       clearTimeout(timeout);
       if (response.status === "ok") {
-	  	document.getElementById('roast_message').textContent = "焙煎を停止しました";
+	  	  document.getElementById('roast_message').textContent = "焙煎を停止しました";
+        const img = document.getElementById('chart-point');
+        img.style.display = 'none';
+        if (img && img.classList.contains('pointer-animation')) {
+            img.classList.remove('pointer-animation');
+        }
+        const arrowElement = document.getElementById('chart-arrow');
+        if (arrowElement) {
+          arrowElement.style.display = 'none';
+        }
         resolve(response);
       } else {
         alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
@@ -381,7 +456,7 @@ let LiveData = [];
 function addLiveDataPoint(chart, time, temp) {
   if (typeof time === 'number' && typeof temp === 'number') {
     const newPoint = { x: time, y: temp };
-    console.log("data:", time, temp);
+    //console.log("data:", time, temp);
     LiveData.push(newPoint);
 
     chart.options.plugins.verticalLinePlugin.xValue = time;	//縦軸
@@ -392,7 +467,7 @@ function addLiveDataPoint(chart, time, temp) {
     else {
       lastPoint = newPoint;
     }
-    const RoR = { x: time, y: calculateCurrentRoR(LiveData) };
+    const RoR = { x: time, y: calculateRoR(LiveData) };
     chart.data.datasets[1].data.push(newPoint);
     chart.data.datasets[3].data.push(RoR);
     AutoChartWidthAdjustment(chart, 0); // 最大値+1で表示範囲を調整
@@ -525,6 +600,11 @@ function downloadJSON() {
       latestEntries.set(time, temp);
     }
   });
+
+  if (latestEntries.size === 0) {
+    alert("テーブルに有効なプロファイルがありません。");
+    return;
+  }
 
   // 時間順にソートしてからJSON化
   const profile = Array.from(latestEntries.entries())
@@ -662,12 +742,18 @@ function updateChartWithProfile(profileData) {
   roastChart.data.labels = times;
   roastChart.data.datasets[0].data = temps;
   AutoChartWidthAdjustment(roastChart, 0); // 最大値+1で表示範囲を調整
-  const prof_sec_data = getOneSecondIntervalProfile(profileData);
+  let prof_sec_data_ = getOneSecondIntervalProfile(profileData);
    roastChart.data.datasets[2].data = [];
+
+  // `time` を `x` に、`temp` を `y` にリネームして抽出し、残りを `rest` に集約
+  exchangeData = ({ time: x, temp: y, ...rest }) => ({ x, y, ...rest });
+  prof_sec_data = prof_sec_data_.map(exchangeData);
+
   for (let i = 0; i < prof_sec_data.length; i++) {
-    const t = getInterpolatedProfileRoR(prof_sec_data, i); // RoRを計算してデータセットに追加
+    //const t = getInterpolatedProfileRoR(prof_sec_data, i); // RoRを計算してデータセットに追加
+    const t = calculateRoR(prof_sec_data, i); // RoRを計算してデータセットに追加
     if (t != null) {
-      roastChart.data.datasets[2].data[i] = t;
+      roastChart.data.datasets[2].data.push({ x: prof_sec_data[i].x, y: t });  
     }
   }
 
@@ -684,10 +770,10 @@ function AutoChartWidthAdjustment(chart, minTime, maxTime = 1800) {
   if (chart.data.datasets[1] && chart.data.datasets[1].data.length > 0) { 
     x1 = chart.data.datasets[1].data[chart.data.datasets[1].data.length - 1].x;
   }
-  const total = Math.min(x + x1 + 200, 1800);
+  maxChartWidth = x + x1 + 200;
 
   chart.options.scales.x.min = minTime;
-  chart.options.scales.x.max = total;
+  chart.options.scales.x.max = Math.min(maxChartWidth + widthOffset, 1800); // 最大値+1で表示範囲を調整
 }
 
 const verticalLinePlugin = {
@@ -736,7 +822,7 @@ function initChart() {
               pointRadius: 2, 
               pointHoverRadius: 8
           }, {
-              label: 'リアルタイム温度',
+              label: '現在温度',
               data: [], // ここを最初から空配列に
               borderColor: 'rgba(255, 66, 99, 1)',
               fill: false,
@@ -747,7 +833,7 @@ function initChart() {
               pointRadius: 2,
               pointHoverRadius: 8
           }, {
-              label: 'RoR (プロファイル温度用）',
+              label: 'RoR (プロファイル温度）',
               data: [],
               borderSColor: 'rgba(159, 152, 255, 0.5)', 
               backgroundColor: 'rgba(157, 132, 255, 0.5)',
@@ -759,7 +845,7 @@ function initChart() {
               pointRadius: 1,
               pointHoverRadius: 8
           },{
-              label: 'RoR (リアルタイム温度用)',
+              label: 'RoR (現在温度)',
               data: [],
               borderColor: 'rgba(194, 120, 29, 0.5)', 
               backgroundColor: 'rgba(255, 223, 61, 0.5)',
@@ -807,7 +893,30 @@ function initChart() {
                   position: 'bottom',
                   title: { display: true, text: '経過時間 (秒)' },
                   min: 0,
-                  max: 1800 // 30分
+                  max: 1800, // 30分
+                  ticks: {
+                    // ★★★ ここが重要！ ★★★
+                    callback: function(value, index, values) {
+                        // value は現在の目盛りの値（秒数）
+                        // index は目盛りのインデックス
+                        // values はすべての目盛りの配列
+                        
+                        // 秒数を分:秒形式に変換するヘルパー関数を使用
+                        // 前の会話で定義した formatSecondsToMinutesSeconds 関数があればそれを使えます
+                        // 例: function formatSecondsToMinutesSeconds(totalSeconds) { ... }
+                        if (!isMinutesSecondsFormat) {
+                            return value; // 秒表示
+                        }
+                        else {
+                          return formatSecondsToMinutesSeconds(value);
+                        }
+                        const minutes = Math.floor(value / 60);
+                        const seconds = Math.floor(value % 60);
+                        const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
+                        return `${minutes}:${formattedSeconds}`;
+                    }
+                  }
+
               },
               y: { // 左側のY軸（温度用）
                   type: 'linear',
@@ -845,6 +954,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (roastTimeDisplay) {
     roastTimeDisplay.addEventListener('click', () => {
       isMinutesSecondsFormat = !isMinutesSecondsFormat;
+      roastChart.update();
     });
   }
   initChart();
@@ -932,8 +1042,9 @@ const smartAIIndicatorPlugin = {
         const currentTemp = latestLivePoint.y;
 
         const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
-        const targetRoR = getInterpolatedProfileRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
-        const currentRoR = calculateCurrentRoR(liveTempDataset.data); 
+        //const targetRoR = getInterpolatedProfileRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
+        const targetRoR = calculateRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
+        const currentRoR = calculateRoR(liveTempDataset.data); 
         const acceleration = calculateAcceleration(liveTempDataset.data, 30, 60); // 加速度を取得
 
         // if (targetTemp === null || targetRoR === null) {
@@ -949,22 +1060,14 @@ const smartAIIndicatorPlugin = {
         const pixelY = scales.y.getPixelForValue(currentTemp) - chartArea.top;
 
         // 1. ヒートマップ円の描画
-        ctx.beginPath();
-        ctx.arc(pixelX, pixelY, indicatorRadius, 0, Math.PI * 2);
-        ctx.fillStyle = indicatorColor;
-        ctx.fill();
-        const strokeRadius = indicatorRadius;//indicatorRadius + radi / 2;
-        ctx.arc(pixelX, pixelY, strokeRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = setHslaAlpha(indicatorColor, 0.2);
-        ctx.lineWidth = indicatorRadius * 1.05;
-        ctx.stroke();
-
-        // 2. 将来の矢印描画のためにtranslateを戻す（この時点では矢印は描かない）
-        // ctx.translate(-pixelX, -pixelY); // 矢印の原点移動を戻す
-
+        moveImageAt(currentTime, currentTemp, indicatorRadius * 2, setHslaAlpha(indicatorColor, 0.6));
+        updateArrowPositionAndRotation(roastChart, currentTime, currentTemp, 5);
         ctx.restore(); // 保存した描画状態を元に戻す（重要！）
-
-
+        
+        const arrowElement = document.getElementById('chart-arrow');
+        if (arrowElement) {
+          arrowElement.style.display = 'block'; // 矢印を表示
+        }
 
         // --- 矢印の描画 ---
         const { length: arrowLength, angle: arrowAngle } = calculateArrowVector(
@@ -1011,71 +1114,8 @@ const smartAIIndicatorPlugin = {
     }
 };
 
-// SmartAIIndicator プラグイン
-const smartAIIndicatorPlugin2 = {
-    id: 'smartAIIndicator',
-    // グラフの描画後に実行されるフック
-    afterDraw(chart, args, options) {
-        const { ctx, chartArea, scales } = chart;
-        const profileDataset = chart.data.datasets[0]; // 設定温度プロファイル (roastData)
-        const liveTempDataset = chart.data.datasets[1]; // リアルタイム温度
-
-        // リアルタイムデータが存在しない、またはデータポイントが少なすぎる場合は何もしない
-        if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
-            return;
-        }
-
-        // 最新のリアルタイムデータポイントを取得
-        const latestLivePoint = liveTempDataset.data[liveTempDataset.data.length - 1];
-        const currentTime = latestLivePoint.x;
-        const currentTemp = latestLivePoint.y;
-
-        // 現在時間に対応する設定温度を補間して取得
-        const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
-
-        // targetTempがnullの場合も描画しない
-        if (targetTemp === null) {
-            return;
-        }
-
-        // 温度差を計算
-        const tempDifference = currentTemp - targetTemp; // 正なら設定より高い、負なら低い
-
-        // 円の色と半径を計算
-        const indicatorColor = getColorForTemperatureDifference(tempDifference);
-        const indicatorRadius = getRadiusForTemperatureDifference(tempDifference);
-
-        // --- 描画開始 ---
-        ctx.save(); // 現在の描画状態を保存
-
-        // Chart.jsの描画エリアの左上隅にCanvasの原点を移動
-        ctx.translate(chartArea.left, chartArea.top);
-
-        // 現在のデータポイントのピクセル座標（ChartArea内での相対座標）
-        const pixelX = scales.x.getPixelForValue(currentTime) - chartArea.left;
-        const pixelY = scales.y.getPixelForValue(currentTemp) - chartArea.top;
-
-        // 1. ヒートマップ円の描画
-        ctx.beginPath();
-        ctx.arc(pixelX, pixelY, indicatorRadius, 0, Math.PI * 2);
-        ctx.fillStyle = indicatorColor;
-        ctx.fill();
-        const strokeRadius = indicatorRadius;//indicatorRadius + radi / 2;
-        ctx.arc(pixelX, pixelY, strokeRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = setHslaAlpha(indicatorColor, 0.2);
-        ctx.lineWidth = indicatorRadius * 1.05;
-        ctx.stroke();
-
-        // 2. 将来の矢印描画のためにtranslateを戻す（この時点では矢印は描かない）
-        // ctx.translate(-pixelX, -pixelY); // 矢印の原点移動を戻す
-
-        ctx.restore(); // 保存した描画状態を元に戻す（重要！）
-    }
-};
-
 // SmartAIIndicator プラグインをChart.jsに登録
-Chart.register(smartAIIndicatorPlugin);
-
+//Chart.register(smartAIIndicatorPlugin);
 
 // --- ヘルパー関数 ---
 /**
@@ -1185,16 +1225,18 @@ function getRadiusForTemperatureDifference(tempDiff) {
  *
  * @param {Array<Object>} profileData - { time: number, temp: number } 形式のプロファイルデータ配列。
  * @param {number} currentTime - 目標RoRを計算したい現在の時間 (秒)。
- * @param {number} periodSeconds - 移動平均RoRの計算に使う期間 (秒)。デフォルトは30秒。
+ * @param {number} periodSeconds - 移動平均RoRの計算に使う期間 (秒)。デフォルトは20秒。
+ * @param {number} halfposition - 現在の位置を基準にするためのオフセット (デフォルトは0（現在位置よりperiodSeconds分前から計算）)。
  * @returns {number|null} 計算されたRoR (°C/分)、またはデータ不足の場合はnull。
  */
-function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20) {
+function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20, halfposition = 0) {
     if (profileData.length < 2) return null;
 
-    const halfPeriod = periodSeconds / 2;
+    if (halfposition < 0) { halfposition = 0; }
+    else if (halfposition > periodSeconds) { halfposition = periodSeconds; }
     // RoR計算の開始時間と終了時間
-    const startTime = (currentTime - halfPeriod).toFixed(0);
-    const endTime = (currentTime + halfPeriod).toFixed(0);
+    const startTime = (currentTime - (periodSeconds - halfposition)).toFixed(0);
+    const endTime = (currentTime + halfposition).toFixed(0);
 
     if (startTime < 1) {
       return null;
@@ -1210,14 +1252,14 @@ function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20)
     // フィルタリングされたデータがRoR計算に不十分な場合
     if (relevantPoints.length < 2) {
         // 例えば、プロファイルの最初や最後でデータが不足する場合
-        if (currentTime <= profileData[0].time + halfPeriod) {
+        if (currentTime <= profileData[0].time + periodSeconds) {
             // プロファイルの最初から periodSeconds 以内の場合、最初の2点を使う
             const p1 = profileData[0];
             const p2 = profileData[1];
             const dt = p2.time - p1.time;
             const dT = p2.temp - p1.temp;
             return null; //dt > 0 ? (dT / dt) * 60 : 0;
-        } else if (currentTime >= profileData[profileData.length - 1].time - halfPeriod) {
+        } else if (currentTime >= profileData[profileData.length - 1].time - periodSeconds) {
             // プロファイルの最後から periodSeconds 以内の場合、最後の2点を使う
             const p1 = profileData[profileData.length - 2];
             const p2 = profileData[profileData.length - 1];
@@ -1248,19 +1290,24 @@ function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20)
  * リアルタイム温度データから、指定期間（periodSeconds）内のデータに対する線形回帰を用いてRoRを計算します。
  * これは、N個のデータポイントの移動平均 RoR の一種として機能し、ノイズに強いです。
  *
- * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
+ * @param {Array<Object>} data - { x: time, y: temp } 形式のリアルタイム温度データ。
  * @param {number} periodSeconds - RoR計算に使う期間（秒）。
  * @returns {number} 現在のRoR (°C/min)。計算に必要なデータが不足している場合は0。
  */
-function calculateCurrentRoR(liveData, periodSeconds = 20) {
-    if (liveData.length < 2) return 0; // 最低2点は必要
-
-    const currentPointTime = liveData[liveData.length - 1].x;
+function calculateRoR(data, position = -1, periodSeconds = 20) {
+    if (data.length < 2) return 0; // 最低2点は必要
+    let currentPointTime;
+    if (position == -1) {
+      currentPointTime = data[data.length - 1].x;
+    } 
+    else {
+      currentPointTime = position;
+    }
     const startTime = currentPointTime - periodSeconds;
 
     // 計算期間内のデータポイントをフィルタリング
     // 線形回帰には少なくとも2点必要
-    const relevantPoints = liveData.filter(p => p.x >= startTime);
+    const relevantPoints = data.filter(p => p.x >= startTime && p.x < currentPointTime);
 
     if (relevantPoints.length < 2) {
         return 0; // データが不足している場合は0を返す
@@ -1296,37 +1343,6 @@ function calculateCurrentRoR(liveData, periodSeconds = 20) {
 }
 
 /**
- * リアルタイム温度データから現在のRoRを計算します。
- * (例: 直近30秒間の平均RoR)
- * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
- * @param {number} periodSeconds - RoR計算に使う期間（秒）。
- * @returns {number} 現在のRoR (°C/min)。データ不足の場合は0。
- */
-function calculateCurrentRoR2(liveData, periodSeconds = 30) {
-    if (liveData.length < 2) return 0;
-
-    const currentPoint = liveData[liveData.length - 1];
-    let pastPoint = null;
-
-    // periodSeconds 前のデータポイントを探す
-    for (let i = liveData.length - 2; i >= 0; i--) {
-        if (currentPoint.x - liveData[i].x >= periodSeconds) {
-            pastPoint = liveData[i];
-            break;
-        }
-    }
-
-    if (!pastPoint) { // 十分な過去データがない場合は、利用可能な最新2点を使う
-        pastPoint = liveData[0];
-    }
-
-    const timeElapsed = currentPoint.x - pastPoint.x;
-    const tempChange = currentPoint.y - pastPoint.y;
-
-    return timeElapsed > 0 ? (tempChange / timeElapsed) * 60 : 0; // °C/min
-}
-
-/**
  * リアルタイム温度データから加速度を計算します。
  * (RoRのRoR、つまりRoRの変化率)
  * @param {Array<Object>} liveData - { x: time, y: temp } 形式のリアルタイム温度データ。
@@ -1338,7 +1354,7 @@ function calculateAcceleration(liveData, rorPeriodSeconds = 30, accelerationPeri
     if (liveData.length < 3) return 0; // 加速度計算には最低3点（RoRを2回計算するため）
 
     // 現在のRoR
-    const currentRoR = calculateCurrentRoR(liveData, rorPeriodSeconds);
+    const currentRoR = calculateRoR(liveData, rorPeriodSeconds);
 
     // 加速度計算のために、少し前の時点でのRoRを計算
     const currentPointTime = liveData[liveData.length - 1].x;
@@ -1357,7 +1373,7 @@ function calculateAcceleration(liveData, rorPeriodSeconds = 30, accelerationPeri
     const pastRoRData = liveData.filter(p => p.x <= pastTimeForRoR);
     if (pastRoRData.length < 2) return 0;
 
-    const prevRoR = calculateCurrentRoR(pastRoRData, rorPeriodSeconds);
+    const prevRoR = calculateRoR(pastRoRData, rorPeriodSeconds);
 
     const timeDiffRoR = currentPointTime - pastTimeForRoR; // RoR間の時間差（秒）
     
@@ -1453,4 +1469,116 @@ function calculateArrowVector(currentTemp, targetTemp, currentRoR, targetRoR, ac
     const angleRadians = angleDegrees * (Math.PI / 180);
 
     return { length, angle: angleRadians };
+}
+
+// 指定したチャート座標に画像を追加する関数
+function drawArrowImage(xValue, yValue, size, color) {
+}
+
+// 指定したチャート座標に画像を追加する関数
+function moveImageAt(xValue, yValue, size, color) {
+    // チャート座標をピクセル座標に変換
+    const xPixel = roastChart.scales.x.getPixelForValue(xValue);
+    const yPixel = roastChart.scales.y.getPixelForValue(yValue);
+    
+    // キャンバスの位置を取得
+    const canvasRect = roastChart.canvas.getBoundingClientRect();
+    const containerRect = roastChart.canvas.parentElement.getBoundingClientRect();
+    
+    // HTML絶対座標に変換（コンテナ基準）
+    const absoluteX = xPixel + (canvasRect.left - containerRect.left);
+    const absoluteY = yPixel + (canvasRect.top - containerRect.top);
+    
+    const xy = translateChartCoordinate(roastChart, xValue, yValue);
+    // 画像要素を作成
+    const img = document.getElementById('chart-point');
+    img.style.display = 'block';
+    img.style.left = (xy.x - img.offsetWidth / 2) + 'px'; // 中央揃え
+    img.style.top = (xy.y - img.offsetHeight / 2) + 'px';  // 中央揃え
+    img.style.width = size + 'px'; // サイズを指定
+    img.style.height = size + 'px'; // サイズを指定
+    img.style.backgroundColor = color; // 色を指定
+}
+// 指定したチャート座標に画像を追加する関数
+function translateChartCoordinate(chart, xValue, yValue) {
+    // チャート座標をピクセル座標に変換
+    const xPixel = chart.scales.x.getPixelForValue(xValue);
+    const yPixel = chart.scales.y.getPixelForValue(yValue);
+    
+    // キャンバスの位置を取得
+    const canvasRect = chart.canvas.getBoundingClientRect();
+    const containerRect = chart.canvas.parentElement.getBoundingClientRect();
+    
+    // HTML絶対座標に変換（コンテナ基準）
+    const absoluteX = xPixel + (canvasRect.left - containerRect.left);
+    const absoluteY = yPixel + (canvasRect.top - containerRect.top);
+    
+    return { x: absoluteX, y: absoluteY };
+}
+
+/**
+ * 矢印要素の位置と回転を更新します。
+ *
+ * @param {object} chart - Chart.jsのチャートインスタンス
+ * @param {number} currentTime - 現在のチャート上の時間（X軸の値）
+ * @param {number} currentTemp - 現在のチャート上の温度（Y軸の値）
+ * @param {number} historyCount - 矢印の方向計算に使用する過去のデータポイント数（N）
+ * @param {number} [arrowLength=30] - 矢印の長さ（ピクセル）。デフォルトは30px。
+ */
+function updateArrowPositionAndRotation(chart, currentTime, currentTemp, historyCount, arrowLength = 30) {
+    const arrowElement = document.getElementById('chart-arrow');
+    const rorDataset = chart.data.datasets[1];
+
+    if (!arrowElement || !rorDataset || rorDataset.data.length === 0) {
+        // 要素やデータがない場合は何もしない
+        arrowElement.style.display = 'none'; // 非表示にする
+        return;
+    }
+    // --- 1. 現在のデータポイントのピクセル座標を取得 ---
+    const currentPixelPos = translateChartCoordinate(chart, currentTime, currentTemp);
+    // --- 2. 過去N回分の平均データポイントを計算 ---
+    let pastXSum = 0;
+    let pastYSum = 0;
+    const dataPoints = rorDataset.data;
+    const startIndex = Math.max(0, dataPoints.length - historyCount); // 過去N個分の開始インデックス
+
+    if (startIndex >= dataPoints.length) {
+        // データがN個未満の場合も非表示
+        arrowElement.style.display = 'none';
+        return;
+    }
+
+    let validCount = 0;
+    for (let i = startIndex; i < dataPoints.length; i++) {
+        pastXSum += dataPoints[i].x;
+        pastYSum += dataPoints[i].y; // RoRのY値を直接使用するか、またはTempを使用するかは要検討
+        validCount++;
+    }
+
+    if (validCount === 0) {
+        arrowElement.style.display = 'none';
+        return;
+    }
+
+    const avgPastX = pastXSum / validCount;
+    const avgPastY = pastYSum / validCount;
+
+    const avgPastPixelPos = translateChartCoordinate(chart, avgPastX, avgPastY);
+
+    // --- 4. ベクトル（方向）を計算 ---
+    // (現在の点) - (過去の平均点)
+    const deltaX = currentPixelPos.x - avgPastPixelPos.x;
+    const deltaY = currentPixelPos.y - avgPastPixelPos.y;
+    const angleRad = Math.atan2(deltaY, deltaX);
+    const angleDeg = angleRad * (180 / Math.PI); // ラジアンを度に変換
+    const arrowWidth = arrowElement.offsetWidth;
+    const arrowHeight = arrowElement.offsetHeight;
+
+    // 矢印の中心（デフォルトのtransform-origin: 50% 50%）を現在の点に合わせる
+    // X軸は左端、Y軸は上端を基準とするため、Y軸は要素の半分を引く
+    arrowElement.style.left = `${currentPixelPos.x }px`;
+    arrowElement.style.top = `${currentPixelPos.y - arrowHeight / 2}px`;
+    const rotation = angleDeg; // 基本の回転
+    arrowElement.style.transform = `rotate(${rotation}deg)`;
+    arrowElement.style.display = 'block'; // 矢印を表示
 }

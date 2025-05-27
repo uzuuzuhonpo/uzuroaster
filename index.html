@@ -149,7 +149,7 @@
       display: flex;
       gap: 20px;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       flex-wrap: wrap;
     }
 
@@ -205,7 +205,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      width: 120px;
+      width: 160px;
     }
 
     .display-label {
@@ -227,6 +227,11 @@
       color: var(--accent-color);
       font-size: 16px;
       align-self: center;
+    }
+    #control-buttons {
+      margin-left:auto;
+      display: flex;
+      gap: 10px;
     }
 
     /* Table Controls */
@@ -521,8 +526,18 @@
   }
 
 
-#table-button-area {
+.chart-control-button {
+  width: 20px;
+  text-align: center;
+  padding:2px;
+  margin: 0px;
+  height: 36px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-weight: bold;
+  color: #777;
 }
+
 .table-button {
 	height: 20px;
 	text-align: center;
@@ -728,7 +743,81 @@
   transform: scale(1.5); /* 好きな倍率に調整 */
   z-index: 10;
 }
-	
+
+.image-overlay {
+    display: none; /* 初期状態では非表示 */
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+    z-index: 10000;
+    border-radius: 50%;
+    background-color: rgba(255,0,0,0.6);
+    transform-origin: 50% 50%;
+    filter: blur(2.5px);
+}
+
+.pointer-animation {
+    animation: pulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8); /* 最初は等倍 */
+        opacity: 0.8; /* オプション: 透明度も変化させる */
+    }
+    50% {
+        transform: scale(1.2); /* 途中で1.5倍に拡大 */
+        opacity: 1; /* オプション: 透明度も変化させる */
+    }
+    100% {
+        transform: scale(0.8); /* 最後は等倍に戻る */
+        opacity: 0.8; /* オプション: 透明度も変化させる */
+    }
+}
+
+.image-arrow {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+    z-index: 20000;
+    transform-origin: left center; 
+    display: none; /* 初期状態では非表示 */
+    /* transition はそのまま */
+    transition:
+        left 0.5s ease-out,
+        top 0.5s ease-out,
+        transform 1s linear;
+}
+
+/* ★★★ ここが重要！SVGとpathに直接スタイルを適用する ★★★ */
+.image-arrow svg {
+    width: 100%; /* 親divのサイズに合わせる */
+    height: 100%; /* 親divのサイズに合わせる */
+    display: block; /* インライン要素なのでブロックにすると扱いやすい */
+    transform-origin: 0% 50%; /* または left center; */
+}
+
+/* fill="currentColor" と stroke="currentColor" を使う場合 */
+.image-arrow svg path {
+    /* fill: currentColor; */ /* fill="currentColor"はHTML属性で指定済みなので不要 */
+    stroke: currentColor; /* 親のcolorプロパティを参照してストローク色を設定 */
+    stroke-width: 1px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* もし fill と stroke で別の色にしたい場合 */
+
+.image-arrow svg path {
+    fill: rgba(255, 0, 0, 0.5); /* SVGのfill="currentColor"とstroke="currentColor"の色をここで制御 */
+    stroke: rgba(0, 0, 0, 0.5);
+    stroke-width: 1px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
 </style>
 </head>
 <body>
@@ -753,7 +842,10 @@
         <button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button>
         <span id="connection-label">未接続</span>
       </div>
-    <!-- プロファイルメタデータ -->
+    <div><button class="button red-button" onclick="window.location.href = window.location.href;">RESET</button>
+    <button class="button" onclick="helpButtonCommand()">ヘルプ</button>
+    <button class="button" onclick="configButtonCommand()">設定</button></div>
+  <!-- プロファイルメタデータ -->
     <div class="profile-meta">
       <div class="meta-field">
         <label for="profileTitle">タイトル：</label>
@@ -766,13 +858,10 @@
     </div>
       <div class="roast-controls">
         <div id="roasting-indicator" class="hidden"></div>
-        <button class="button header-button" onclick="sendStartCommand()" id="start-button">スタート</button>
-        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
       </div>
     </div>
 
 <!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
-
     <div class="popup" id="popupTextarea">焙煎メモ<br>
         <textarea id="popupText"></textarea>
         <div id="popup-button-area"><button id="closePopup">閉じる</button></div>
@@ -782,7 +871,7 @@
 
       <!-- 表示エリア -->
     <div class="display-area">
-      <div class="display-item" id="roast_time_area">
+      <div class="display-item" id="roast_time_area" style="cursor: pointer;">
         <div class="display-label">経過時間</div>
         <div class="display-value" id="roast_time">0 秒</div>
       </div>
@@ -791,8 +880,16 @@
         <div class="display-value" id="roast_temperature">0 ℃</div>
       </div>
       <div class="display-item">
-        <div class="display-label">目標温度</div>
+        <div class="display-label">RoR(現在温度)</div>
+        <div class="display-value" id="roast_ror">--</div>
+      </div>
+      <div class="display-item">
+        <div class="display-label">プロファイル温度</div>
         <div class="display-value" id="profile_temperature">0 ℃</div>
+      </div>
+      <div class="display-item">
+        <div class="display-label">RoR(プロファイル温度)</div>
+        <div class="display-value" id="profile_ror">--</div>
       </div>
       <div class="display-item">
         <div class="display-label">評価</div>
@@ -810,6 +907,15 @@
       <button onclick="downloadJSON()" class="button">📁 プロファイル保存</button>
       <button class="button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
       <button class="button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
+      <div id="control-buttons">
+        <div>
+        <button class="chart-control-button " onclick="shorenChart()" id="shorten-button">◀</button>
+        <button class="chart-control-button " onclick="resetWidthChart()" id="reset-width-button">||</button>
+        <button class="chart-control-button " onclick="enlargeChart()" id="enlarge-button">▶</button>
+        </div>
+        <button class="button header-button" onclick="sendStartCommand()" id="start-button">スタート</button>
+        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
+      </div>    
     </div>
     
     <!-- メインコンテンツエリア -->
@@ -835,10 +941,15 @@
           <button id="all-delete-button" class="button button-accent red-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
         </div>
       </div>
-
-      <!-- チャートセクション -->
+     <!-- チャートセクション -->
       <div class="chart-section">
         <div class="chart-container" id="chart-area">
+          <div class="image-overlay" id="chart-point"></div>
+          <div class="image-arrow" id="chart-arrow">
+            <svg viewBox="0 0 30 30" fill="currentColor">
+              <path d="M0 12L20 12L20 6L28 14L20 22L20 16L0 16Z"/>
+            </svg>
+          </div>
           <canvas id="roastChart"></canvas>
         </div>
       </div>

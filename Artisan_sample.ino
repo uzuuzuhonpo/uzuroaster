@@ -19,7 +19,7 @@
 #include <ArduinoJson.h>
 
 #define MAX_ROAST_TIME  1800
-#define MAX_TEMPERATURE 300
+#define MAX_TEMPERATURE 260
 
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -56,13 +56,14 @@ float RoastData[MAX_ROAST_TIME];
 
 // 🔑 Wi-Fi設定
 const char Ssid[] = "UZU-ROASTER";
-const char Password[] = "00000000";
+const char Password[] = "";
 const IPAddress IpAddress_(192, 168, 4, 1); 	// *** set any addr ***
 const IPAddress SubNet(255, 255, 255, 0); 	// *** set any addr ***
 
 // センサーオブジェクト作成
 Adafruit_MAX31855 thermocouple(ThermoCLK_pin, ThermoCS_pin, ThermoDO_pin);
 float AverageTemperature = 0.0;
+float ProfileTemperature = 0.0;
 const String TemperaturePath = "temperature";
 
 //////////////////////////////////////////////////////////////////////////
@@ -121,10 +122,12 @@ void ReadTempTask(void *pvParameters) {
   float avg;
   MovingAverage ma(10, 2);  // 10個の値で移動平均を計算
   int count = 0;
+  int temp_send_interval_count = 0;
 
   while (true) {
     bt = ReadThermoCouple();
     avg = ma.addValue(bt);
+    String msg;
 
     if (SimulateCount > 0.5) {
       avg = SimulateCount;
@@ -146,17 +149,45 @@ void ReadTempTask(void *pvParameters) {
       }
     }
 
-    if (roasting && roasting < MAX_ROAST_TIME) {
-      roastTime += 1;
-      RoastData[roastTime] = AverageTemperature;
-      SendTemperatureData();
+    ProfileTemperature = getTargetTemp(roastTime);
+    float diff = AverageTemperature - ProfileTemperature;
 
+    temp_send_interval_count++;
+    if ((temp_send_interval_count % 10) == 0) {
+      temp_send_interval_count = 0;
+      if (roastTime >= MAX_ROAST_TIME) {
+      }
+      if (roasting && roastTime < MAX_ROAST_TIME) {
+        RoastData[roastTime] = AverageTemperature;
+        SendTemperatureData(roastTime);
+        roastTime += 1;
+
+        if (diff > 10) msg = "火から離して！";
+        else if (diff < -15) msg = "火力上げて！";
+        else msg = "順調ずら〜";
+        sendMessage(msg);
+      }
+      else {
+        #define NO_ROASTING   -1
+        SendTemperatureData(NO_ROASTING);
+        msg = "焙煎待機中";
+        sendMessage(msg);
+      }
     }
-  }
 
-
-    vTaskDelay(delay); // FreeRTOS流のdelay
+     vTaskDelay(delay); // FreeRTOS流のdelay
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+void sendMessage(String message) {
+  StaticJsonDocument<128> json;
+  json["msg"] = message;
+
+  String payload;
+  serializeJson(json, payload);
+
+  webSocket.broadcastTXT(payload);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -258,7 +289,7 @@ void loop() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-float getTargetTemp(float t, const std::vector<std::pair<float, float>>& roastProfile) {
+float getTargetTemp(float t) {
   if (roastProfile.empty()) return 0.0f;
 
   // 最初より前：先頭の温度を返す
@@ -599,7 +630,7 @@ void TaskSetup()
   xTaskCreatePinnedToCore(
     ReadTempTask,         // タスク関数
     "My60HzTask",   // 名前
-    2048,           // スタックサイズ（バイト）
+    4096,           // スタックサイズ（バイト）
     NULL,           // パラメータ
     1,              // 優先度
     &taskHandle,    // ハンドル格納先
@@ -632,7 +663,7 @@ void WiFiSetup() {
   String pass = preferences.getString("pass", Password);
   preferences.end();
 
-  WiFi.softAP(ssid, pass);
+  WiFi.softAP(ssid, pass, 1, 0, 10);  // Max. connection = 10
   delay(100);
   
   IPAddress my_ip = WiFi.softAPIP();
@@ -642,6 +673,9 @@ void WiFiSetup() {
   Serial.print("SSID(AP): ");
   Serial.println(ssid);
   
+  // ３）DNSサーバー起動（全ドメインを local_ip に向ける）
+  dnsServer.start(53, "*", IpAddress_);
+
   WebSerial.begin(&ServerObject);
   WebSerial.onMessage(WebReceiveMsg);
   ServerObject.begin();
@@ -649,8 +683,6 @@ void WiFiSetup() {
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
 
-// ３）DNSサーバー起動（全ドメインを local_ip に向ける）
-  dnsServer.start(53, "*", IpAddress_);
    // エンドポイント登録（非同期の形式）
    String path = "/" + TemperaturePath;
   ServerObject.on(path.c_str(), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -719,14 +751,19 @@ float ReadThermoCouple() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-void SendTemperatureData() {
-    float temp = SimulateCount;
+void SendTemperatureData(int time) {
+    if (isnan(AverageTemperature) || isinf(AverageTemperature)) {
+        Serial.println("異常な温度値のため送信中止");
+        return;
+    }
 
     StaticJsonDocument<128> json;
-    json["time"] = roastTime;
-    json["temp"] = temp;
-    
+    json["time"] = time;
+    json["temp"] = roundf(AverageTemperature * 10) / 10.0;;
+    json["temp_prof"] = roundf(ProfileTemperature * 10) / 10.0;
+
     String message;
+    message.reserve(64);
     serializeJson(json, message);
     webSocket.broadcastTXT(message);
 }
@@ -768,6 +805,8 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
     else if (strcmp(cmd, "stop") == 0) {
       roasting = false;
       Serial.println("焙煎ストップ受信");
+      String msg = "焙煎終了！";
+      sendMessage(msg);
 
       StaticJsonDocument<256> ack;
       ack["type"] = "ack";
@@ -785,21 +824,26 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
 void handleWebSocketMessage(uint8_t num, uint8_t *payload, size_t length) {
-  DynamicJsonDocument doc(60000); // 焙煎プロファイル分
-  DeserializationError error = deserializeJson(doc, payload);
-  const char* id = doc["id"];
+  Serial.printf("空きヒープ: %d bytes\n", ESP.getFreeHeap());
 
+  DynamicJsonDocument doc(20000);  // 1バッチ分だけ確保
+  DeserializationError error = deserializeJson(doc, payload);
   if (error) {
-    Serial.println("JSONデコードエラー");
+    Serial.println("JSONエラー: ");
+    Serial.println(error.f_str());
     return;
   }
 
+  const char* id = doc["id"];
   const char* type = doc["type"];
-  if (strcmp(type, "profile_upload") == 0) {
+
+  if (strcmp(type, "profile_upload_batch") == 0) {
+    int part = doc["part"];
+    bool isLast = doc["isLast"];
     JsonArray profileArray = doc["profile"].as<JsonArray>();
-    roastProfile.clear();  // いったんクリア
+
+    if (part == 0) roastProfile.clear();  // 最初のバッチだけクリア
 
     for (JsonObject point : profileArray) {
       float time = point["x"];
@@ -807,21 +851,22 @@ void handleWebSocketMessage(uint8_t num, uint8_t *payload, size_t length) {
       roastProfile.emplace_back(time, temp);
     }
 
-    // 保存されたプロファイルを確認
-    Serial.println("プロファイルを受信:");
-    for (auto& pt : roastProfile) {
-      Serial.printf("  t=%.1f, temp=%.1f\n", pt.first, pt.second);
+    // バッチごとのACK送信
+    StaticJsonDocument<256> ack;
+    ack["type"] = "ack";
+    ack["status"] = "ok";
+    ack["id"] = String(id) + "_" + String(part);
+    ack["message"] = "Batch received";
+    String response;
+    serializeJson(ack, response);
+    webSocket.sendTXT(num, response);
+
+    if (isLast) {
+      Serial.println("プロファイル全体受信完了！");
+      for (auto& pt : roastProfile) {
+        Serial.printf("t=%.1f, temp=%.1f\n", pt.first, pt.second);
+      }
     }
-
-      StaticJsonDocument<256> ack;
-      ack["type"] = "ack";
-      ack["status"] = "ok";
-      ack["id"] = id;
-      ack["message"] = "Profile uploaded";
-
-      String response;
-      serializeJson(ack, response);
-      webSocket.sendTXT(num, response);
   }
 }
 
