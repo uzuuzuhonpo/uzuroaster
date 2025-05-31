@@ -278,12 +278,10 @@ function sendStartCommand() {
         initChart();
 	      updateChartWithProfile(getProfileDataFromTable());
         SetRoastingState(true);
-        const img = document.getElementById('chart-point');
-        img.style.display = 'none';
-        const arrow = document.getElementById('chart-arrow');
-        arrow.style.display = 'none';
+        HideChartIndicators();
+        const img = document.getElementById('chart-point');   
         if (img && !img.classList.contains('pointer-animation')) {
-            img.classList.add('pointer-animation');
+          img.classList.add('pointer-animation');
         }
         resolve(response);
       } 
@@ -315,14 +313,10 @@ function sendStopCommand() {
       clearTimeout(timeout);
       if (response.status === "ok") {
 	  	  document.getElementById('roast_message').textContent = "焙煎を停止しました";
+        HideChartIndicators();
         const img = document.getElementById('chart-point');
-        img.style.display = 'none';
         if (img && img.classList.contains('pointer-animation')) {
             img.classList.remove('pointer-animation');
-        }
-        const arrowElement = document.getElementById('chart-arrow');
-        if (arrowElement) {
-          arrowElement.style.display = 'none';
         }
         resolve(response);
       } else {
@@ -334,6 +328,44 @@ function sendStopCommand() {
   });
  
 }
+
+function HideChartIndicators() {
+  const img = document.getElementById('chart-point');   
+  if (img) {  
+    img.style.display = 'none'; // グラフのポイントを非表示
+    if (img.classList.contains('pointer-animation')) {
+      img.classList.remove('pointer-animation'); // アニメーションを削除
+    }
+  }   
+  const arrowElement = document.getElementById('chart-arrow');
+  if (arrowElement) {       
+    arrowElement.style.display = 'none'; // 矢印を非表示
+  } 
+  const dashLine = document.getElementById('overlayCanvas');
+  if (dashLine) {       
+    dashLine.style.display = 'none'; 
+  }   
+ 
+}
+
+function ShowChartIndicators() {
+  const img = document.getElementById('chart-point');   
+  if (img) {  
+    img.style.display = 'block'; 
+    if (img.classList.contains('pointer-animation')) {
+      img.classList.add('pointer-animation'); 
+    }
+  }   
+  const arrowElement = document.getElementById('chart-arrow');
+  if (arrowElement) {       
+    arrowElement.style.display = 'block'; 
+  }   
+  const dashLine = document.getElementById('overlayCanvas');
+  if (dashLine) {       
+    dashLine.style.display = 'block'; 
+  }   
+}
+
 
 function sendProfileInBatches(profileData) {
   const BATCH_SIZE = 100;
@@ -1055,6 +1087,7 @@ const smartAIIndicatorPlugin = {
     const liveTempDataset = chart.data.datasets[1]; // リアルタイム温度
     const rorDataset = chart.data.datasets[3]; // RoRデータセット
 
+    // プロファイルが表示されてなかったらインジケーターは表示しない
     if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
         return;
     }
@@ -1084,14 +1117,8 @@ const smartAIIndicatorPlugin = {
     // 1. ヒートマップ円の描画
     moveImageAt(currentTime, currentTemp, indicatorRadius * 2, setHslaAlpha(indicatorColor, 0.6));
     updateArrowPositionAndRotation(roastChart, currentTime, currentTemp, 5);
-    ctx.restore(); // 保存した描画状態を元に戻す（重要！）
     
-    const arrowElement = document.getElementById('chart-arrow');
-    if (arrowElement) {
-      arrowElement.style.display = 'block'; // 矢印を表示
-    }
-
-    ctx.restore();
+    ShowChartIndicators();
 
     const currentPx = { x: currentTime, y: currentTemp };
     let targetPx = ProfileSecondData[currentTime + Math.floor(Math.random() * (100)) + 1];
@@ -1099,12 +1126,12 @@ const smartAIIndicatorPlugin = {
       targetPx = { x: currentTime, y: currentTemp }; // データがない場合は現在の値を使用
     }
     
-    //const xy = translateChartCoordinate(roastChart, currentTime, currentTemp);
     if (currentPx && targetPx) {
-      //drawTargetDashLine(currentPx, targetPx, roastChart);
       updateCorrectionVisuals(chart, currentPx, ProfileSecondData);
 
-    }    
+    } 
+    ctx.restore();
+   
   }
 };
 
@@ -1466,7 +1493,6 @@ function moveImageAt(xValue, yValue, size, color) {
     const xy = translateChartCoordinate(roastChart, xValue, yValue);
     // 画像要素を作成
     const img = document.getElementById('chart-point');
-    img.style.display = 'block';
     img.style.left = (xy.x - img.offsetWidth / 2) + 'px'; // 中央揃え
     img.style.top = (xy.y - img.offsetHeight / 2) + 'px';  // 中央揃え
     img.style.width = size + 'px'; // サイズを指定
@@ -1555,7 +1581,6 @@ function updateArrowPositionAndRotation(chart, currentTime, currentTemp, history
     arrowElement.style.top = `${currentPixelPos.y - arrowHeight / 2}px`;
     const rotation = angleDeg; // 基本の回転
     arrowElement.style.transform = `rotate(${rotation}deg)`;
-    arrowElement.style.display = 'block'; // 矢印を表示
 }
 
 // オーバーレイCanvasのコンテキストを一度取得しておく
@@ -1564,8 +1589,6 @@ const overlayCtx = overlayCanvas ? overlayCanvas.getContext('2d') : null;
 
 // CanvasのサイズをメインチャートのCanvasと同じにする関数 (リサイズ対応)
 function resizeOverlayCanvas() {
-    if (overlayCanvas && roastChart) { // chartInstanceはChart.jsのインスタンス
-    }
 }
 
 // --- Helper to get pixel coordinates ---
@@ -1655,7 +1678,6 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
 
     // 描画コンテキストを毎回リセットし、DPRスケールを適用する
     overlayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
     // データ値のバリデーション
     if (!currentChartPointData || !targetChartPointData ||
@@ -1669,25 +1691,18 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
     const targetPx = getChartPixelCoordinates(chart, targetChartPointData);
 
     // --- ここから線の終点計算ロジック ---
-    // 1. 方向ベクトルの算出 (現在点から目標点へ)
     const dx = targetPx.x - currentPx.x;
     const dy = targetPx.y - currentPx.y;
-
-    // 2. チャートの描画エリアの境界線を取得
-    // Chart.jsのスケールオブジェクトから、グラフが描画される実際のピクセル範囲を取得します。
     const chartArea = chart.chartArea; // Chart.js 2.x/3.x/4.x で共通
 
-    // 3. 線の終点を計算する関数
     function calculateLineEndPoint(startPx, dx, dy, chartArea) {
         // ベクトルが0（点が重なっている）場合は、終点も始点と同じ
         if (dx === 0 && dy === 0) {
             return startPx;
         }
 
-        // 始点から各境界線までの「距離の比率」を計算する
         let t = Infinity; // パラメータ t
 
-        // X軸方向 (左右の境界線)
         if (dx !== 0) {
             const tx1 = (chartArea.left - startPx.x) / dx;
             const tx2 = (chartArea.right - startPx.x) / dx;
@@ -1695,23 +1710,15 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
             else t = Math.min(t, tx1);      // 左方向へ進むなら左境界
         }
 
-        // Y軸方向 (上下の境界線)
         if (dy !== 0) {
             const ty1 = (chartArea.top - startPx.y) / dy;
             const ty2 = (chartArea.bottom - startPx.y) / dy;
             if (dy > 0) t = Math.min(t, ty2); // 下方向へ進むなら下境界
             else t = Math.min(t, ty1);      // 上方向へ進むなら上境界
         }
-
-        // 最も早く到達する境界線での終点座標を計算
-        // t が無限大のままであれば、線はチャートエリアを横切らない（点のみ）
         if (t === Infinity || isNaN(t)) {
-            // エラーケースまたは非常に短い線、または点が描画エリア外の場合
             return startPx; // 始点と同じ点を返すか、描画しないなどの処理
         }
-
-        // パラメータ t を使って終点を計算
-        // 少なくともターゲットポイントまでは到達するように、tは1以上を保証
         t = Math.max(t, 1); // targetPxを必ず含むようにする
 
         return {
@@ -1720,15 +1727,20 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
         };
     }
 
-    // 計算した終点
     const endPx = calculateLineEndPoint(currentPx, dx, dy, chartArea);
 
+    if (animationStartTime == null) {
+      animateDashLine(currentPx, endPx); 
+    }
+}
+
+function drawDashLinePhysical(currentPx, endPx) {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
     // --- 破線を描画 ---
     overlayCtx.beginPath();
-    overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // 黄色の破線
+    overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; 
     overlayCtx.lineWidth = 2;
     overlayCtx.setLineDash([5, 5]);
-
     overlayCtx.moveTo(currentPx.x, currentPx.y);
     overlayCtx.lineTo(endPx.x, endPx.y); // 現在点から計算した端の点まで描画
     overlayCtx.stroke();
@@ -1736,7 +1748,7 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
 }
 
 let animationStartTime = null;
-
+let last_endPx = null; 
 // 現在の線の終点座標（アニメーションの開始点）を保持する変数
 let currentLineEndPoint = null; // 例: { x: 100, y: 100 }
 let AnimationIntervalID = null;
@@ -1749,23 +1761,18 @@ let DashLineStartDataPoint = null;
  * 補助線の描画をアニメーションさせる
  * @param {object} startDataPoint アニメーションの開始データ点 {x, y}
  * @param {object} endDataPoint アニメーションの最終データ点 {x, y} (目標プロファイル上の点)
- * @param {Chart} chart Chart.jsインスタンス
  */
-function animateDashLine(startDataPoint, endDataPoint, chart) {
+function animateDashLine(startDataPoint, endDataPoint) {
     // アニメーションの開始時刻を記録
     if (AnimationIntervalID == null) {
-      animationStartTime = 0.0;
       AnimationIntervalID = setInterval(() => {
           animate100ms();
         }, 100);
     }
-    if (animationStartTime == 0.0){
-      animationStartTime = 0.1;
-    }
-    else { 
-      return; 
-    } // アニメーションがすでに開始されている場合は何もしない
+    animationStartTime = 0.1;
     DashLineStartDataPoint = startDataPoint; // 現在温度地点のデータ点
+    drawDashLinePhysical(DashLineStartDataPoint, endDataPoint);
+
     // アニメーションの開始データ点と終了データ点を設定
     if (DashLineAnimationEndData === null) {
       DashLineAnimationStartData = endDataPoint;
@@ -1779,21 +1786,17 @@ function animateDashLine(startDataPoint, endDataPoint, chart) {
 // アニメーションループを開始
 function animate100ms() {
     let progress = Math.min(animationStartTime, 1); // 0から1の進行度
-    if (animationStartTime >= 0.0) {
+    if (animationStartTime > 0.0) {
       animationStartTime += 0.1;
     }
     if (animationStartTime >= 1.0) {
-      animationStartTime = 0.0; // アニメーションをリセット
+      animationStartTime = null; // アニメーションをリセット
     }
-
     // 補間されたデータ値を計算
     const interpolatedDataX = DashLineAnimationStartData.x + (DashLineAnimationEndData.x - DashLineAnimationStartData.x) * progress;
     const interpolatedDataY = DashLineAnimationStartData.y + (DashLineAnimationEndData.y - DashLineAnimationStartData.y) * progress;
 
-    // 計算された補間データ点を使って、描画関数を呼び出す
-    // drawTargetDashLineは、現在点と目標点をデータ値で受け取る
-    // ここでは、現在温度地点は固定で、目標点のみをアニメーションさせる
-    drawTargetDashLine(DashLineStartDataPoint, { x: interpolatedDataX, y: interpolatedDataY }, roastChart);
+    drawDashLinePhysical(DashLineStartDataPoint, { x: interpolatedDataX, y: interpolatedDataY });
 }
 
 
