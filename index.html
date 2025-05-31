@@ -791,7 +791,6 @@
         transform 1s linear;
 }
 
-/* ★★★ ここが重要！SVGとpathに直接スタイルを適用する ★★★ */
 .image-arrow svg {
     width: 100%; /* 親divのサイズに合わせる */
     height: 100%; /* 親divのサイズに合わせる */
@@ -799,7 +798,6 @@
     transform-origin: 0% 50%; /* または left center; */
 }
 
-/* fill="currentColor" と stroke="currentColor" を使う場合 */
 .image-arrow svg path {
     /* fill: currentColor; */ /* fill="currentColor"はHTML属性で指定済みなので不要 */
     stroke: currentColor; /* 親のcolorプロパティを参照してストローク色を設定 */
@@ -816,6 +814,22 @@
     stroke-width: 1px;
     stroke-linejoin: round;
     stroke-linecap: round;
+}
+.debug_button {
+  width: 40px;
+  height: 20px;
+  font-size: 10px;
+}
+
+#overlayCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* メインチャートのCanvasと完全に同じサイズにする */
+    width: 100%; 
+    height: 100%;
+    z-index: 15000; /* 矢印（z-index: 20000）より下、Chart.jsのCanvasより上 */
+    pointer-events: none; /* 下のチャートへのクリックイベントを通過させる */
 }
 
 </style>
@@ -909,7 +923,7 @@
       <button class="button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
       <div id="control-buttons">
         <div>
-        <button class="chart-control-button " onclick="shorenChart()" id="shorten-button">◀</button>
+        <button class="chart-control-button " onclick="shotenChart()" id="shorten-button">◀</button>
         <button class="chart-control-button " onclick="resetWidthChart()" id="reset-width-button">||</button>
         <button class="chart-control-button " onclick="enlargeChart()" id="enlarge-button">▶</button>
         </div>
@@ -950,6 +964,7 @@
               <path d="M0 12L20 12L20 6L28 14L20 22L20 16L0 16Z"/>
             </svg>
           </div>
+          <canvas id="overlayCanvas"></canvas> 
           <canvas id="roastChart"></canvas>
         </div>
       </div>
