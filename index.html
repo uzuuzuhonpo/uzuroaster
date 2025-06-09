@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="chart.js"></script>
 	  <title>UZU ROASTER</title>
   <style>
@@ -48,9 +49,10 @@
 
     .status-indicator {
       display: inline-block;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
+      width: 16px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
       transition: background-color 0.3s ease;
     }
 
@@ -84,7 +86,8 @@
     .button {
       background-color: var(--primary-color);
       color: var(--text-light);
-      padding: 8px 16px;
+      padding: 2px 12px;
+      margin: 2px 0px;
       font-size: 14px;
       border: none;
       border-radius: 4px;
@@ -312,8 +315,9 @@
       padding: 2px 15px;
       text-align: center;
       border-bottom: 1px solid var(--border-color);
-		height: 20px;
-		width: 100px;
+      height: 20px;
+      line-height: 20px;
+      width: 100px;
     }
 
     th {
@@ -335,6 +339,7 @@
 
     td input {
       max-width: 100%;
+      height: 100%;
       padding: 0px 5px;
       border: 1px solid transparent;
       text-align: center;
@@ -345,6 +350,13 @@
       border-color: var(--primary-color);
       outline: none;
       background-color: var(--background-light);
+    }
+
+    td button {
+      background-color: transparent;
+      cursor: pointer;
+      padding: 0;
+      align-items: center;
     }
 
     .table-action-button {
@@ -380,17 +392,6 @@
     }
 
 /****************** Popup/Modal *******************************/
-    .popup-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      display: none;
-    }
-
     .popup {
       position: fixed;
       top: 50%;
@@ -400,7 +401,7 @@
       padding: 25px;
       border-radius: 8px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      z-index: 1001;
+      z-index: 30001;
       width: 90%;
       max-width: 600px;
       display: none;
@@ -433,7 +434,7 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.7);
-      z-index: 500;
+      z-index: 25000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -490,12 +491,6 @@
 
 /**************************************************************************************************/
 
-    .status-indicator {
-      display: inline-block;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-    }
     
 
 .thead-button {
@@ -602,7 +597,7 @@
             border: 1px solid #443b2f;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1010;
+            z-index: 30010;
             width: 95%;
             max-width: 800px;
             height: auto; /* 高さ自動調整 */
@@ -623,7 +618,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1009;
+            z-index: 30000;
         }
         #popup-button-area {
 			text-align: right;
@@ -677,7 +672,7 @@
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 768px) { /* スマホ用 */
   #main-area {
     flex-direction: column;
   }
@@ -688,6 +683,10 @@
 
   #profileTable {
     width: 100%;
+  }
+
+  body {
+   /*  font-size: 24px!important;  モバイルではフォントサイズを小さく */
   }
 }
 
@@ -706,7 +705,7 @@
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -759,6 +758,17 @@
 
 .pointer-animation {
     animation: pulse 1s infinite alternate ease-in-out;
+}
+
+#debug_console {
+    position: fixed;
+    width: 200px;
+    height: 80px;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 28000; /* 高いz-indexで他の要素の上に表示 */
 }
 
 @keyframes pulse {
@@ -841,24 +851,29 @@
     <div class="spinner"></div>
     <p>プロファイル送信中...</p>
   </div>
-</div>
-<div id="debug_console" style="position: fixed; left: 100px; display: block;">
+</div><div id="debug_console" style="display:none">
+
   <button class="debug_button" onclick="OffsetIncrement(0.1)">+0.1</button>
   <button class="debug_button" onclick="OffsetIncrement(1)">+1</button>
-  <button class="debug_button" onclick="OffsetIncrement(10)">+10</button><br>
+  <button class="debug_button" onclick="OffsetIncrement(10)">+10</button>&nbsp;
+  <button class="debug_button" onclick="CloseOffsetDialogBox()">✖</button><br>
   <button class="debug_button" onclick="OffsetIncrement(-0.1)">-0.1</button>
   <button class="debug_button" onclick="OffsetIncrement(-1)">-1</button>
-  <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>
+  <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>&nbsp;
+  <button class="debug_button" onclick="OffsetReset()">RESET</button>
 </div>
     <!-- ヘッダー部分 -->
     <div class="header">
       <div class="connection-status">
-        <button onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></button>
+        <div onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></div>
         <span id="connection-label">未接続</span>
       </div>
-    <div><button class="button red-button" onclick="window.location.href = window.location.href;">RESET</button>
-    <button class="button" onclick="helpButtonCommand()">ヘルプ</button>
-    <button class="button" onclick="configButtonCommand()">設定</button></div>
+    <div>
+      <button class="button red-button" onclick="ResetButtonCommand()">RESET</button>
+      <button class="button" onclick="helpButtonCommand()">ヘルプ</button>
+      <button class="button" onclick="configButtonCommand()">設定</button>
+      <button class="button" onclick="WebButtonCommand()">Web</button>
+    </div>
   <!-- プロファイルメタデータ -->
     <div class="profile-meta">
       <div class="meta-field">
@@ -907,28 +922,27 @@
       </div>
       <div class="display-item">
         <div class="display-label">評価</div>
-        <div class="display-value" id="score">100</div>
+        <div class="display-value" id="score">--</div>
       </div>
       <div id="roast_message">焙煎待機中</div>
     </div>
 
     <!-- テーブル操作ボタン -->
     <div class="table-controls">
-      <label for="fileInput" class="button">
-        <span>📁 プロファイル読込</span>
-      </label>
-      <input type="file" id="fileInput" multiple accept=".json, .alog, .csv">
-      <button onclick="downloadJSON()" class="button">📁 プロファイル保存</button>
-      <button class="button" onclick="sortTable();updateChartWithProfile(getProfileDataFromTable());sendCurrentProfile();">テーブル整列⇒アップロード</button>
-      <button class="button" onclick="overwriteTableWithLastRoast();">焙煎データ⇒テーブル⇒アップロード</button>
+<button type="button" class="button table_edit" onclick="openFileDialog()">
+    <span>📁 プロファイル読込</span>
+</button>
+<input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">      <button onclick="downloadJSON()" class="button table_edit">💾 プロファイル保存</button>
+      <button class="button table_edit" onclick="sendCurrentProfile();">📈 テーブル⇒プロファイル</button>
+      <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
       <div id="control-buttons">
         <div>
         <button class="chart-control-button " onclick="shotenChart()" id="shorten-button">◀</button>
         <button class="chart-control-button " onclick="resetWidthChart()" id="reset-width-button">||</button>
         <button class="chart-control-button " onclick="enlargeChart()" id="enlarge-button">▶</button>
         </div>
-        <button class="button header-button" onclick="sendStartCommand()" id="start-button">スタート</button>
-        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">ストップ</button>
+        <button class="button header-button" onclick="sendStartCommand()" id="start-button">▶ スタート</button>
+        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">■ ストップ</button>
       </div>    
     </div>
     
@@ -951,8 +965,8 @@
           </table>
          </div> 
         <div style="padding: 10px; text-align: center; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
-          <button class="button" onclick="addRow()">行追加</button>
-          <button id="all-delete-button" class="button button-accent red-button" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
+          <button class="button table_edit" onclick="addRow()">行追加</button>
+          <button id="all-delete-button" class="button button-accent red-button table_edit" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
         </div>
       </div>
      <!-- チャートセクション -->
@@ -960,9 +974,14 @@
         <div class="chart-container" id="chart-area">
           <div class="image-overlay" id="chart-point"></div>
           <div class="image-arrow" id="chart-arrow">
-            <svg viewBox="0 0 30 30" fill="currentColor">
-              <path d="M0 12L20 12L20 6L28 14L20 22L20 16L0 16Z"/>
-            </svg>
+
+<svg viewBox="0 0 30 24">
+  <path d="M2 10L18 10L18 6C18 5.4 18.4 5 19 5C19.3 5 19.5 5.1 19.7 5.3L27.7 11.3C28.1 11.7 28.1 12.3 27.7 12.7L19.7 18.7C19.3 19.1 18.7 19.1 18.3 18.7C18.1 18.5 18 18.2 18 18L18 14L2 14C1.4 14 1 13.6 1 13L1 11C1 10.4 1.4 10 2 10Z" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
+
+
+
+
           </div>
           <canvas id="overlayCanvas"></canvas> 
           <canvas id="roastChart"></canvas>
@@ -973,3 +992,73 @@
 <script src="script.js"></script>
 </body>
 </html>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const draggableElement = document.getElementById('debug_console');
+            // ドラッグハンドルを指定する場合 (h3要素など)
+            const dragHandle = draggableElement;
+            // ドラッグハンドルがない場合、draggableElement を直接使う
+            // const dragHandle = draggableElement; 
+
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            // ドラッグを開始するイベント
+            dragHandle.addEventListener('mousedown', dragStart);
+
+            function dragStart(e) {
+                // e.button === 0 は左クリックを意味します
+                if (e.button === 0) { 
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+
+                    // ドラッグ中はテキスト選択を無効にする（オプション）
+                    e.preventDefault(); 
+
+                    isDragging = true;
+                    // ドラッグ中はカーソルを移動中に変更
+                    draggableElement.style.cursor = 'grabbing'; 
+
+                    // マウス移動とマウスアップのイベントリスナーを body に追加
+                    // これにより、要素の外でマウスを離してもイベントを捕捉できる
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', dragEnd);
+                }
+            }
+
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault(); // ここでもデフォルト動作を防ぐ
+
+                    // 新しい位置を計算
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    xOffset = currentX;
+                    yOffset = currentY;
+
+                    // 要素の位置を更新 (transform を使うのがパフォーマンス上推奨)
+                    draggableElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+
+                    // あるいは、left/top を直接変更 (transform の方がスムーズ)
+                    // draggableElement.style.left = (e.clientX - initialX) + 'px';
+                    // draggableElement.style.top = (e.clientY - initialY) + 'px';
+                }
+            }
+
+            function dragEnd(e) {
+                isDragging = false;
+                // ドラッグ終了後はカーソルを元に戻す
+                draggableElement.style.cursor = 'grab'; 
+
+                // マウス移動とマウスアップのイベントリスナーを削除
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', dragEnd);
+            }
+        });
+    </script>

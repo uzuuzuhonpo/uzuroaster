@@ -11,7 +11,8 @@ let isMinutesSecondsFormat = false; // 初期値は秒表示
 let widthOffset = 0; // グラフの幅調整用オフセット
 let maxChartWidth = 1800; // グラフの最大幅
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
-
+const Version = "UZU ROASTER     Ver. 1.0.0\n\n うずうず本舗（うずうずコーヒー焙煎工房）"
+      + "\n https://uzuuzu.shop"; // バージョン情報
 window.addEventListener('resize', () => {
   if (roastChart) {
     roastChart.resize();
@@ -69,7 +70,9 @@ setTimeout(() => {
         });
 
 let socket = null;
+let keepAliveTimeout = null; // キープアライブタイマー
 connectWebSocket();
+ResetKeepAliveTimer();
 const pendingResponses = new Map();
 const liveData = [];
 let isRoasting = false;
@@ -77,19 +80,25 @@ let isRoasting = false;
 socket.onopen = () => {
 		updateConnectionStatus(true);
 	console.log("WebSocket接続");
-	};
+};
 socket.onclose = () => {  
-	updateConnectionStatus(false);
-	console.log("WebSocket切断");
-	};
+    updateConnectionStatus(false);
+    document.getElementById('roast_message').textContent = "接続が解除されました";
+    //sendStopCommand(); // 焙煎を停止
+    SetRoastingState(false);
+    HideChartIndicators();
+    console.log("WebSocket切断");
+};
 socket.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
     const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
     const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
-    if ("time" in data && "temp" in data && "temp_prof" in data) {
+    if ("time" in data && "temp" in data) {
       if (data.time > -1 && isRoasting) {
-        addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
+        document.getElementById('roast_message').textContent = "焙煎中";
+
+        const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
         document.getElementById('roast_time').textContent = formatSecondsToMinutesSeconds(data.time); 
         document.getElementById('roast_temperature').textContent = temp + "[℃]";
         if (roastChart.data.datasets[0].data.length === 0) {
@@ -97,7 +106,18 @@ socket.onmessage = (event) => {
             document.getElementById('profile_ror').textContent = "--";
         }
         else {	
-          document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+          //document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+          const profileTemp = getOneSecondIntervalProfile(getProfileDataFromTable());
+          if (profileTemp[0].time >= data.time) {
+            document.getElementById('profile_temperature').textContent = profileTemp[0].temp.toFixed(1) + "[℃]";
+          }   
+          else if (profileTemp[profileTemp.length - 1].time >= data.time) {    
+            document.getElementById('profile_temperature').textContent = profileTemp[data.time - profileTemp[0].time].temp.toFixed(1) + "[℃]";      
+          }   
+          else {
+            document.getElementById('profile_temperature').textContent = profileTemp[profileTemp.length - 1].temp.toFixed(1) + "[℃]";      
+          }
+
           if (roastChart.data.datasets[2].data.length > 0) {
             if (roastChart.data.datasets[2].data.length > data.time) {
               document.getElementById('profile_ror').textContent = (roastChart.data.datasets[2].data[data.time].y).toFixed(1);
@@ -106,8 +126,8 @@ socket.onmessage = (event) => {
               document.getElementById('profile_ror').textContent = "--";
             }
           }
-          document.getElementById('roast_ror').textContent = (roastChart.data.datasets[3].data[data.time].y).toFixed(1);
         }
+        document.getElementById('roast_ror').textContent = current_ror.y.toFixed(1);//(roastChart.data.datasets[3].data[roastChart.data.datasets[3].data.length - 1].y).toFixed(1);
       }
       else {	//焙煎中以外は現在温度のみ表示
         if (!isMinutesSecondsFormat) {
@@ -127,24 +147,20 @@ socket.onmessage = (event) => {
       }
   	}   
   	
-	else if ("msg" in data) {
-	  if (isRoasting) {
-  		if (roastChart.data.datasets[0].data.length === 0) {
-		    document.getElementById('roast_message').textContent = "焙煎中";
-		  }
-		  else {
-        document.getElementById('roast_message').textContent = data.msg;
+    else if ("msg" in data) {
+      if (data.msg === "KEEP_ALIVE") {
+        ResetKeepAliveTimer(); // キープアライブタイマーをリセット
+        return;
       }
-	  }
-	  else {
-		  //document.getElementById('roast_message').textContent = "焙煎停止中";
-	  }
-	}
+      else if (data.msg !== "") { 
+        document.getElementById('roast_message').textContent = data.msg; // メッセージを表示  } 
+      }
+    }
     else if (data.id && pendingResponses.has(data.id)) {
-    	pendingResponses.get(data.id)(data);
-    	pendingResponses.delete(data.id);
- 	} 
- 	else {
+      pendingResponses.get(data.id)(data);
+      pendingResponses.delete(data.id);
+    } 
+    else {
       console.log("その他のメッセージ:", data);
     }
   } catch (e) {
@@ -153,9 +169,32 @@ socket.onmessage = (event) => {
   }
 };
 
+function ResetKeepAliveTimer() {
+  if (keepAliveTimeout) {     
+    clearTimeout(keepAliveTimeout);
+  } 
+  keepAliveTimeout = setTimeout(() => {
+    console.warn("キープアライブメッセージが受信できませんでした");
+    updateConnectionStatus(false);
+    document.getElementById('roast_message').textContent = "接続が解除されました";
+    //sendStopCommand(); // 焙煎を停止
+    HideChartIndicators();
+
+    connectWebSocket(); // 再接続を試みる
+    keepAliveTimeout = null; // タイマーをリセット
+    ResetKeepAliveTimer();
+  }, 30000); // 30秒ごとにキープアライブチェック
+}
+
 let TemperatureOffset = 0;
 function OffsetIncrement(offset){
   TemperatureOffset += offset;
+}
+function OffsetReset(){
+  TemperatureOffset = 0;
+}
+function CloseOffsetDialogBox(){
+  document.getElementById('debug_console').style.display = "none";
 }
 
 function connectWebSocket() {
@@ -166,10 +205,19 @@ function generateUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 function SetRoastingState(flag) {
-  isRoasting = flag;
+    isRoasting = flag;
 	  document.getElementById('stop-button').disabled = !flag;
 	  document.getElementById('start-button').disabled = flag;
 	  showRoastingIndicator(flag);
+
+    function disableInputsByClass(roasting_flag) {
+      const className = 'table_edit'; // 対象のクラス名
+      const inputs = document.querySelectorAll(`.${className}`);
+      inputs.forEach(input => {
+          input.disabled = roasting_flag;
+      });
+    }
+    disableInputsByClass(flag)
 }
 
 document.addEventListener('keydown', function(event) {
@@ -217,12 +265,32 @@ function sendSafe(data) {
   }
 }
 
-function configButtonCommand() {
-  alert("設定画面はまだ実装されていません。");
-  // ここに設定画面への遷移や処理を追加することができます
+function helpButtonCommand() {
+  alert(Version);
 }
 
-function helpButtonCommand() {
+function ResetButtonCommand() {
+  const id = generateUniqueId(); // 一意なIDをつける
+  const message = { command: "reset", id: id  };
+  sendSafe(message);
+  console.log("リセットコマンド送信");
+  // キャッシュを無視して強制的にリロード (サーバーから再取得)
+  setTimeout(() => {    
+    location.reload(true);
+  }, 300);
+}
+
+function configButtonCommand() {
+  const id = document.getElementById('debug_console');
+  if (id.style.display === "none") {
+    id.style.display = "block";
+  } 
+  else {
+    id.style.display = "none";
+  }
+}
+
+function WebButtonCommand() {
   window.open("https://uzuuzu.shop", "_blank"); 
 }
 
@@ -274,15 +342,12 @@ function sendStartCommand() {
       clearTimeout(timeout);
       if (response.status === "ok") {
         console.log("焙煎スタートACK受信", response);
+	  	  document.getElementById('roast_message').textContent = "焙煎中";
         roastChart.destroy();
         initChart();
 	      updateChartWithProfile(getProfileDataFromTable());
         SetRoastingState(true);
-        HideChartIndicators();
-        const img = document.getElementById('chart-point');   
-        if (img && !img.classList.contains('pointer-animation')) {
-          img.classList.add('pointer-animation');
-        }
+        //HideChartIndicators();
         resolve(response);
       } 
       else {
@@ -300,12 +365,12 @@ function sendStopCommand() {
   sendSafe(message);
   console.log("ストップコマンド送信");
   SetRoastingState(false);
+  HideChartIndicators();
   
    return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       pendingResponses.delete(id);
       alert("焙煎ストップがタイムアウトしました。\nWiFi接続を確認してください。");
-  		SetRoastingState(true);
       reject(new Error("タイムアウト"));
     }, 3000); // 3秒でタイムアウトする
 
@@ -313,15 +378,9 @@ function sendStopCommand() {
       clearTimeout(timeout);
       if (response.status === "ok") {
 	  	  document.getElementById('roast_message').textContent = "焙煎を停止しました";
-        HideChartIndicators();
-        const img = document.getElementById('chart-point');
-        if (img && img.classList.contains('pointer-animation')) {
-            img.classList.remove('pointer-animation');
-        }
         resolve(response);
       } else {
         alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
-  		SetRoastingState(true);
         reject(new Error("ストップ失敗: " + response.message));
       }
     });
@@ -403,7 +462,7 @@ function sendProfileInBatches(profileData) {
           batchIndex++;
           if (batchIndex === totalBatches) {
             resolve(response); // 最後まで完了！
-		    document.getElementById('roast_message').textContent = "プロファイルをアップロードしました";
+            document.getElementById('roast_message').textContent = "プロファイルをアップロードしました";
           } else {
             sendNextBatch(); // 次へ
           }
@@ -418,18 +477,26 @@ function sendProfileInBatches(profileData) {
 }
 
 function sendCurrentProfile() {
+  
+  {
+    sortTable();
+    const profileData = getProfileDataFromTable();
+    updateChartWithProfile(profileData);
+    return; // 直接アップロードはしない 
+  }
+
+
   showUploadOverlay();
   sortTable();
   const profileData = getProfileDataFromTable();
   updateChartWithProfile(profileData);
-
+ 
   if (!profileData || profileData.length === 0) {
     alert("焙煎プロファイルがありません。");
     hideUploadOverlay(); 
     return;
   }
 
- 
   const converted = profileData.map(p => ({
     x: Math.round(p.time),
     y: Math.round(p.temp * 10) / 10
@@ -522,8 +589,11 @@ function addLiveDataPoint(chart, time, temp) {
     const RoR = { x: time, y: calculateRoR(LiveData) };
     chart.data.datasets[1].data.push(newPoint);
     chart.data.datasets[3].data.push(RoR);
+    updateCorrectionVisuals(chart, newPoint, ProfileSecondData);
     AutoChartWidthAdjustment(chart, 0); // 最大値+1で表示範囲を調整
     chart.update(); // ← 'none' にするとアニメーションもカット
+
+    return RoR;
   }
 }
 
@@ -535,9 +605,9 @@ function addRow(time = '', temp = '') {
   const tempCell = row.insertCell(1);
   const deleteCell = row.insertCell(2);
 
-  timeCell.innerHTML = `<input type="number" value="${time}" step="1" min="0" max="1799" oninput="validateInput_time(this, 0, 1799)">`;
-  tempCell.innerHTML = `<input type="number" value="${temp}" min="0" max="260" oninput="validateInput_temperature(this, 0, 260)">`;
-  deleteCell.innerHTML = `<button onclick="this.parentNode.parentNode.remove()">🗑</button>`;
+  timeCell.innerHTML = `<input class="table_edit" type="number" value="${time}" step="1" min="0" max="1799" oninput="validateInput_time(this, 0, 1799)">`;
+  tempCell.innerHTML = `<input class="table_edit" type="number" value="${temp}" min="0" max="260" oninput="validateInput_temperature(this, 0, 260)">`;
+  deleteCell.innerHTML = `<button class="table_edit" onclick="this.parentNode.parentNode.remove()">🗑</button>`;
 }
 
 function validateInput_temperature(input, min, max) {
@@ -631,7 +701,7 @@ function updateConnectionStatus(isConnected) {
   const connectionLabel = document.getElementById('connection-label');
   
   if (isConnected) {
-    statusIndicator.style.backgroundColor = '#00ff00';
+    statusIndicator.style.backgroundColor = '#1ecc32';
     connectionLabel.textContent = '接続中';
   } else {
     statusIndicator.style.backgroundColor = '#cccccc';
@@ -682,7 +752,11 @@ function downloadJSON() {
   a.click();
   URL.revokeObjectURL(url);
 
-  document.getElementById('roast_message').textContent = "プロファイルを保存ドしました";
+  document.getElementById('roast_message').textContent = "プロファイルの保存処理が完了しました";
+}
+
+function openFileDialog() {
+    document.getElementById('fileInput').click();
 }
 
 document.getElementById("fileInput").addEventListener("change", (event) => {
@@ -852,7 +926,6 @@ const verticalLinePlugin = {
   }
 };
 
-
 function initChart() {
   const ctx = document.getElementById('roastChart').getContext('2d');
 
@@ -947,29 +1020,19 @@ function initChart() {
               x: {
                   type: 'linear', // 時間を数値として扱う
                   position: 'bottom',
-                  title: { display: true, text: '経過時間 (秒)' },
+                  title: {  display: true,
+                            text: '経過時間 (秒)'
+                  },
                   min: 0,
                   max: 1800, // 30分
                   ticks: {
-                    // ★★★ ここが重要！ ★★★
                     callback: function(value, index, values) {
-                        // value は現在の目盛りの値（秒数）
-                        // index は目盛りのインデックス
-                        // values はすべての目盛りの配列
-                        
-                        // 秒数を分:秒形式に変換するヘルパー関数を使用
-                        // 前の会話で定義した formatSecondsToMinutesSeconds 関数があればそれを使えます
-                        // 例: function formatSecondsToMinutesSeconds(totalSeconds) { ... }
                         if (!isMinutesSecondsFormat) {
                             return value; // 秒表示
                         }
                         else {
                           return formatSecondsToMinutesSeconds(value);
                         }
-                        const minutes = Math.floor(value / 60);
-                        const seconds = Math.floor(value % 60);
-                        const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
-                        return `${minutes}:${formattedSeconds}`;
                     }
                   }
 
@@ -1011,6 +1074,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (roastTimeDisplay) {
     roastTimeDisplay.addEventListener('click', () => {
       isMinutesSecondsFormat = !isMinutesSecondsFormat;
+      roastChart.options.scales.x.title.text = !isMinutesSecondsFormat ? '経過時間 (秒)' : '経過時間 (分)';
       roastChart.update();
     });
   }
@@ -1088,7 +1152,7 @@ const smartAIIndicatorPlugin = {
     const rorDataset = chart.data.datasets[3]; // RoRデータセット
 
     // プロファイルが表示されてなかったらインジケーターは表示しない
-    if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0) {
+    if (!liveTempDataset || liveTempDataset.data.length === 0 || !profileDataset || profileDataset.data.length === 0 || !isRoasting) {
         return;
     }
 
@@ -1120,16 +1184,6 @@ const smartAIIndicatorPlugin = {
     
     ShowChartIndicators();
 
-    const currentPx = { x: currentTime, y: currentTemp };
-    let targetPx = ProfileSecondData[currentTime + Math.floor(Math.random() * (100)) + 1];
-    if (!targetPx) {
-      targetPx = { x: currentTime, y: currentTemp }; // データがない場合は現在の値を使用
-    }
-    
-    if (currentPx && targetPx) {
-      updateCorrectionVisuals(chart, currentPx, ProfileSecondData);
-
-    } 
     ctx.restore();
    
   }
@@ -1531,7 +1585,6 @@ function updateArrowPositionAndRotation(chart, currentTime, currentTemp, history
     const rorDataset = chart.data.datasets[1];
 
     if (!arrowElement || !rorDataset || rorDataset.data.length === 0) {
-        // 要素やデータがない場合は何もしない
         arrowElement.style.display = 'none'; // 非表示にする
         return;
     }
@@ -1589,6 +1642,12 @@ const overlayCtx = overlayCanvas ? overlayCanvas.getContext('2d') : null;
 
 // CanvasのサイズをメインチャートのCanvasと同じにする関数 (リサイズ対応)
 function resizeOverlayCanvas() {
+    overlayCanvas.width = roastChart.canvas.width;
+    overlayCanvas.height = roastChart.canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    // 描画コンテキストを毎回リセットし、DPRスケールを適用する
+    overlayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 }
 
 // --- Helper to get pixel coordinates ---
@@ -1608,15 +1667,14 @@ function getChartPixelCoordinates(chart, dataPoint) {
  * @param {Array<object>} profileData 焙煎プロファイルのデータ配列 [{x: time, y: temp}, ...]
  */
 function updateCorrectionVisuals(chart, currentTempData, profileData) {
-    if (!overlayCtx || !overlayCanvas || !chart || !currentTempData || !profileData || profileData.length === 0) {
-        console.warn("Required data for updateCorrectionVisuals is missing or invalid.");
+    if (!currentTempData || !profileData || profileData.length === 0) { // プロファイルがロードされていない
         return;
     }
 
     // 3. 焙煎プロファイル上の目標点を特定
     // ここでは「現在の時間から少し未来の目標プロファイルの点」を目指すアプローチを取ります
     // 例: 現在時間から +10秒後のプロファイル上の点を目標とする
-    const targetLookAheadSeconds = 15; // 調整可能な秒数
+    const targetLookAheadSeconds = 20; // 調整可能な秒数
     const targetTime = currentTempData.x + targetLookAheadSeconds;
 
     // プロファイルデータから目標時間に対応する温度を見つける (線形補間)
@@ -1646,6 +1704,7 @@ function updateCorrectionVisuals(chart, currentTempData, profileData) {
     // もしtargetTimeがプロファイルの最後を超えていたら、プロファイルの最終点を目標とする
     if (targetDataPoint === null && profileData.length > 0) {
         targetDataPoint = profileData[profileData.length - 1];
+        targetDataPoint.x = chart.scales.x.max; // 最後の時間を最大値に設定
     }
 
     if (!targetDataPoint) {
@@ -1654,11 +1713,8 @@ function updateCorrectionVisuals(chart, currentTempData, profileData) {
     }
 
     drawTargetDashLine(currentTempData, targetDataPoint, roastChart);
-    // if (lastCurrentPoint != currentTempData) {
-    //   lastCurrentPoint = currentTempData; // 現在の最新データ点
-    //   animateDashLine(lastCurrentPoint, targetDataPoint, roastChart);
-    // }
   }
+
 let lastCurrentPoint = null;
 /**
  * 現在温度地点からターゲットポイントを通ってチャートの端まで破線を描画する関数
@@ -1671,13 +1727,6 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
         console.error("Overlay Canvas, Context, または Chart インスタンスが利用できません。");
         return;
     }
-
-    overlayCanvas.width = roastChart.canvas.width;
-    overlayCanvas.height = roastChart.canvas.height;
-    const dpr = window.devicePixelRatio || 1;
-
-    // 描画コンテキストを毎回リセットし、DPRスケールを適用する
-    overlayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // データ値のバリデーション
     if (!currentChartPointData || !targetChartPointData ||
@@ -1700,16 +1749,13 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
         if (dx === 0 && dy === 0) {
             return startPx;
         }
-
         let t = Infinity; // パラメータ t
-
         if (dx !== 0) {
             const tx1 = (chartArea.left - startPx.x) / dx;
             const tx2 = (chartArea.right - startPx.x) / dx;
             if (dx > 0) t = Math.min(t, tx2); // 右方向へ進むなら右境界
             else t = Math.min(t, tx1);      // 左方向へ進むなら左境界
         }
-
         if (dy !== 0) {
             const ty1 = (chartArea.top - startPx.y) / dy;
             const ty2 = (chartArea.bottom - startPx.y) / dy;
@@ -1720,23 +1766,27 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData, chart) 
             return startPx; // 始点と同じ点を返すか、描画しないなどの処理
         }
         t = Math.max(t, 1); // targetPxを必ず含むようにする
-
+        
+        const mag = 100;
         return {
-            x: startPx.x + dx * t,
-            y: startPx.y + dy * t
+            x: startPx.x + dx * t * mag,
+            y: startPx.y + dy * t * mag
         };
     }
 
     const endPx = calculateLineEndPoint(currentPx, dx, dy, chartArea);
 
-    if (animationStartTime == null) {
-      animateDashLine(currentPx, endPx); 
-    }
+    animateDashLine(currentPx, endPx); 
 }
 
 function drawDashLinePhysical(currentPx, endPx) {
-    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-    // --- 破線を描画 ---
+    resizeOverlayCanvas();
+
+    overlayCtx.save(); 
+    overlayCtx.beginPath();
+    overlayCtx.rect(roastChart.chartArea.left, roastChart.chartArea.top, roastChart.chartArea.width, roastChart.chartArea.height);
+    overlayCtx.clip(); // ここでクリッピングを適用
+
     overlayCtx.beginPath();
     overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; 
     overlayCtx.lineWidth = 2;
@@ -1745,6 +1795,7 @@ function drawDashLinePhysical(currentPx, endPx) {
     overlayCtx.lineTo(endPx.x, endPx.y); // 現在点から計算した端の点まで描画
     overlayCtx.stroke();
     overlayCtx.setLineDash([]); // 破線モードをリセット
+    overlayCtx.restore();
 }
 
 let animationStartTime = null;
@@ -1752,9 +1803,10 @@ let last_endPx = null;
 // 現在の線の終点座標（アニメーションの開始点）を保持する変数
 let currentLineEndPoint = null; // 例: { x: 100, y: 100 }
 let AnimationIntervalID = null;
-let DashLineAnimationStartData = null;
-let DashLineAnimationEndData = null;
-let DashLineStartDataPoint = null;
+let DashLineAnimationEndData_S = null;
+let DashLineAnimationEndData_E = null;
+let DashLineAnimationStartData_S = null;
+let DashLineAnimationStartData_E = null;
 
 // アニメーションをトリガーする関数
 /**
@@ -1763,40 +1815,59 @@ let DashLineStartDataPoint = null;
  * @param {object} endDataPoint アニメーションの最終データ点 {x, y} (目標プロファイル上の点)
  */
 function animateDashLine(startDataPoint, endDataPoint) {
-    // アニメーションの開始時刻を記録
-    if (AnimationIntervalID == null) {
-      AnimationIntervalID = setInterval(() => {
-          animate100ms();
-        }, 100);
+    if (AnimationIntervalID != null) {
+        clearInterval(AnimationIntervalID); // 既存のアニメーションをクリア
     }
-    animationStartTime = 0.1;
-    DashLineStartDataPoint = startDataPoint; // 現在温度地点のデータ点
-    drawDashLinePhysical(DashLineStartDataPoint, endDataPoint);
+    animationStartTime = 0.01;
 
     // アニメーションの開始データ点と終了データ点を設定
-    if (DashLineAnimationEndData === null) {
-      DashLineAnimationStartData = endDataPoint;
+    if (DashLineAnimationEndData_E === null) {
+      DashLineAnimationEndData_S = endDataPoint;
+      DashLineAnimationStartData_S = startDataPoint; // 現在温度地点のデータ点
     }
     else {
-      DashLineAnimationStartData = DashLineAnimationEndData;
+      DashLineAnimationEndData_S = DashLineAnimationEndData_E;
+      DashLineAnimationStartData_S = DashLineAnimationStartData_E;
     }
-    DashLineAnimationEndData = endDataPoint;             
+    DashLineAnimationEndData_E = endDataPoint;  
+    DashLineAnimationStartData_E = startDataPoint;  
+    AnimationIntervalID = setInterval(() => {
+      animate100ms();
+    }, 100);
+
 }
 
 // アニメーションループを開始
 function animate100ms() {
-    let progress = Math.min(animationStartTime, 1); // 0から1の進行度
     if (animationStartTime > 0.0) {
-      animationStartTime += 0.1;
+      animationStartTime += 0.09;
     }
-    if (animationStartTime >= 1.0) {
-      animationStartTime = null; // アニメーションをリセット
-    }
-    // 補間されたデータ値を計算
-    const interpolatedDataX = DashLineAnimationStartData.x + (DashLineAnimationEndData.x - DashLineAnimationStartData.x) * progress;
-    const interpolatedDataY = DashLineAnimationStartData.y + (DashLineAnimationEndData.y - DashLineAnimationStartData.y) * progress;
 
-    drawDashLinePhysical(DashLineStartDataPoint, { x: interpolatedDataX, y: interpolatedDataY });
+    let progress = Math.min(animationStartTime, 1); // 0から1の進行度
+    progress = easeInOutQuad(progress); 
+    if (progress >= 1.0) {
+      animationStartTime = null; // アニメーションをリセット
+      clearInterval(AnimationIntervalID); // アニメーションを停止
+      AnimationIntervalID = null; // IDをリセット
+      return;
+    }
+
+    // 補間されたデータ値を計算
+    const interpolatedEndDataX = DashLineAnimationEndData_S.x + (DashLineAnimationEndData_E.x - DashLineAnimationEndData_S.x) * progress;
+    const interpolatedEndDataY = DashLineAnimationEndData_S.y + (DashLineAnimationEndData_E.y - DashLineAnimationEndData_S.y) * progress;
+    const interpolatedStartDataX = DashLineAnimationStartData_S.x + (DashLineAnimationStartData_E.x - DashLineAnimationStartData_S.x) * progress;
+    const interpolatedStartDataY = DashLineAnimationStartData_S.y + (DashLineAnimationStartData_E.y - DashLineAnimationStartData_S.y) * progress;
+
+    drawDashLinePhysical({ x: interpolatedStartDataX, y: interpolatedStartDataY }, { x: interpolatedEndDataX, y: interpolatedEndDataY });
 }
 
+// イージング関数 (例: quadInOut - 緩やかに加速し、緩やかに減速する)
+function easeInOutQuad(t) {
+    t *= 2;
+    if (t < 1) return 0.5 * t * t;
+    return -0.5 * (--t * (t - 2) - 1);
+}
 
+//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+// Version.1.0.0
+//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
