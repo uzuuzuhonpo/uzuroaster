@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UZU Roaster（うずロースター）取扱説明書</title>
+    <title>UZU ROASTER（うずロースター）取扱説明書</title>
     <style>
         body {
             font-family: 'Segoe UI', 'Meiryo', sans-serif;
@@ -132,16 +132,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>UZU Roaster（うずロースター）取扱説明書</h1>
+        <h1>UZU ROASTER（うずロースター）取扱説明書</h1>
 
         <div class="table-of-contents">
             <h2>目次</h2>
             <ul>
                 <li><a href="#section-product-overview">📦 製品概要</a></li>
-                <li><a href="#section-preparation">🚀 準備と接続</a></li> <li><a href="#section-main-features">✨ UZU Roasterの主な機能</a></li> <li><a href="#section-artisan-usb">☕ Artisanと連携する（USB接続編）</a>
+                <li><a href="#section-preparation">🚀 準備と接続</a></li> <li><a href="#section-main-features">✨ UZU ROASTERの主な機能</a></li> <li><a href="#section-artisan-usb">☕ Artisanと連携する（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-artisan-requirements">🧰 必要なもの</a></li>
-                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU Roaster (ESP32) 側の準備</a></li> <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバーのインストール）</a></li>
+                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバーのインストール）</a></li>
                         <li><a href="#subsection-artisan-settings">⚙️ 3. Artisanの設定手順</a></li>
                         <li><a href="#subsection-artisan-test">✅ 接続テスト＆確認</a></li> <li><a href="#subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント</a></li> </ul>
                 </li>
@@ -150,32 +150,41 @@
                         <li><a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a></li> </ul>
                 </li>
                 <li><a href="#section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ）の詳しい操作方法</a> <ul>
-                        <li><a href="#subsection-web-app-overview">1. Webアプリ概要</a></li> <li><a href="#subsection-web-app-basic-screen">2. 基本画面と各エリアの説明</a></li> <li><a href="#subsection-web-app-profile-edit">3. 焙煎プロファイルの作成・編集</a></li> <li><a href="#subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み</a></li>
-                        <li><a href="#subsection-web-app-roast-control">5. 焙煎開始・停止の操作</a></li> <li><a href="#subsection-web-app-assist">6. リアルタイム表示と焙煎アシスト機能</a></li> </ul>
-                </li><a href="#section-attachment">🎁 付録</a>
+                        <li><a href="#subsection-web-app-overview">1. Webアプリ概要</a></li> <li><a href="#subsection-web-app-basic-screen">2. 基本画面と各エリアの説明</a></li> 
+                        <li><a href="#subsection-web-app-profile-edit">3. 焙煎プロファイルの作成・編集</a></li> 
+                        <li><a href="#subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み</a></li>
+                        <li><a href="#subsection-web-app-roast-control">5. 焙煎開始・停止の操作</a></li> 
+                        <li><a href="#subsection-web-app-assist">6. リアルタイム表示と焙煎アシスト機能</a></li> </ul>
+                </li>
+                <li><a href="#section-custom-webserver">🌏 カスタムウェブサーバー機能</a> <ul>
+                        <li><a href="#section-custom-webserver_uzu">☕ うずロースターを使った「キャプティブポータル広告宣伝システム」の概要</a></li> 
+                        <li><a href="#section-custom-webserver-fs">Web画面（LittleFS）の構成と更新</a></li> </ul>
+                </li>
+                <li><a href="#section-troubleshooting">💡 トラブルシューティング（困ったときは）</a></li> 
+                <li><a href="#section-product-specs">📋 製品仕様</a></li> 
+                <li><a href="#section-inquiry">📞 お問い合わせ</a></li>
+                <li><a href="#section-attachment">🎁 付録</a></li>
                 <ul>
-                <li><a href="#section-web-serial-commands">💬 Web/USBシリアルコマンド一覧</a></li> <li><a href="#section-sensor-specs">📈 温度センサーと表示の仕様</a></li>
-                <li><a href="#section-power-saving">💤 省電力モードについて</a></li> <li><a href="#section-web-screen-littlefs">📁 Web画面（LittleFS）の構成と更新</a></li> <li><a href="#section-notes">📌 ご使用上の注意</a></li> <li><a href="#section-troubleshooting">💡 トラブルシューティング（困ったときは）</a></li> <li><a href="#section-maintenance">👨‍🔧 メンテナンス情報（開発者向け）</a></li>
-                <li><a href="#section-contact">🧪 開発協力・お問い合わせ</a></li>
+                <li><a href="#section-web-serial-commands">💬 Web/USBシリアルコマンド一覧</a></li> 
+                <li><a href="#section-sensor-specs">📈 温度センサーと表示の仕様</a></li>
                 <li><a href="#section-webserial-manual">🌐 WebSerial（ブラウザ焙煎ビューアー）接続マニュアル【応用編】</a> <ul>
                         <li><a href="#subsection-webserial-whatis">💡 WebSerialとは？</a></li>
                         <li><a href="#subsection-webserial-environment">🧪 必要な環境</a></li>
                     </ul>
                 </li>
-                <li><a href="#section-future-outlook">🚀 将来の展望</a></li>
-                <li><a href="#section-product-specs">📋 製品仕様</a></li> 
+                <li><a href="#section-loadmap">🧪 開発ロードマップ</a></li>
                 </ul>   
             </ul>
         </div>
 
         <h2 id="section-product-overview">📦 製品概要</h2>
-        <p>UZU Roaster（うずロースター）は、小型のコーヒー焙煎機や手鍋に接続し、**温度センサーのデータをリアルタイムで取得**するIoTデバイスです。取得したデータは、PCソフトの「Artisan」や、うずロースター内蔵のWebページ（うずロースターコントローラー）上で表示され、焙煎を強力にアシストします。Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
+        <p>UZU ROASTER（うずロースター）は、小型のコーヒー焙煎機や手鍋に接続し、**温度センサーのデータをリアルタイムで取得**するIoTデバイスです。取得したデータは、PCソフトの「Artisan」や、うずロースター内蔵のWebページ（うずロースターコントローラー）上で表示され、焙煎を強力にアシストします。Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
 
         <h2 id="section-preparation">🚀 準備と接続</h2>
         <ol>
             <li>
                 <h3>K型熱電対の接続:</h3>
-                <p>K型熱電対をUZU Roaster本体の接続端子に接続してください。**プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。** もし常温でマイナス付近の値が表示される場合、接続が逆になっている可能性があります。</p>
+                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。**プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。** もし常温でマイナス付近の値が表示される場合、接続が逆になっている可能性があります。</p>
                 <ul>
                     <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）、U字端子</li>
                     <li><strong>ご注意:</strong> 接続不可能な端子の場合は、お手数ですが追加工して形状を合わせてください。</li>
@@ -184,30 +193,30 @@
             </li>
         </ol>
 
-        <h2 id="section-main-features">✨ UZU Roasterの主な機能</h2>
-        <p>UZU Roasterはコーヒー焙煎をサポートする以下の3つの主要な機能を提供します。</p>
+        <h2 id="section-main-features">✨ UZU ROASTERの主な機能</h2>
+        <p>UZU ROASTERはコーヒー焙煎をサポートする以下の3つの主要な機能を提供します。</p>
         <ol>
-            <li>**Artisan連携（USBシリアル）:** PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示できます。</li>
-            <li>**うずロースターコントローラー（Webアプリ）:** UZU Roaster本体に内蔵されたWebサーバー機能により、PCやスマホのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
-            <li>**カスタムWebサーバー機能:** ユーザーが自由に作成したカスタムWebページを、UZU RoasterのWi-Fiスポット経由で表示・利用できます。</li>
+            <li>**Artisan連携（USBシリアル）:** PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
+            <li>**うずロースターコントローラー（Webアプリ）:** UZU ROASTER本体に内蔵されたWebサーバー機能により、PCやスマホのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
+            <li>**カスタムWebサーバー機能:** ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
         </ol>
 
         <hr>
 
         <h2 id="section-artisan-usb">☕ Artisanと連携する（USB接続編）</h2>
-        <p>このセクションでは、UZU Roaster (ESP32) をPCにUSB接続し、Artisanの温度ロガーとして利用する手順を説明します。温度の表示・記録・プロファイルの作成など、焙煎ログ管理が飛躍的に快適になります。</p>
+        <p>このセクションでは、UZU ROASTER (ESP32) をPCにUSB接続し、Artisanの温度ロガーとして利用する手順を説明します。温度の表示・記録・プロファイルの作成など、焙煎ログ管理が飛躍的に快適になります。</p>
 
         <h3 id="subsection-artisan-requirements">🧰 必要なもの:</h3>
         <ul>
-            <li>UZU Roaster本体（焙煎用温度センサーモジュール AX31855搭載）</li>
+            <li>UZU ROASTER本体（焙煎用温度センサーモジュール AX31855搭載）</li>
             <li>焙煎用温度センサー K型熱電対</li>
             <li>PC（Windows/macOS/Linux）</li>
             <li>Artisan（最新版推奨） 👉 <a href="https://artisan-scope.org/" target="_blank">Artisan公式サイト</a></li>
-            <li>USB Type-Cケーブル（UZU RoasterとPCを接続するため）</li>
+            <li>USB Type-Cケーブル（UZU ROASTERとPCを接続するため）</li>
         </ul>
 
-        <h3 id="subsection-esp32-preparation">🔌 1. UZU Roaster側の仕様:</h3>
-        <p>UZU Roaster には、以下の機能が実装されています。</p>
+        <h3 id="subsection-esp32-preparation">🔌 1. UZU ROASTER側の仕様:</h3>
+        <p>UZU ROASTER には、以下の機能が実装されています。</p>
         <ul>
             <li>USBシリアル通信で温度を定期的に出力する機能。
                 <ul>
@@ -217,11 +226,11 @@
         </ul>
         <div class="tip">
             <h4>ヒント:</h4>
-            <p>このデータ形式は、Web/USBシリアルコマンドにより柔軟に変更できます。</p>
+            <p>このデータ形式は、Web/USBシリアルコマンドにより柔軟に変更可能です。</p>
         </div>
 
         <h3 id="subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバーのインストール）:</h3>
-        <p>UZU RoasterをUSBでPCに接続するために、USBシリアルドライバーのインストールが必要です。</p>
+        <p>UZU ROASTERをUSBでPCに接続するために、USBシリアルドライバーのインストールが必要です。</p>
         <ul>
             <li><strong>Windowsの場合:</strong><br>
                 <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank">https://www.wch.cn/downloads/CH341SER_ZIP.html</a> から「CH340 USBシリアルドライバー」をダウンロードし、PCにインストールしてください。</li>
@@ -231,7 +240,7 @@
 
         <h3 id="subsection-artisan-settings">⚙️ 3. Artisanの設定手順:</h3>
         <ol>
-            <li>UZU RoasterとPCをUSBケーブルで接続します。</li>
+            <li>UZU ROASTERとPCをUSBケーブルで接続します。</li>
             <li>Artisanを起動します。（ArtisanはすでにPCにインストールされているものとします）</li>
             <li>Artisanのメニューから「設定」→「デバイス」を開きます。</li>
         </ol>
@@ -244,9 +253,9 @@
 
         <h4>【シリアルポート構成】</h4>
         <ul>
-            <li><code>ポート</code>: UZU Roasterが接続されているCOMポートを指定します。<br>
+            <li><code>ポート</code>: UZU ROASTERが接続されているCOMポートを指定します。<br>
                 （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code> など）</li>
-            <li><code>通信速度</code>: <code>115200</code> （UZU Roaster側と合わせてください）</li>
+            <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER側と合わせてください）</li>
             <li><code>データー長</code>: <code>8</code></li>
             <li><code>パリティービット</code>: <code>N</code></li>
             <li><code>ストップビット</code>: <code>1</code></li>
@@ -257,21 +266,16 @@
             <p>Artisanの設定画面で、<code>ET/BT</code> の設定を変更することで、異なる温度センサーのデータを扱うことも可能です。</p> 
         
                 <h4>【スクリプト設定（Serial Protocol）】</h4>
-                <ol start="4">
-                    <li>Artisanのメニューで「設定 → スクリプト → シリアルポート読み取りスクリプト」を開き、以下の内容を貼り付けます。</li>
-                </ol>
-                <pre><code class="language-python"># 一行に温度1つだけ送られてくる場合
-        return float(input)
+                <ol>
+                    <li>Artisanのメニューで「構成（Config） → デバイス（Device）」を開き、「Prog」でカスタムスクリプトを設定することで任意のフォーマットの温度データが受信できるようになります。
+                        <br>詳しくは公式ドキュメントをご参照ください。
+                    </li>
 
-        # 複数チャンネル（ET;BT）の場合
-        # et, bt = input.split(";")
-        # return float(bt), float(et)</code></pre>
-                <p>※複数チャンネルの温度データを扱う場合は、一番上の行をコメントアウト（行頭の<code>#</code>を追記）し、以下の3行をアンコメント（行頭の<code>#</code>を削除）して使用してください。</p>
         </div>
 
         <h3 id="subsection-artisan-test">✅ 接続テスト＆確認:</h3>
         <p>設定画面を閉じたら、Artisanの上部ツールバーにある【START】ボタンをクリックしてください。グラフに温度がリアルタイムで表示されます。</p>
-        <p>UZU Roasterからは、温度データが約0.5秒（500ms）ごとにArtisanへ送信されます。Artisanのその他の設定も、必要に応じて調整してください。（Artisanではサンプリング周期は1秒以上が推奨されています）</p>
+        <p>UZU ROASTERからは、温度データが約0.5秒（500ms）ごとにArtisanへ送信されます。Artisanのその他の設定も、必要に応じて調整してください。（Artisanではサンプリング周期は1秒以上が推奨されています）</p>
         </p>
 
         <h3 id="subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント:</h3>
@@ -297,7 +301,7 @@
                 </tr>
                 <tr>
                     <td>データが読み取れない・エラーになる</td>
-                    <td>UZU Roasterからのデータ出力形式（特に改行<code>\n</code>の有無）がArtisanの設定（スクリプト）と一致しているか確認してください。</td>
+                    <td>UZU ROASTERからのデータ出力形式（特に改行<code>\n</code>の有無）がArtisanの設定（スクリプト）と一致しているか確認してください。</td>
                 </tr>
             </tbody>
         </table>
@@ -305,17 +309,17 @@
         <hr>
 
         <h2 id="section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ）を使う（Wi-Fi接続編）</h2>
-        <p>UZU RoasterをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動します。PCやスマホのブラウザから直接アクセスし、焙煎をコントロールできます。</p>
+        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動します。PCやスマホのブラウザから直接アクセスし、焙煎をコントロール可能です。</p>
 
         <h3 id="subsection-initial-setup-wifi">🔧 初期設定と接続:</h3>
         <ol>
             <li>
                 <h4>起動とWi-Fi接続:</h4>
                 <ul>
-                    <li>UZU Roaster本体をUSB電源（5V/500mA）に接続します。</li>
+                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。</li>
                     <li>お使いのPCまたはスマートフォンのWi-Fi設定を開き、Wi-Fi接続先（SSID）として <code>UZU-ROASTER</code> を選択します。</li>
                     <li>デフォルトのパスワードは <code>00000000</code> です。</li>
-                    （※）接続すると、Wi-Fiネットワークはインターネットに未接続の状態になりますが、UZU Roasterとの通信には問題ありません。</span></li>
+                    （※）接続すると、Wi-Fiネットワークはインターネットに未接続の状態になりますが、UZU ROASTERとの通信には問題ありません。</span></li>
                 </ul>
             </li>
             <li>
@@ -328,7 +332,7 @@
             </li>
             <li>
                 <h4>WebSocket通信の開始:</h4>
-                <p>ホストデバイス（PC/スマホ）とうずロースターはWebSocket機能を使って接続されます。Webページを開くと、自動的にUZU Roaster本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認できます。</p>
+                <p>ホストデバイス（PC/スマホ）とうずロースターはWebSocket機能を使って接続されます。Webページを開くと、自動的にUZU ROASTER本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
                 （※）WiFiが正常に接続されていても接続状態にならない場合は、しばらく待ってから再度ページを更新するか、異なるブラウザで再度アクセスしてみてください。</li> 
                 
             </li>
@@ -340,12 +344,12 @@
         <p>「うずロースター」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
 
         <h3 id="subsection-web-app-overview">1. Webアプリ概要:</h3>
-        <p>UZU RoasterのWebアプリは、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をグラフで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
+        <p>UZU ROASTERのWebアプリは、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をグラフで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
 
         <h3 id="subsection-web-app-basic-screen">2. 基本画面と各エリアの説明:</h3>
         <ul>
             <li><strong>プロファイルテーブル:</strong><br>
-                時間（秒）と目標温度（℃）を入力し、オリジナルの焙煎プロファイルを作成できます。行の追加・削除、各値の編集が可能です。</li>
+                時間（秒）と目標温度（℃）を入力し、オリジナルの焙煎プロファイルを作成可能です。行の追加・削除、各値の編集が可能です。</li>
             <li><strong>グラフエリア:</strong><br>
                 目標となる「プロファイル温度」、現在の「リアルタイム温度」、そして「RoR（温度上昇速度）」がグラフで表示されます。グラフをクリックすると、全画面表示/解除を切り替えられます。</li>
             <li><strong>操作ボタン:</strong>
@@ -354,7 +358,7 @@
                     <li><strong>ストップ:</strong> チャートへの記録を停止します。</li>
                     <li><strong>リセット:</strong> 現在のプロファイルやデバイスの状態を初期化します。</li>
                     <li><strong>設定:</strong> デバッグコンソールの表示/非表示を切り替えます。</li>
-                    <li><strong>マニュアル:</strong> UZU Roasterのオンラインマニュアルを開きます。</li>
+                    <li><strong>マニュアル:</strong> UZU ROASTERのオンラインマニュアルを開きます。</li>
                 </ul>
             </li>
         </ul>
@@ -363,7 +367,7 @@
         <ul>
             <li><strong>行の追加:</strong> テーブル下部の「＋」ボタンをクリックすると、新しい時間と温度の行が追加されます。</li>
             <li><strong>値の編集:</strong> 各行の「時間」と「温度」欄に数値を直接入力してください。入力値は自動的に0～1799秒、0～260℃の範囲に制限されます。</li>
-            <li><strong>行の削除:</strong> 各行の右端にある「🗑」（ゴミ箱）ボタンで、不要な行を削除できます。</li>
+            <li><strong>行の削除:</strong> 各行の右端にある「🗑」（ゴミ箱）ボタンで、不要な行を削除可能です。</li>
             <li><strong>プロファイルの並び替え:</strong> 「プロファイル整列」ボタンをクリックすると、入力した時間が降順になるようにプロファイルが自動で整列され、チャートに反映されます。</li>
         </ul>
 
@@ -387,7 +391,7 @@
         <ul>
             <li>
                 <h4>プロファイル温度・現在温度の比較と焙煎インジケーター:</h4>
-                <p>焙煎スタート後、グラフ上には目標となる「プロファイル温度」と、実際に測定されている「現在温度」が描画されます。この2つの温度の差（乖離）を瞬時に把握することで、現在の焙煎が目標プロファイルに対して「高いか低いか」を直感的に判断できます。これらのアシスト機能により、初心者の方でも安定した焙煎を行うことができます。</p>
+                <p>焙煎スタート後、グラフ上には目標となる「プロファイル温度」と、実際に測定されている「現在温度」が描画されます。この2つの温度の差（乖離）を瞬時に把握することで、現在の焙煎が目標プロファイルに対して「高いか低いか」を直感的に判断可能です。これらのアシスト機能により、初心者の方でも安定した焙煎を行うことが可能です。</p>
             </li>
             <li>
                 <h4>RoR（温度上昇率）の可視化:</h4>
@@ -416,11 +420,155 @@
                 </ul>
             </li>
         </ul>
+        <br>
+        <hr>
+        <h2 id="section-custom-webserver">🌏 カスタムウェブサーバー機能</h3>
+            <h3  id="section-custom-webserver_uzu">☕ うずロースターを使った「キャプティブポータル広告宣伝システム」の概要</h3>
+このシステムは、内蔵CPUであるESP32のWi-Fi機能を活用し、特定の場所でユーザーに自動的に広告や情報を提供します。
+<ul>
+<ol>
+<b>1. システムの主要な構成要素</b></ol>
+<ul>
+<ol>ESP32 マイクロコントローラー:</ol>
+<ul>Wi-Fiアクセスポイント (AP) モードで動作し、独自のWi-Fiネットワークを作成します。
+Webサーバー機能も内蔵し、簡易的なウェブページをホストします。
+</ul>
+<ol>キャプティブポータル機能:</ol>
+<ul>ユーザーがESP32が作成したWi-Fiに接続すると、インターネットにアクセスする前に強制的に特定のウェブページ（広告ページ）が表示される仕組みです。
+</ul>
+<ol>広告コンテンツ（HTML/CSS/JavaScript）:</ol>
+<ul>ESP32のWebサーバー上に置かれる、ユーザーに表示したい広告や情報の内容です。画像、テキスト、動画などを含めることができます。
+</ul>
+</ul>
+<ol>
+<b> 2. システムの動作フロー</b></ol>
+<ul>
+<ol>ESP32の起動:</ol> <ul>ESP32が起動し、Wi-Fiアクセスポイントとして稼働します（デフォルト例: Wi-Fi名「UZU-ROASTER」、パスワード「00000000」）。
+</ul><ol>ユーザーの接続: </ol><ul>ユーザーがスマートフォンやPCで、このESP32のWi-Fiネットワークに接続します。
+</ul><ol>キャプティブポータルの検知: </ol><ul>ユーザーのデバイスは、インターネットに接続されていないことを検知し、自動的にWebブラウザを起動してキャプティブポータルのページ（ESP32のWebサーバーがホストしているページ）を表示しようとします。
+</ul><ol>広告の表示: </ol><ul>ユーザーのブラウザに、ESP32のWebサーバーに保存されている広告宣伝用のHTMLページが表示されます。このページにQRコードを含めることで、ユーザーがスマートフォン等で簡単に情報を取得できるようになります。
+</ul><ol>情報提供/インターネット接続（オプション）:</ol><ul>
+広告表示後、さらに情報提供を行ったり、ボタンをクリックすることで外部のインターネットへの接続を許可したりすることも可能です（ただし、ESP32自体がインターネット接続機能を持つ場合は、より複雑な設定が必要です）。
+</ul>
+</ul>
+<ol><b>3. 想定される利用シーン</b></ol>
+<ul>
+この機能を使用することで、以下のようなシーンでの利用が考えられます。
+<ol>小規模なイベントや店舗: </ol> <ul>一時的なイベント会場や小さな店舗で、特定の製品やサービス、イベント情報を宣伝。
+</ul><ol>観光案内: </ol> <ul>特定の観光スポットで、地域の情報やおすすめルートを提供。
+</ul><ol>個人での情報発信: </ol> <ul>自作のプロジェクトや趣味の情報を共有。
+</ul>
+</ul>
+<ol><b>   4. 技術的な課題と考慮事項</b></ol>
+<ul>
+<ol>ESP32のメモリ制限: </ol> <ul>ROM容量は4.5MBです。大量の画像や動画を含む複雑なWebページは、ESP32の限られたメモリには収まらない可能性があります。
+</ul><ol>同時接続数: </ol> <ul>デフォルトで10台まで接続可能です。
+</ul><ol>法的規制: </ol> <ul>公衆Wi-Fiを提供する場合は、地域によってはセキュリティやログ保存に関する法的規制がある場合があります。
+</ul>
+</ul>
+            <h3 id="section-custom-webserver-fs">📁 Web画面（LittleFS）の構成と更新</h3>
+        <p>UZU ROASTERのWeb画面は、ESP32内のファイルシステム「LittleFS」に配置されたHTML/CSS/JSファイルで構成されています。</p>
+        <ul>
+            <li><strong>ファイル構成例:</strong>
+                <ul>
+                    <li><code>/index.html</code></li>
+                    <li><code>/script.js</code></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="tip">
+            <h4>Web画面の更新方法:</h4>
+            <p>ご自身でWeb画面の内容を更新したい場合は、Arduino IDEの「データフォルダをアップロード」機能をご利用ください。</p>
+        </div>
 
         <hr>
+        <h2 id="section-troubleshooting">💡 トラブルシューティング（困ったときは）</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>問題</th>
+                    <th>対処法</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Web画面が表示されない</td>
+                    <td>・Wi-FiがUZU-ROASTERに接続されているか確認し、ブラウザで <code>http://192.168.4.1</code> に直接アクセスしてみてください。<br>
+                    ・少し時間をおいてブラウザを更新するか、違うブラウザでお試しください。</td>
+                </tr>
+                <tr>
+                    <td>温度が「nan」や「0.0」と表示される</td>
+                    <td>K型熱電対の接続が抜けていないか、プラス・マイナスが正しいか、破損していないか確認してください。</td>
+                </tr>
+                <tr>
+                    <td>設定をすべて初期化したい</td>
+                    <td>Web/USBシリアルから <code>reset all</code> コマンドを送信してください。UZU ROASTERが再起動し、設定が初期化されます。</td>
+                </tr>
+                <tr>
+                    <td>Wi-Fi接続後にUZU ROASTERを見失った場合</td>
+                    <td>・USBシリアルモニタでUZU ROASTERの現在のIPアドレスを確認してみてください。（デフォルトは192.168.4.1です）<br>・もう一度WiFiを切断⇒接続してキャプティブポータル機能をお試しください。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+        <h2 id="section-product-specs">📋 製品仕様</h3>
+        <table>
+            <caption>UZU ROASTER 製品仕様</caption>
+            <thead>
+                <tr>
+                    <th>項目</th>
+                    <th>仕様</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>制御システム</td>
+                    <td>ESP32マイコン（動作周波数:80MHz　ROM:4.5MB　RAM:520KB)</td>
+                </tr>
+                <tr>
+                    <td>温度センサー</td>
+                    <td>高精度デジタル温度センサー（MAX31855）</td> </tr>
+                <tr>
+                    <td>温度範囲</td>
+                    <td>0～1200℃（K型熱電対の対応範囲に準拠）</td> </tr>
+                <tr>
+                    <td>Wi-Fi機能</td>
+                    <td>IEEE 802.11 b/g/n対応</td>
+                </tr>
+                <tr>
+                    <td>Bluetooth機能</td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td>電源</td>
+                    <td>USB Type-C（5V/500mA）</td>
+                </tr>
+                <tr>
+                    <td>推奨焙煎容量</td> <td>50～500g（豆の種類やロースターの特性により異なる）</td> </tr>
+                <tr>
+                    <td>外形寸法</td>
+                    <td>W82mm × D37mm × H13mm</td> </tr>
+                <tr>
+                    <td>重量</td>
+                    <td>約30g</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+              <h2 id="section-inquiry">📞 お問い合わせ</h2>
+        うずうず本舗（うずうず珈琲焙煎工房）では、UZU ROASTERの開発やサポートに関するお問い合わせを受け付けています。以下の方法でご連絡ください。
+        <p>ご質問やフィードバック、バグ報告など、お気軽にお問い合わせください。</p>
+        <ul>
+            <li>メール: <a href="mailto:uzuuzuhonpo@gmail.com">uzuuzuhonpo@gmail.com</a></li>   
+            <li>Web: <a href="https://uzuuzu.shop">https://uzuuzu.shop</a>   </li>
+            <li>Twitter: <a href="https://x.com/uzuuzuhonpo">@uzuuzuhonpo</a></li>
+        </ul>
+        <hr>
+  
         <h2 id="section-attachment">🎁付録</h2>
         <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド一覧</h3>
-        <p>WebSerialまたはUSBシリアル通信経由で、UZU Roasterに対して以下のコマンドを送信し、設定変更や操作を行うことができます。</p>
+        <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。</p>
         <table>
             <thead>
                 <tr>
@@ -443,7 +591,7 @@
                 </tr>
                 <tr>
                     <td><code>reset</code></td>
-                    <td>各種設定を初期化し、UZU Roaster (ESP32) を再起動します。</td>
+                    <td>各種設定を初期化し、UZU ROASTER (ESP32) を再起動します。</td>
                 </tr>
                 <tr>
                     <td><code>reset all</code></td>
@@ -483,87 +631,11 @@
             <li><strong>センサー:</strong> Adafruit MAX31855 使用（K型熱電対対応）</li>
             <li><strong>平均化処理:</strong> 移動平均（10点、最大最小2点ずつ除外）により、安定した温度値を提供します。</li>
             <li><strong>表示桁数:</strong> 小数第1位まで表示されます。（設定変更可能）</li>
-            <li><strong>更新間隔:</strong> デフォルトは500ms（0.5秒）です。Web/USBシリアルコマンドで変更可能です。</li>
+            <li><strong>更新間隔:</strong> USBシリアルのデフォルトは500ms（0.5秒）です。Web/USBシリアルコマンドで変更可能です。<br>
+            WiFi経由（うずロースターコントローラー）は1秒更新です。</li>
+            <li><strong>RoR演算:</strong> 20秒の移動平均演算でフィルタリングしています。</li>
         </ul>
-
         <hr>
-
-        <h3 id="section-power-saving">💤 省電力モードについて</h3>
-        <p>UZU Roasterに搭載されているESP32は、低クロック（80MHz）で動作するよう設計されており、高い省電力性を実現しています。また、Bluetooth機能は停止されています。</p>
-
-        <hr>
-
-        <h3 id="section-web-screen-littlefs">📁 Web画面（LittleFS）の構成と更新</h3>
-        <p>UZU RoasterのWeb画面は、ESP32内のファイルシステム「LittleFS」に配置されたHTML/CSS/JSファイルで構成されています。</p>
-        <ul>
-            <li><strong>ファイル構成例:</strong>
-                <ul>
-                    <li><code>/index.html</code></li>
-                    <li><code>/style.css</code></li>
-                    <li><code>/script.js</code></li>
-                </ul>
-            </li>
-        </ul>
-        <div class="tip">
-            <h4>Web画面の更新方法:</h4>
-            <p>ご自身でWeb画面の内容を更新したい場合は、Arduino IDEの「データフォルダをアップロード」機能をご利用ください。</p>
-        </div>
-
-        <hr>
-
-        <h3 id="section-notes">📌 ご使用上の注意</h3>
-        <ul>
-            <li>MAX31855センサーは3.3V動作のため、<strong>絶対に5Vで駆動しないでください。</strong> 故障の原因となります。</li>
-            <li>サーボモーターを接続し、負荷がかかりすぎるとESP32がリセットする可能性があります。</li>
-            <li>Web/USBシリアル通信のCOMポートは排他的ですので、WebSerial機能を使用している際、USBシリアル通信が使えません。（逆の状況でも同じです）</li>
-        </ul>
-
-        <hr>
-
-        <h3 id="section-troubleshooting">💡 トラブルシューティング（困ったときは）</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>問題</th>
-                    <th>対処法</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Web画面が表示されない</td>
-                    <td>Wi-FiがUZU-ROASTERに接続されているか確認し、ブラウザで <code>http://192.168.4.1</code> に直接アクセスしてみてください。</td>
-                </tr>
-                <tr>
-                    <td>温度が「nan」や「0.0」と表示される</td>
-                    <td>K型熱電対の接続が抜けていないか、プラス・マイナスが正しいか、破損していないか確認してください。</td>
-                </tr>
-                <tr>
-                    <td>設定をすべて初期化したい</td>
-                    <td>Web/USBシリアルから <code>reset all</code> コマンドを送信してください。UZU Roasterが再起動し、設定が初期化されます。</td>
-                </tr>
-                <tr>
-                    <td>Wi-Fi接続後にUZU Roasterを見失った場合</td>
-                    <td>USBシリアルモニタでUZU Roasterの現在のIPアドレスを確認してみてください。</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <hr>
-
-        <h3 id="section-maintenance">👨‍🔧 メンテナンス情報（開発者向け）</h3>
-        <ul>
-            <li>ソースコードはArduinoベースで開発されており、ESP32用ボードを選択して利用できます。</li>
-            <li>温度センサーのロジックは <code>ReadTempTask()</code> という関数で、FreeRTOSのタスクとして独立して実行されています。</li>
-            <li>各種設定値は、Preferencesライブラリを使用して永続的に保存されます。</li>
-        </ul>
-
-        <hr>
-
-        <h3 id="section-contact">🧪 開発協力・お問い合わせ</h3>
-        <p>UZU Roasterを使って何か面白いアイデアを思いついたり、改善の提案がある場合は、ぜひ開発者にご連絡ください。<br></p>
-
-        <hr>
-
         <h3 id="section-webserial-manual">🌐 WebSerial（ブラウザ焙煎ビューアー）接続マニュアル【応用編】</h3>
 
         <h4 id="subsection-webserial-whatis">💡 WebSerialとは？</h4>
@@ -584,7 +656,7 @@
                 </tr>
                 <tr>
                     <td>接続方式</td>
-                    <td>PCとUZU RoasterをUSB Type-Cケーブルで接続</td>
+                    <td>PCとUZU ROASTERをUSB Type-Cケーブルで接続</td>
                 </tr>
                 <tr>
                     <td>ESP32側処理</td>
@@ -596,57 +668,16 @@
                 </tr>
             </tbody>
         </table>
+        （※）Web/USBシリアル通信のCOMポートは排他的ですので、WebSerial機能を使用している際、USBシリアル通信が使えません。（逆のパターンでも同様です）
 
         <hr>
-
-        <h3 id="section-future-outlook">🚀 将来の展望</h3>
-        <p>UZU Roasterのさらなる進化にご期待ください！</p>
+        <h3 id="section-loadmap">🧪 開発ロードマップ</h3>
         <ul>
             <li><strong>Version 2.0:</strong> 3Dプリンターとの連携による焙煎コントロール機能</li>
             <li><strong>Version 3.0:</strong> 小型焙煎機への組み込みによる高度な温度コントロール機能</li>
             <li><strong>Version 4.0:</strong> ロボットアームとの連携による自動焙煎コントロール機能</li>
         </ul>
-
         <hr>
-        <h3 id="section-product-specs">📋 製品仕様</h3>
-        <table>
-            <caption>UZU Roaster 製品仕様</caption>
-            <thead>
-                <tr>
-                    <th>項目</th>
-                    <th>仕様</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>制御システム</td>
-                    <td>ESP32マイコン</td>
-                </tr>
-                <tr>
-                    <td>温度センサー</td>
-                    <td>高精度デジタル温度センサー（MAX31855）</td> </tr>
-                <tr>
-                    <td>温度範囲</td>
-                    <td>0～1200℃（K型熱電対の対応範囲に準拠）</td> </tr>
-                <tr>
-                    <td>Wi-Fi機能</td>
-                    <td>IEEE 802.11 b/g/n対応</td>
-                </tr>
-                <tr>
-                    <td>電源</td>
-                    <td>USB Type-C（5V/500mA）</td>
-                </tr>
-                <tr>
-                    <td>推奨焙煎容量</td> <td>50～500g（豆の種類やロースターの特性により異なる）</td> </tr>
-                <tr>
-                    <td>外形寸法</td>
-                    <td>W80mm × D40mm × H13mm（概算）</td> </tr>
-                <tr>
-                    <td>重量</td>
-                    <td>約30g</td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 </body>
 </html>
