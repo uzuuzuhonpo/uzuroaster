@@ -13,6 +13,8 @@
       --accent-color: #aa3b3f;
       --text-light: #fff8f0;
       --text-dark: #333333;
+      --text-medium: #444444;
+      --text-medium-light: #666666;
       --border-color: #ccc;
       --background-light: #fff;
       --background-medium: #f9f5f0;
@@ -195,9 +197,9 @@
       display: flex;
       background-color: var(--background-medium);
       border-radius: 8px;
-      padding: 8px 20px;
-      margin-bottom: 8px;
-      gap: 30px;
+      padding: 2px 20px;
+      margin-bottom: 6px;
+      gap: 10px;
       flex-wrap: wrap;
       box-shadow: var(--shadow);
       border: solid 1px var(--primary-active);
@@ -214,13 +216,20 @@
     .display-label {
       font-size: 14px;
       color: #666;
-      margin-bottom: 5px;
+      margin-bottom: 1px;
     }
 
     .display-value {
       font-size: 28px;
       font-weight: bold;
-      color: var(--text-dark);
+      color: var(--text-medium);
+    }
+
+    .unit_generic {
+      font-size: 20px;
+      color: var(--text-medium-light);
+      margin-right: 0px;
+      padding-right: 0px;
     }
 
     #roast_message {
@@ -656,11 +665,17 @@
   margin: 0px 5px 0px 2px;
 }
 
+#table_title {
+  text-align: center;
+  font-size: 1em;
+  padding: 1px;
+}
+
 /* テーブル本体は固定幅 */
 #profileTable {
   width: 90%;
   border-collapse: collapse;
-  margin: 5%;
+  margin: 1% 3%;
 }
 
 /* ヘッダーを固定する（ブラウザによっては `display: block`が必要） */
@@ -870,7 +885,7 @@
       </div>
     <div>
       <button class="button red-button" onclick="ResetButtonCommand()">RESET</button>
-      <button class="button" onclick="helpButtonCommand()">ヘルプ</button>
+      <button class="button" onclick="helpButtonCommand()">マニュアル</button>
       <button class="button" onclick="configButtonCommand()">設定</button>
       <button class="button" onclick="WebButtonCommand()">Web</button>
     </div>
@@ -902,27 +917,27 @@
     <div class="display-area">
       <div class="display-item" id="roast_time_area" style="cursor: pointer;">
         <div class="display-label">経過時間</div>
-        <div class="display-value" id="roast_time">0 秒</div>
+        <div class="display-value" id="roast_time">　</div>
       </div>
       <div class="display-item">
         <div class="display-label">現在温度</div>
-        <div class="display-value" id="roast_temperature">0 ℃</div>
+        <div class="display-value" id="roast_temperature">　</div>
       </div>
       <div class="display-item">
         <div class="display-label">RoR(現在温度)</div>
-        <div class="display-value" id="roast_ror">--</div>
+        <div class="display-value" id="roast_ror">　</div>
       </div>
       <div class="display-item">
         <div class="display-label">プロファイル温度</div>
-        <div class="display-value" id="profile_temperature">0 ℃</div>
+        <div class="display-value" id="profile_temperature">　</div>
       </div>
       <div class="display-item">
         <div class="display-label">RoR(プロファイル温度)</div>
-        <div class="display-value" id="profile_ror">--</div>
+        <div class="display-value" id="profile_ror">　</div>
       </div>
       <div class="display-item">
         <div class="display-label">評価</div>
-        <div class="display-value" id="score">--</div>
+        <div class="display-value" id="score">　</div>
       </div>
       <div id="roast_message">焙煎待機中</div>
     </div>
@@ -933,8 +948,9 @@
     <span>📁 プロファイル読込</span>
 </button>
 <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">      <button onclick="downloadJSON()" class="button table_edit">💾 プロファイル保存</button>
-      <button class="button table_edit" onclick="sendCurrentProfile();">📈 テーブル⇒プロファイル</button>
+      <button class="button table_edit" onclick="sendCurrentProfile();">📈 プロファイル整列</button>
       <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
+      <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare();">📈 比較プロファイル表示</button>
       <div id="control-buttons">
         <div>
         <button class="chart-control-button " onclick="shotenChart()" id="shorten-button">◀</button>
@@ -951,6 +967,7 @@
       <!-- テーブルセクション -->
       <div class="table-section" id="table_contents">
         <div class="table-container">
+          <div id="table_title">焙煎プロファイル</div>
           <table id="profileTable">
             <thead>
               <tr>

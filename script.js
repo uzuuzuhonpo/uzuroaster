@@ -4,6 +4,10 @@ const popupText = document.getElementById('popupText');
 const closeButton = document.getElementById('closePopup');
 const popupOverlay = document.getElementById('popupOverlay');
 
+const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
+const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
+const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
+
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -11,8 +15,8 @@ let isMinutesSecondsFormat = false; // 初期値は秒表示
 let widthOffset = 0; // グラフの幅調整用オフセット
 let maxChartWidth = 1800; // グラフの最大幅
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
-const Version = "UZU ROASTER     Ver. 1.0.0\n\n うずうず本舗（うずうずコーヒー焙煎工房）"
-      + "\n https://uzuuzu.shop"; // バージョン情報
+const Version = "UZU ROASTER     Ver. 1.0.0\n\n OKを押すと新しいタブでマニュアルが開きます"
+      + "\n"; // バージョン情報
 window.addEventListener('resize', () => {
   if (roastChart) {
     roastChart.resize();
@@ -99,47 +103,47 @@ socket.onmessage = (event) => {
         document.getElementById('roast_message').textContent = "焙煎中";
 
         const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
-        document.getElementById('roast_time').textContent = formatSecondsToMinutesSeconds(data.time); 
-        document.getElementById('roast_temperature').textContent = temp + "[℃]";
+        document.getElementById('roast_time').innerHTML = formatSecondsToMinutesSeconds(data.time); 
+        document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
         if (roastChart.data.datasets[0].data.length === 0) {
-            document.getElementById('profile_temperature').textContent = "--[℃]";
-            document.getElementById('profile_ror').textContent = "--";
+            document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
+            document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
         }
         else {	
-          //document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + "[℃]";
+          //document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + unit_temp;
           const profileTemp = getOneSecondIntervalProfile(getProfileDataFromTable());
           if (profileTemp[0].time >= data.time) {
-            document.getElementById('profile_temperature').textContent = profileTemp[0].temp.toFixed(1) + "[℃]";
+            document.getElementById('profile_temperature').innerHTML = profileTemp[0].temp.toFixed(1) + unit_temp;
           }   
           else if (profileTemp[profileTemp.length - 1].time >= data.time) {    
-            document.getElementById('profile_temperature').textContent = profileTemp[data.time - profileTemp[0].time].temp.toFixed(1) + "[℃]";      
+            document.getElementById('profile_temperature').innerHTML = profileTemp[data.time - profileTemp[0].time].temp.toFixed(1) + unit_temp;      
           }   
           else {
-            document.getElementById('profile_temperature').textContent = profileTemp[profileTemp.length - 1].temp.toFixed(1) + "[℃]";      
+            document.getElementById('profile_temperature').innerHTML = profileTemp[profileTemp.length - 1].temp.toFixed(1) + unit_temp;      
           }
 
           if (roastChart.data.datasets[2].data.length > 0) {
             if (roastChart.data.datasets[2].data.length > data.time) {
-              document.getElementById('profile_ror').textContent = (roastChart.data.datasets[2].data[data.time].y).toFixed(1);
+              document.getElementById('profile_ror').innerHTML = (roastChart.data.datasets[2].data[data.time].y).toFixed(1) + unit_ror;
             }
             else {
-              document.getElementById('profile_ror').textContent = "--";
+              document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
             }
           }
         }
-        document.getElementById('roast_ror').textContent = current_ror.y.toFixed(1);//(roastChart.data.datasets[3].data[roastChart.data.datasets[3].data.length - 1].y).toFixed(1);
+        document.getElementById('roast_ror').innerHTML = current_ror.y.toFixed(1) + unit_ror;//(roastChart.data.datasets[3].data[roastChart.data.datasets[3].data.length - 1].y).toFixed(1);//ESP32側でプロファイルデータを持たせる場合
       }
       else {	//焙煎中以外は現在温度のみ表示
         if (!isMinutesSecondsFormat) {
-          document.getElementById('roast_time').textContent = "--[秒]";
+          document.getElementById('roast_time').innerHTML = "--" + unit_sec;
         }
         else {
-          document.getElementById('roast_time').textContent = "--:--"; 
+          document.getElementById('roast_time').innerHTML = "--:--"; 
         }
-        document.getElementById('roast_temperature').textContent = temp + "[℃]";
-        document.getElementById('profile_temperature').textContent = "--[℃]";
-        document.getElementById('profile_ror').textContent = "--";
-        document.getElementById('roast_ror').textContent = "--";        
+        document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
+        document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
+        document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
+        document.getElementById('roast_ror').innerHTML = "--" + unit_ror;        
       }
       
       if (isRoasting == true && data.time >= 1800 - 1) {
@@ -198,7 +202,19 @@ function CloseOffsetDialogBox(){
 }
 
 function connectWebSocket() {
-	socket = new WebSocket("ws://192.168.4.1:81/"); 
+  // 81番ポートを指定してWebSocket接続URLを作成
+  const currentHost = window.location.hostname;
+  if (currentHost == "") {  // ローカルからアクセス
+	  socket = new WebSocket("ws://192.168.4.1:81/"); 
+  }
+  else if (currentHost == "uzuuzu.shop") {  
+    const websocketUrl = `https://${currentHost}:81/`;
+    socket = new WebSocket(websocketUrl);
+  }
+  else {
+    const websocketUrl = `ws://${currentHost}:81/`;
+    socket = new WebSocket(websocketUrl);
+  }
 }
 
 function generateUniqueId() {
@@ -266,7 +282,7 @@ function sendSafe(data) {
 }
 
 function helpButtonCommand() {
-  alert(Version);
+  window.open("uzu_roaster_manual.html", "_blank");
 }
 
 function ResetButtonCommand() {
@@ -558,7 +574,7 @@ function hideUploadOverlay() {
  */
 function formatSecondsToMinutesSeconds(totalSeconds) {
     if (!isMinutesSecondsFormat) {
-      return totalSeconds + "[秒]"; // 秒表示
+      return totalSeconds + unit_sec; // 秒表示
     }
     if (totalSeconds < 0) totalSeconds = 0; // 負の値は0として扱う
 
@@ -841,17 +857,14 @@ function getOneSecondIntervalProfile(originalProfileData) {
         return originalProfileData; // データが少ない場合はそのまま返す
     }
 
-    const firstTime = originalProfileData[0].time;
+    // 0秒から開始する
+    const firstTime = 0;
     const lastTime = originalProfileData[originalProfileData.length - 1].time;
 
     const oneSecondIntervalData = [];
 
-    // 開始時間から終了時間まで1秒刻みでループ
     for (let t = firstTime; t <= lastTime; t++) {
-        // 各時間 t における温度を線形補間して取得
-        // getInterpolatedProfileTemp は丸め処理を含んでいるものを使用
         const temp = getInterpolatedProfileTemp(originalProfileData, t);
-
         if (temp !== null) {
             oneSecondIntervalData.push({ time: t, temp: temp });
         }
@@ -981,7 +994,7 @@ function initChart() {
               fill: false,
               tension: 0.2,
               yAxisID: 'y1', // 別のY軸を使う
-              order: 10, // 一番上に表示
+              order: 10, 
               borderWidth: 1,
               pointRadius: 1,
               pointHoverRadius: 8
@@ -1245,6 +1258,40 @@ function getColorForTemperatureDifference(tempDiff) {
     const lightness = '50%'; // 明るさ
     
     return `hsl(${hue.toFixed(0)}, ${saturation}, ${lightness}, 0.6)`;
+}
+
+let isCompareProfileShown = false;
+
+function copyProfileChartToCompare(chart = roastChart) {
+    const btn = document.getElementById('button-copy-profile');
+    if (!chart) return;
+    // 比較用データセットのインデックスを探す
+    const compareIndex = chart.data.datasets.findIndex(ds => ds.label === '比較用プロファイル');
+
+    if (!isCompareProfileShown && compareIndex === -1) {
+        // 追加
+        const profileData = getProfileDataFromTable();
+        if (!profileData || profileData.length === 0) return;
+        chart.data.datasets.push({
+            label: '比較用プロファイル',
+            data: profileData.map(p => ({ x: p.time, y: p.temp })),
+            borderColor: 'rgba(52, 181, 89, 0.7)',
+            backgroundColor: 'rgba(0, 104, 61, 0.04)',
+            borderWidth: 1,
+            pointRadius: 2,
+            fill: true,
+            tension: 0.01,
+            order: 15
+        });
+        isCompareProfileShown = true;
+        if (btn) btn.textContent = "📈 比較プロファイル解除";
+    } else if (isCompareProfileShown && compareIndex !== -1) {
+        // 削除
+        chart.data.datasets.splice(compareIndex, 1);
+        isCompareProfileShown = false;
+        if (btn) btn.textContent = "📈 比較プロファイル表示";
+    }
+    chart.update();
 }
 
 /**
