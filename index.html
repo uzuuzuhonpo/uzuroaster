@@ -268,13 +268,12 @@
       flex: 1;
       min-width: 300px;
       max-width: 500px;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border-color); 
       border-radius: 8px;
       overflow: hidden;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      max-height: 500px;
       scrollbar-width: none;
       height: 100%;
     }
@@ -282,7 +281,6 @@
     .table-container {
       flex: 1;
       overflow-y: scroll;
-      max-height: 400px;
       margin: 10px;
       height: 100%;
     }
@@ -385,14 +383,14 @@
     /* Chart Section */
     .chart-section {
       flex: 2;
-      min-width: 500px;
+      /* min-width: 500px; */
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 15px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow); 
       position: relative;
       overflow: hidden;
-      min-height: 500px;
+      min-height: 300px;
     }
 
     .chart-container {
@@ -477,18 +475,16 @@
         flex-direction: column;
       }
       .main-area {
-        height:1500px!important;
+        height:1000px!important;
       }
       .table-section,
       .chart-section {
-        max-width: 100%;
-        width: 100%;
+        width: 95%!important;
         max-height: 100%;
       }
       .profileTtable {
-		width: 90%;
-		
-	  }
+      width: 90%;
+      }
 	  th,td {
 		max-width: 100px;
 	  }
@@ -559,19 +555,10 @@
 	display: flex;
 }
 
-#main-area {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  border: solid 1px #888;
-  border-radius: 10px;
-
-}
-
 #chart-area {
   flex-grow: 1;
   width: 100%;
-  min-height: 300px; 
+  min-height: 200px; 
   position: relative; 
 }
 
@@ -653,7 +640,6 @@
         }
 
 #table_contents {
-  max-height: 500px; 
   overflow-y: scroll;
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -688,9 +674,6 @@
 
 
 @media (max-width: 768px) { /* スマホ用 */
-  #main-area {
-    flex-direction: column;
-  }
 
   #chart-area {
     width: 100%;
@@ -987,7 +970,7 @@
         </div>
       </div>
      <!-- チャートセクション -->
-      <div class="chart-section">
+      <div class="chart-section" id ="chart-section">
         <div class="chart-container" id="chart-area">
           <div class="image-overlay" id="chart-point"></div>
           <div class="image-arrow" id="chart-arrow">
@@ -1009,73 +992,198 @@
 <script src="script.js"></script>
 </body>
 </html>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const draggableElement = document.getElementById('debug_console');
-            // ドラッグハンドルを指定する場合 (h3要素など)
-            const dragHandle = draggableElement;
-            // ドラッグハンドルがない場合、draggableElement を直接使う
-            // const dragHandle = draggableElement; 
 
-            let isDragging = false;
-            let currentX;
-            let currentY;
-            let initialX;
-            let initialY;
-            let xOffset = 0;
-            let yOffset = 0;
+<script>
 
-            // ドラッグを開始するイベント
-            dragHandle.addEventListener('mousedown', dragStart);
+  document.addEventListener('DOMContentLoaded', () => {
+      const draggableElement = document.getElementById('debug_console');
+      // ドラッグハンドルを指定する場合 (h3要素など)
+      const dragHandle = draggableElement;
+      // ドラッグハンドルがない場合、draggableElement を直接使う
+      // const dragHandle = draggableElement; 
 
-            function dragStart(e) {
-                // e.button === 0 は左クリックを意味します
-                if (e.button === 0) { 
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
+      let isDragging = false;
+      let currentX;
+      let currentY;
+      let initialX;
+      let initialY;
+      let xOffset = 0;
+      let yOffset = 0;
 
-                    // ドラッグ中はテキスト選択を無効にする（オプション）
-                    e.preventDefault(); 
+      // ドラッグを開始するイベント
+      dragHandle.addEventListener('mousedown', dragStart);
 
-                    isDragging = true;
-                    // ドラッグ中はカーソルを移動中に変更
-                    draggableElement.style.cursor = 'grabbing'; 
+      function dragStart(e) {
+          // e.button === 0 は左クリックを意味します
+          if (e.button === 0) { 
+              initialX = e.clientX - xOffset;
+              initialY = e.clientY - yOffset;
 
-                    // マウス移動とマウスアップのイベントリスナーを body に追加
-                    // これにより、要素の外でマウスを離してもイベントを捕捉できる
-                    document.addEventListener('mousemove', drag);
-                    document.addEventListener('mouseup', dragEnd);
-                }
-            }
+              // ドラッグ中はテキスト選択を無効にする（オプション）
+              e.preventDefault(); 
 
-            function drag(e) {
-                if (isDragging) {
-                    e.preventDefault(); // ここでもデフォルト動作を防ぐ
+              isDragging = true;
+              // ドラッグ中はカーソルを移動中に変更
+              draggableElement.style.cursor = 'grabbing'; 
 
-                    // 新しい位置を計算
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
+              // マウス移動とマウスアップのイベントリスナーを body に追加
+              // これにより、要素の外でマウスを離してもイベントを捕捉できる
+              document.addEventListener('mousemove', drag);
+              document.addEventListener('mouseup', dragEnd);
+          }
+      }
 
-                    xOffset = currentX;
-                    yOffset = currentY;
+      function drag(e) {
+          if (isDragging) {
+              e.preventDefault(); // ここでもデフォルト動作を防ぐ
 
-                    // 要素の位置を更新 (transform を使うのがパフォーマンス上推奨)
-                    draggableElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+              // 新しい位置を計算
+              currentX = e.clientX - initialX;
+              currentY = e.clientY - initialY;
 
-                    // あるいは、left/top を直接変更 (transform の方がスムーズ)
-                    // draggableElement.style.left = (e.clientX - initialX) + 'px';
-                    // draggableElement.style.top = (e.clientY - initialY) + 'px';
-                }
-            }
+              xOffset = currentX;
+              yOffset = currentY;
 
-            function dragEnd(e) {
-                isDragging = false;
-                // ドラッグ終了後はカーソルを元に戻す
-                draggableElement.style.cursor = 'grab'; 
+              // 要素の位置を更新 (transform を使うのがパフォーマンス上推奨)
+              draggableElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
 
-                // マウス移動とマウスアップのイベントリスナーを削除
-                document.removeEventListener('mousemove', drag);
-                document.removeEventListener('mouseup', dragEnd);
-            }
-        });
-    </script>
+              // あるいは、left/top を直接変更 (transform の方がスムーズ)
+              // draggableElement.style.left = (e.clientX - initialX) + 'px';
+              // draggableElement.style.top = (e.clientY - initialY) + 'px';
+          }
+      }
+
+      function dragEnd(e) {
+          isDragging = false;
+          // ドラッグ終了後はカーソルを元に戻す
+          draggableElement.style.cursor = 'grab'; 
+
+          // マウス移動とマウスアップのイベントリスナーを削除
+          document.removeEventListener('mousemove', drag);
+          document.removeEventListener('mouseup', dragEnd);
+      }
+  });
+</script>
+<style>
+/* Responsive Design */
+    @media (max-width: 768px) {
+      /* ヘッダー部分 */
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+      }
+      
+      .connection-status {
+        justify-content: center;
+      }
+      
+      .header > div:nth-child(2) {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      
+      /* プロファイルメタ */
+      .profile-meta {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .meta-field {
+        min-width: auto;
+        width: 100%;
+      }
+      
+      #profileTitle, #profileMemo {
+        width: 100%;
+      }
+      
+      /* 表示エリア */
+      .display-area {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        padding: 10px;
+      }
+      
+      .display-item {
+        width: 140px;
+      }
+      
+      #roast_message {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+      }
+      
+      /* テーブルコントロール */
+      .table-controls {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      
+      .table-controls > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center;
+      }
+      
+      #control-buttons {
+        margin-left: 0;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      /* メインエリア */
+      .main-area {
+        flex-direction: column;
+        height: auto;
+        gap: 15px;
+      }
+      
+      .table-section {
+        width: 100%;
+        max-width: 100%;
+        height: 350px;
+        order: 2;
+      }
+      
+      .chart-section {
+        width: 100%;
+        max-width: 100%;
+        height: 400px;
+        order: 1;
+        min-height: 400px;
+      }
+      
+      /* ボタンサイズ調整 */
+      .button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 80px;
+      }
+      
+      .header-button {
+        min-width: 90px;
+      }
+      
+      /* テーブル調整 */
+      th, td {
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .display-value {
+        font-size: 24px;
+      }
+      
+      .display-label {
+        font-size: 12px;
+      }
+    }
+    
+</style>

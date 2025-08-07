@@ -24,54 +24,197 @@ window.addEventListener('resize', () => {
   }
 });
 
-/*
-let isFullscreen2 = false;
-const chartWrapper = document.getElementById('chart-area');
-const tableContents = document.getElementById('table_contents');
-chartWrapper.addEventListener('click', () => {
-  isFullscreen2 = !isFullscreen2;
-  chartWrapper.classList.toggle('fullscreen', isFullscreen2);
-  tableContents.style.display = isFullscreen2 ? 'none' : 'block';
-});
-*/
+////////////////////////////////////////////////////////////////
+// グラフのクリックで全画面表示切り替え
+////////////////////////////////////////////////////////////////
 let isFullscreen = false;
-const chartCanvas = document.getElementById('chart-area');
+const chartCanvas = document.getElementById('chart-section');
+const mainArea2 = document.getElementById('main-area2');
+
 chartCanvas.addEventListener('click', () => {
   if (!isFullscreen) {
+    animateFromElement(chartCanvas); // アニメーションを適用
     document.getElementById('table_contents').style.display="none";
-    document.getElementById('main-area2').style.height="100%";
+    chartCanvas.style.position = "fixed";
+    chartCanvas.style.width = "100%";
+    chartCanvas.style.height = "100%";  
+    chartCanvas.style.top = "0";
+    chartCanvas.style.left = "0";
+    chartCanvas.style.zIndex = "1000"; // 他の要素の上に表示
+    chartCanvas.style.backgroundColor = "white"; // 背景色を白に設定
+    chartCanvas.style.display = "block"; // ブロック要素として表示
     isFullscreen = true;
-	const targetDOMRect = chartCanvas.getBoundingClientRect();
-	const targetTop = targetDOMRect.top + window.pageYOffset;
-setTimeout(() => {
-  window.scrollTo({ top: targetTop, behavior: 'smooth' });
-}, 100); // 100msくらいが安定
-  } else {
+  } 
+  else {
     document.getElementById('table_contents').style.display="flex";
-    document.getElementById('main-area2').style.height="500px";
+    chartCanvas.style.position = "relative";
     isFullscreen = false;
+    mainAreaResize(mainArea2);
+    animateToElement(chartCanvas); // アニメーションを適用
   }
 });
 
-        textarea.addEventListener('click', () => {
-            popupText.value = textarea.value;
-            popup.classList.add('show');
-            popupOverlay.classList.add('show');
-            // ポップアップ表示時にテキストエリアにフォーカスを当てる
-            popupText.focus();
-        });
+////////////////////////////////////////////////////////////////
+// シンプルボーダー拡大アニメーション
+////////////////////////////////////////////////////////////////
+function animateFromElement(element) {
+    // 要素の位置とサイズを取得
+    const rect = element.getBoundingClientRect();
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
 
-        closeButton.addEventListener('click', () => {
-            textarea.value = popupText.value;
-            popup.classList.remove('show');
-            popupOverlay.classList.remove('show');
-        });
+    // アニメーション用のボーダー要素を作成
+    const border = document.createElement('div');
+    border.style.cssText = `
+        position: fixed;
+        pointer-events: none;
+        border: 4px solid #565656ff;
+        border-radius: 10px;
+        z-index: 1999;
+        box-sizing: border-box;
+        width: ${rect.width}px;
+        height: ${rect.height}px;
+        left: ${rect.left}px;
+        top: ${rect.top}px;
+        transition: all 200ms ease-out, opacity 500ms ease-out;
+        opacity: 1;
+    `;
 
-        popupOverlay.addEventListener('click', () => {
-            textarea.value = popupText.value;
-            popup.classList.remove('show');
-            popupOverlay.classList.remove('show');
-        });
+    // DOMに追加
+    document.body.appendChild(border);
+
+    // 次のフレームでアニメーション開始
+    requestAnimationFrame(() => {
+        // フルスクリーンサイズに拡大
+        const fullWidth = window.innerWidth;
+        const fullHeight = window.innerHeight;
+        
+        border.style.width = fullWidth + 'px';
+        border.style.height = fullHeight + 'px';
+        border.style.left = '0px';
+        border.style.top = '0px';
+        border.style.opacity = '0';
+
+        // アニメーション完了後に削除
+        setTimeout(() => {
+            border.remove();
+        }, 800);
+    });
+}
+
+////////////////////////////////////////////////////////////////
+// シンプルボーダー縮小アニメーション（フルスクリーン→要素サイズ）
+////////////////////////////////////////////////////////////////
+function animateToElement(element) {
+    // 要素の位置とサイズを取得
+    const rect = element.getBoundingClientRect();
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+
+    // フルスクリーンサイズを取得
+    const fullWidth = window.innerWidth;
+    const fullHeight = window.innerHeight;
+
+    // アニメーション用のボーダー要素を作成
+    const border = document.createElement('div');
+    border.style.cssText = `
+        position: fixed;
+        pointer-events: none;
+        border: 4px solid #565656ff;
+        border-radius: 0px;
+        z-index: 1999;
+        box-sizing: border-box;
+        width: ${fullWidth}px;
+        height: ${fullHeight}px;
+        left: 0px;
+        top: 0px; 
+        transition: all 200ms ease-out, opacity 500ms ease-out;
+        opacity: 1;
+    `;
+
+    // DOMに追加
+    document.body.appendChild(border);
+
+    // 次のフレームでアニメーション開始
+    requestAnimationFrame(() => {
+        // 要素サイズに縮小
+        border.style.width = rect.width + 'px';
+        border.style.height = rect.height + 'px';
+        border.style.left = rect.left + 'px';
+        border.style.top = rect.top + 'px';
+        border.style.borderRadius = '10px';
+        border.style.opacity = '0';
+
+        // アニメーション完了後に削除
+        setTimeout(() => {
+            border.remove();
+        }, 800);
+    });
+}
+
+////////////////////////////////////////////////////////////////
+// グラフの高さをビューポートに合わせて調整
+////////////////////////////////////////////////////////////////
+function adjustHeightToViewport(selector) {
+  const element = document.querySelector(selector);
+  if (!element) return;
+
+  // 初回実行 & リサイズ時に再実行
+  mainAreaResize(element);
+  window.addEventListener('resize', mainAreaResize(element));
+}
+
+function mainAreaResize(element) {
+  const viewportHeight = window.innerHeight;
+  const elementTop = element.getBoundingClientRect().top + window.scrollY;
+  const newHeight = viewportHeight - elementTop - 10;
+  element.style.height = newHeight + 'px';
+  setMobileWidthIfMobile(element); // スマホ判定で要素幅を100%に設定
+}
+
+adjustHeightToViewport('#main-area2');
+
+////////////////////////////////////////////////////////////////
+// スマホ判定と要素幅設定
+////////////////////////////////////////////////////////////////
+        // ===== メイン関数: スマホ判定で要素幅を100%に設定 =====
+        function setMobileWidthIfMobile(element) {
+            if (isMobile()) {
+              element.style.width = '100vw';
+              return true;
+            }
+            return false;
+        }
+
+        // ===== スマホ判定関数 =====
+        function isMobile() {
+            // 方法1: 画面幅での判定 (768px以下をモバイルとする)
+            const isNarrowScreen = window.innerWidth <= 768;
+            return isNarrowScreen;
+        }
+
+////////////////////////////////////////////////////////////////
+// ポップアップのテキストエリアをクリックしたときの処理
+////////////////////////////////////////////////////////////////
+textarea.addEventListener('click', () => {
+    popupText.value = textarea.value;
+    popup.classList.add('show');
+    popupOverlay.classList.add('show');
+    // ポップアップ表示時にテキストエリアにフォーカスを当てる
+    popupText.focus();
+});
+
+closeButton.addEventListener('click', () => {
+    textarea.value = popupText.value;
+    popup.classList.remove('show');
+    popupOverlay.classList.remove('show');
+});
+
+popupOverlay.addEventListener('click', () => {
+    textarea.value = popupText.value;
+    popup.classList.remove('show');
+    popupOverlay.classList.remove('show');
+});
 
 let socket = null;
 let keepAliveTimeout = null; // キープアライブタイマー
