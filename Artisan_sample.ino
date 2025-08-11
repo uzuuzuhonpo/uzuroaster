@@ -2,6 +2,7 @@
 #include <deque>
 #include <esp_wifi.h>
 #include <WiFi.h>
+#include <WiFiGeneric.h>
 #include <ESP32Servo.h>  
 #include <FS.h>
 #include <LittleFS.h>
@@ -20,6 +21,7 @@
 
 #define MAX_ROAST_TIME  1800
 #define MAX_TEMPERATURE 260
+#define MAX_WIFI_CONNECTION   10
 
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -53,12 +55,12 @@ bool roasting = false;
 int roastTime = 0;
 int counterx = 0;
 float RoastData[MAX_ROAST_TIME];
-
+int IPAddressMemory[4] = { 192, 168, 4, 1 };  // デフォルトのUZU ROASTER IPアドレス
 // 🔑 Wi-Fi設定
 const char Ssid[] = "UZU-ROASTER";
 const char Password[] = "";
-const IPAddress IpAddress_(192, 168, 4, 1); 	// *** set any addr ***
-const IPAddress SubNet(255, 255, 255, 0); 	// *** set any addr ***
+IPAddress IpAddress_; 	// 後で設定可能
+const IPAddress SubNet(255, 255, 255, 0); 	
 
 // センサーオブジェクト作成
 Adafruit_MAX31855 thermocouple(ThermoCLK_pin, ThermoCS_pin, ThermoDO_pin);
@@ -161,17 +163,12 @@ void ReadTempTask(void *pvParameters) {
         RoastData[roastTime] = AverageTemperature;
         SendTemperatureData(roastTime);
         roastTime += 1;
-
-        if (diff > 10) msg = "火から離して！";
-        else if (diff < -15) msg = "火力上げて！";
-        else msg = "順調ずら〜";
-        sendMessage(msg);
       }
       else {
         #define NO_ROASTING   -1
         SendTemperatureData(NO_ROASTING);
         msg = "焙煎待機中";
-        sendMessage(msg);
+        //sendMessage(msg);
       }
     }
 
@@ -247,7 +244,7 @@ void setup() {
   Prefix = preferences.getString("prefix", Prefix);
   Suffix = preferences.getString("suffix", Suffix);
   TempDisplay =  preferences.getBool("temp_display", TempDisplay);
-
+  SimulateCount =  preferences.getFloat("simulate_count", SimulateCount);
   preferences.end();
 
   //ControlServo();
@@ -280,11 +277,11 @@ void loop() {
   counterx++;
 
   LEDProc();
-  bool currentButtonState = digitalRead(bootButtonPin);
+  bool currentButtonState = digitalRead(bootButtonPin); // false: ON / true: OFF
 
 
-  if ((counterx % 100) == 0 && currentButtonState == false) {
-    Serial.println("Button pushed!!");
+  if ((counterx % 300) == 0) {
+    sendMessage("KEEP_ALIVE");
   }
 }
 
@@ -374,32 +371,40 @@ void CommandProcess(String& command) {
   String str;
   int value;
 
-  if (command == "reset") {
-    preferences.begin("wifi", false);
-    preferences.putString("ssid", Ssid);
-    preferences.putString("pass", Password);
-    preferences.end();
-    Serial.println(String("SSID: ") + Ssid);
-    Serial.println(String("Password: ") + Password);
+  if (command.startsWith("reset")) {
+    String arg = command.substring(6);
+    if (arg == "all") {
+      preferences.begin("wifi", false);
+      preferences.putString("ssid", Ssid);
+      preferences.putString("pass", Password);
+      preferences.end();
+      Serial.println(String("SSID: ") + Ssid);
+      Serial.println(String("Password: ") + Password);
 
-    int interval = 500;
-    int digit = 1;
-    String prefix = "";
-    String suffix = "";
-    bool temp_display = true;
-    preferences.begin("temperature", false);
-    preferences.putInt("interval", interval);
-    preferences.putInt("digit", digit);
-    preferences.putString("prefix", prefix);
-    preferences.putString("suffix", suffix);
-    preferences.putBool("temp_display", temp_display);
-    preferences.end();
+      int interval = 500;
+      int digit = 1;
+      String prefix = "";
+      String suffix = "";
+      bool temp_display = true;
+      float simulate_count = 0.0; 
+      preferences.begin("temperature", false);
+      preferences.putInt("interval", interval);
+      preferences.putInt("digit", digit);
+      preferences.putString("prefix", prefix);
+      preferences.putString("suffix", suffix);
+      preferences.putBool("temp_display", temp_display);
+      preferences.putFloat("simulate_count", simulate_count);
 
-    Serial.println("Temperature interval: " + String(interval) + "[ms]");
-    Serial.println("Temperature fraction digit: " + String(digit) + "[ms]");
-    Serial.println("Removed prefix and suffix.");
-    Serial.println("Temperature Display: ON");
-    Serial.println("Resetting Uzu Roaster System...");
+      preferences.end();
+
+      Serial.println("Temperature interval: " + String(interval) + "[ms]");
+      Serial.println("Temperature fraction digit: " + String(digit) + "[ms]");
+      Serial.println("Removed prefix and suffix.");
+      Serial.println("Temperature Display: ON");
+      Serial.println("Resetting UZU ROASTER System...");
+  }
+  
+  Serial.println("Resetting UZU ROASTER System...");
 
     ESP.restart();
 
@@ -525,13 +530,46 @@ void CommandProcess(String& command) {
     float temp = str.toFloat();         // 数値として取り出す
     Serial.println(temp);               // 数値だけ送る
   }
-  else if (command == "simulate on") {
-    SimulateCount = 1.0;
-    Serial.println("Simulate set to ON.");
+  else if (command.startsWith("simulate ")) {
+    str = command.substring(9);
+    if (str == "on") {
+      SimulateCount = 1.0;
+      Serial.println("Simulate set to ON.");
+    }
+    else if (str == "off") {
+      SimulateCount = 0.0;
+      Serial.println("Simulate set to OFF.");
+    }
+    preferences.begin("temperature", false);
+    preferences.putFloat("simulate_count", SimulateCount);
+    preferences.end();
   }
-  else if (command == "simulate off") {
-    SimulateCount = 0.0;
-    Serial.println("Simulate set to OFF.");
+  else if (command == "ip") {
+    Serial.print("IP address: ");
+    Serial.print(IPAddressMemory[0]);
+    Serial.print(".");
+    Serial.print(IPAddressMemory[1]);
+    Serial.print(".");
+    Serial.print(IPAddressMemory[2]);
+    Serial.print(".");
+    Serial.println(IPAddressMemory[3]);
+  }
+  else if (command.startsWith("ip")) {
+    str = command.substring(3);
+    int count = sscanf(str.c_str(), "%d.%d.%d.%d", &IPAddressMemory[0], &IPAddressMemory[1], &IPAddressMemory[2], &IPAddressMemory[3]);
+    if (count != 4) {
+      Serial.println("IP Address is not correct!");
+      return;
+    }
+
+    preferences.begin("wifi", false);
+    preferences.putInt("address0", IPAddressMemory[0]);
+    preferences.putInt("address1", IPAddressMemory[1]);
+    preferences.putInt("address2", IPAddressMemory[2]);
+    preferences.putInt("address3", IPAddressMemory[3]);
+    preferences.end();
+    Serial.println("IP Address is set to " + str);
+    ESP.restart();
   }
   else if (command == "ls") {
     if (!LittleFS.begin()) {
@@ -564,29 +602,31 @@ void CommandProcess(String& command) {
       Serial.println("Error: File not found.");
     }
   }
- else if (command == "help") {
+  else if (command == "help") {
     Serial.println("Available commands:");
     Serial.println("reset       - Resets the system and restores settings.");
+    Serial.println("reset all   - Resets for factory settings.");
     Serial.println("wifi on     - Turns on WiFi.");
     Serial.println("wifi off    - Turns off WiFi.");
     Serial.println("ssid        - Shows the current SSID or sets the one.");
     Serial.println("password    - Clears the WiFi password or sets the one.");
     Serial.println("temp on     - Turns on temperature display.");
     Serial.println("temp off    - Turns off temperature display.");
-    Serial.println("interval    - Set temperature display interval.");
-    Serial.println("digit       - Set temperature fraction digit.");
-    Serial.println("prefix      - Set temperature text prefix.");
-    Serial.println("suffix      - Set temperature text suffix.");
+    Serial.println("interval    - Sets temperature display interval.");
+    Serial.println("digit       - Sets temperature fraction digit.");
+    Serial.println("prefix      - Sets temperature text prefix.");
+    Serial.println("suffix      - Sets temperature text suffix.");
     Serial.println("echo        - Prints the message.");
     Serial.println("echon       - Prints the number.");
     Serial.println("simulate on - Turns on simulation mode.");
     Serial.println("simulate off- Turns off simulation mode.");
-    Serial.println("ls          - List files in LittleFS.");
-    Serial.println("cat <file>  - Display the contents of a file.");
-    Serial.println("rm <file>   - Delete a file.");
-    Serial.println("help        - Display this help menu.");
+    Serial.println("ip          - Sets IP Address ex) 192.168.0.1");
+    Serial.println("ls          - Lists files in LittleFS.");
+    Serial.println("cat <file>  - Displays the contents of a file.");
+    Serial.println("rm <file>   - Deletes a file.");
+    Serial.println("help        - Displays this help menu.");
   }
- else {
+  else {
       //Serial.println("Unknown command."); // "8t,gs" とかいうコマンドがArtisan（Behmor）から送られてきて反応するためコメントアウト
   }
 }
@@ -654,17 +694,30 @@ void WiFiOff() {
 
 //////////////////////////////////////////////////////////////////////////
 void WiFiSetup() {
+  // Wi-Fiイベントハンドラの登録
+  WiFi.onEvent(onWiFiEvent);
+  
   WiFi.mode(WIFI_AP); 
+  preferences.begin("wifi", true); // 読み取り専用
+  IPAddressMemory[0] = preferences.getInt("address0", IPAddressMemory[0]);
+  IPAddressMemory[1] = preferences.getInt("address1", IPAddressMemory[1]);
+  IPAddressMemory[2] = preferences.getInt("address2", IPAddressMemory[2]);
+  IPAddressMemory[3] = preferences.getInt("address3", IPAddressMemory[3]);
+  preferences.end();
+
+  IpAddress_ = IPAddress(IPAddressMemory[0], IPAddressMemory[1], IPAddressMemory[2], IPAddressMemory[3]);
   WiFi.softAPConfig(IpAddress_, IpAddress_, SubNet);
   delay(100);
   
+  WebSerial.begin(&ServerObject);
+  WebSerial.onMessage(WebReceiveMsg);
+
   preferences.begin("wifi", true); // 読み取り専用
   String ssid = preferences.getString("ssid", Ssid);
   String pass = preferences.getString("pass", Password);
   preferences.end();
 
-  WiFi.softAP(ssid, pass, 1, 0, 10);  // Max. connection = 10
-  delay(100);
+  WiFi.softAP(ssid, pass, 1, 0, MAX_WIFI_CONNECTION); 
   
   IPAddress my_ip = WiFi.softAPIP();
  
@@ -673,16 +726,6 @@ void WiFiSetup() {
   Serial.print("SSID(AP): ");
   Serial.println(ssid);
   
-  // ３）DNSサーバー起動（全ドメインを local_ip に向ける）
-  dnsServer.start(53, "*", IpAddress_);
-
-  WebSerial.begin(&ServerObject);
-  WebSerial.onMessage(WebReceiveMsg);
-  ServerObject.begin();
-  
-  webSocket.begin();
-  webSocket.onEvent(onWebSocketEvent);
-
    // エンドポイント登録（非同期の形式）
    String path = "/" + TemperaturePath;
   ServerObject.on(path.c_str(), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -690,7 +733,6 @@ void WiFiSetup() {
     String json = "{\"temperature\": " + String(c) + "}";
     request->send(200, "application/json", json);
   });
-  ServerObject.begin();
 
   // 192.168.4.1/がリクエストされた時に返すWebサーバー設定
   ServerObject.on("/", HTTP_GET, [](AsyncWebServerRequest *req){
@@ -698,28 +740,393 @@ void WiFiSetup() {
   });
   
   ServerObject.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->redirect("http://192.168.4.1/");
+    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
+    request->redirect(ip);
   });
   /*
   ServerObject.on("/redirect", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->redirect("http://192.168.4.1/");
+    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
+    request->redirect(ip);
   });
   */
-  ServerObject.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *req){
-    req->redirect("http://192.168.4.1/");
-  });
   /*
-    ServerObject.on("/webserial", HTTP_GET, [](AsyncWebServerRequest *req){
+  ServerObject.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *req){
+    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
+    request->redirect(ip);
+  });
+  */
+  ServerObject.on("/webserial", HTTP_GET, [](AsyncWebServerRequest *req){
     req->send(LittleFS, "/webserial.html", "text/html");
   });
+  /*
   ServerObject.on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest *req){
-    req->redirect("http://192.168.4.1/");
+    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
+    request->redirect(ip);
   }); 
   ServerObject.onNotFound([](AsyncWebServerRequest *request){
     ///request->send(404, "text/plain", "Not Found");
-    request->redirect("http://192.168.4.1/");
+    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
+    request->redirect(ip);
   });
   */
+
+  // ★ 追加：ファイルアップロード用管理画面
+  ServerObject.on("/admin", HTTP_GET, [](AsyncWebServerRequest *request){
+    String html = R"(
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>UZU ROASTER ファイル更新</title>
+          <style>
+              body { 
+                  font-family: Arial, sans-serif; 
+                  margin: 40px; 
+                  background: #f5f5f5; 
+              }
+              .container { 
+                  background: white; 
+                  padding: 30px; 
+                  border-radius: 10px; 
+                  max-width: 600px; 
+                  margin: 0 auto;
+              }
+              h1 { 
+                  color: #333; 
+                  border-bottom: 3px solid #ff6b35; 
+                  padding-bottom: 10px; 
+              }
+              .warning { 
+                  background: #fff3cd; 
+                  border: 1px solid #ffeaa7; 
+                  color: #856404; 
+                  padding: 15px; 
+                  border-radius: 5px; 
+                  margin: 20px 0; 
+              }
+              .file-input { 
+                  margin: 15px 0; 
+                  padding: 10px; 
+                  border: 2px dashed #ddd; 
+                  border-radius: 5px; 
+              }
+              input[type="file"] { 
+                  margin: 10px 0; 
+              }
+              input[type="submit"] { 
+                  background: #ff6b35; 
+                  color: white; 
+                  padding: 15px 30px; 
+                  border: none; 
+                  border-radius: 5px; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  margin-top: 20px; 
+              }
+              input[type="submit"]:hover { 
+                  background: #e55a2b; 
+              }
+              .info { 
+                  background: #d1ecf1; 
+                  border: 1px solid #bee5eb; 
+                  color: #0c5460; 
+                  padding: 15px; 
+                  border-radius: 5px; 
+                  margin: 20px 0; 
+              }
+              .hidden {
+                  display: none;
+              }
+              .loading {
+                  text-align: center;
+                  padding: 50px;
+              }
+              .spinner {
+                  border: 4px solid #f3f3f3;
+                  border-top: 4px solid #ff6b35;
+                  border-radius: 50%;
+                  width: 60px;
+                  height: 60px;
+                  animation: spin 1s linear infinite;
+                  margin: 0 auto 20px;
+              }
+              @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+              }
+              .loading-text {
+                  font-size: 18px;
+                  color: #ff6b35;
+                  font-weight: bold;
+              }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <div id="upload-form">
+                  <h1>🚀 UZU ROASTER ファイル更新</h1>
+                  
+                  <div class="warning">
+                      <strong>⚠️ 重要な注意事項</strong><br>
+                      • この機能はPCブラウザでのみご利用ください<br>
+                      • ファイルアップロード後、UZU ROASTERは自動で再起動します<br>
+                      • アップロード中は電源を切らないでください
+                  </div>
+                  
+                  <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                      <div class="file-input">
+                          <label for="index"><strong>📄 index.html ファイル:</strong></label><br>
+                          <input type="file" id="index" name="index" accept=".html">
+                      </div>
+                      
+                      <div class="file-input">
+                          <label for="script"><strong>📄 script.js ファイル:</strong></label><br>
+                          <input type="file" id="script" name="script" accept=".js">
+                      </div>
+                      
+                      <div class="file-input">
+                          <label for="chart"><strong>📄 chart.js ファイル:</strong></label><br>
+                          <input type="file" id="chart" name="chart" accept=".js">
+                      </div>
+                      <input type="submit" value="🚀 アップロード開始" id="submitBtn">
+                  </form>
+                  
+                  <div class="info">
+                      <strong>📥 ファイルの入手方法:</strong><br>
+                      1. <a href='https://github.com/uzuuzuhonpo/uzuroaster' target='_blank'>GitHub</a>から最新版をダウンロード<br>
+                      2. PCの任意のフォルダに保存<br>
+                      3. 上記のフォームでファイルを選択してアップロード<br>
+                      <strong>※選択していないファイルはバージョンアップされません</strong>
+                  </div>
+                  <p><a href="/">← メイン画面に戻る</a></p>
+              </div>
+              
+              <div id="loading-screen" class="hidden">
+                  <div class="loading">
+                      <div class="spinner"></div>
+                      <div class="loading-text">📤 アップロード中...</div>
+                      <p>UZU ROASTERにファイルを送信しています。<br>
+                      しばらくお待ちください。</p>
+                      <div class="warning">
+                          <strong>⚠️ 電源を切らないでください</strong>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          
+          <script>
+              document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                  // フォームを隠してローディング画面を表示
+                  document.getElementById('upload-form').classList.add('hidden');
+                  document.getElementById('loading-screen').classList.remove('hidden');
+              });
+          </script>
+      </body>
+      </html>
+      )";
+
+    request->send(200, "text/html", html);
+  });
+
+  // ★ 修正版：ファイルアップロード処理
+  ServerObject.on("/upload", HTTP_POST, 
+    // アップロード完了時の処理
+    [](AsyncWebServerRequest *request) {
+
+    Serial.println("1つ目のコールバック開始"); // ③これ
+    
+    String html = R"(
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>アップロード完了</title>
+          <style>
+              body { 
+                  font-family: Arial, sans-serif; 
+                  margin: 40px; 
+                  text-align: center; 
+                  background: #f5f5f5; 
+              }
+              .success { 
+                  background: #d4edda; 
+                  border: 1px solid #c3e6cb; 
+                  color: #155724; 
+                  padding: 40px; 
+                  border-radius: 10px; 
+                  max-width: 600px; 
+                  margin: 0 auto; 
+                  line-height: 1.6;
+              }
+              h1 { color: #155724; margin-bottom: 20px; }
+              .step { 
+                  background: #fff; 
+                  padding: 15px; 
+                  margin: 10px 0; 
+                  border-radius: 5px; 
+                  border-left: 4px solid #28a745; 
+              }
+              .important { 
+                  background: #fff3cd; 
+                  border: 1px solid #ffeaa7; 
+                  color: #856404; 
+                  padding: 15px; 
+                  border-radius: 5px; 
+                  margin: 20px 0; 
+              }
+          </style>
+      </head>
+      <body>
+          <div class="success">
+              <h1>✅ ファイルアップロード完了！</h1>
+              
+              <div class="important">
+                  <strong>🔌 次の手順で UZU ROASTER を再起動してください</strong>
+              </div>
+              
+              <div class="step">
+                  <strong>手順1:</strong> UZU ROASTER本体の電源を一度切ってください
+              </div>
+              
+              <div class="step">
+                  <strong>手順2:</strong> 5秒ほど待機
+              </div>
+              
+              <div class="step">
+                  <strong>手順3:</strong> 電源を再度入れ直してください
+              </div>
+              
+              <div class="step">
+                  <strong>手順4:</strong> WiFi「UZU-ROASTER」に再接続
+              </div>
+              
+              <div class="step">
+                  <strong>手順5:</strong> ブラウザで UZU ROASTER URL（デフォルト：192.168.4.1） にアクセス
+              </div>
+              
+              <p style="margin-top: 30px;">
+                  <strong>✨ 新しいバージョンをお試しください</strong>
+              </p>
+              
+              <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                  このページは電源を切るまでそのままにしておいてください
+              </p>
+          </div>
+      </body>
+      </html>
+      )";
+      
+      request->send(200, "text/html; charset=UTF-8", html);
+  },
+    // アップロード処理中の処理
+    [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+      static File uploadFile;
+      static String currentFilePath = "";
+      
+      // アップロード開始
+      if (index == 0) {
+        Serial.println("=== アップロード開始 ===");
+        Serial.println("ファイル名: " + filename);
+        
+        // ★ 修正：ファイル名から判定する方法
+        if (filename.endsWith(".html") || filename.indexOf("index") >= 0) {
+          currentFilePath = "/index.html";
+        } else if (filename.indexOf("script") >= 0) {
+          currentFilePath = "/script.js";
+        } else if (filename.indexOf("chart") >= 0) {
+          currentFilePath = "/chart.js";
+        } else {
+          Serial.println("Unknown file: " + filename);
+          return;
+        }
+        
+        Serial.println("保存先: " + currentFilePath);
+        
+        // 既存ファイルを削除してから新規作成
+        if (LittleFS.exists(currentFilePath)) {
+          LittleFS.remove(currentFilePath);
+          Serial.println("既存ファイルを削除: " + currentFilePath);
+        }
+        
+        uploadFile = LittleFS.open(currentFilePath, "w");
+        if (!uploadFile) {
+          Serial.println("ファイル作成に失敗: " + currentFilePath);
+          return;
+        }
+        
+        Serial.println("ファイル作成成功: " + currentFilePath);
+      }
+      
+      // データ書き込み
+      if (len && uploadFile) {
+        size_t written = uploadFile.write(data, len);
+        if (written != len) {
+          Serial.println("書き込みエラー: " + String(written) + "/" + String(len));
+        } else {
+          Serial.println("書き込み中: " + String(len) + " bytes");
+        }
+      }
+      
+      // アップロード完了
+      if (final) {
+        if (uploadFile) {
+          uploadFile.close();
+          Serial.println("=== アップロード完了 ===");
+          Serial.println("ファイル: " + filename);
+          Serial.println("保存先: " + currentFilePath);
+          Serial.println("総サイズ: " + String(index + len) + " bytes");
+          
+          // ファイルが正しく保存されたか確認
+          if (LittleFS.exists(currentFilePath)) {
+            File checkFile = LittleFS.open(currentFilePath, "r");
+            if (checkFile) {
+              Serial.println("保存確認OK: " + String(checkFile.size()) + " bytes");
+              checkFile.close();
+            }
+          } else {
+            Serial.println("保存確認NG: ファイルが見つからない");
+          }
+        }
+        currentFilePath = "";
+      }
+    }
+  );
+}
+
+//////////////////////////////////////////////////////////////////////////
+void onWiFiEvent(WiFiEvent_t event) {
+    switch (event) {
+        case ARDUINO_EVENT_WIFI_AP_START:
+        case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
+            //Serial.println("AP Mode started.");
+
+            webSocket.begin();
+            webSocket.onEvent(onWebSocketEvent);
+            dnsServer.start(53, "*", IpAddress_);
+
+            ServerObject.begin();
+
+            //Serial.println("WebSocket server started.");
+            break;
+        case ARDUINO_EVENT_WIFI_AP_STOP:  // ここには来ない。。。
+            //Serial.println("AP Mode stopped.");
+            webSocket.disconnect(); // 全クライアントを切断
+            //Serial.println("WebSocket server stopped.");
+            break;
+        case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+            //Serial.println("Station disconnected from AP.");
+            ESP.restart();  //ゴミを残して重くならないため強制的にリスタート
+            
+            webSocket.disconnect(); // 全クライアントを切断
+            webSocket.close();
+            delay(100); 
+            dnsServer.stop();
+            ServerObject.end();
+            WiFi.disconnect(true);
+           break;
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -791,7 +1198,7 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
       roastTime = 0;
       Serial.println("焙煎スタート受信");
 
-      // ★ ACKレスポンスを作って返すずら
+      // ★ ACKレスポンスを作って返す
       StaticJsonDocument<256> ack;
       ack["type"] = "ack";
       ack["status"] = "ok";
@@ -806,7 +1213,7 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
       roasting = false;
       Serial.println("焙煎ストップ受信");
       String msg = "焙煎終了！";
-      sendMessage(msg);
+      //sendMessage(msg);
 
       StaticJsonDocument<256> ack;
       ack["type"] = "ack";
@@ -817,6 +1224,10 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
       String response;
       serializeJson(ack, response);
       webSocket.sendTXT(num, response);
+    }
+    else if (strcmp(cmd, "reset") == 0) {
+      Serial.println("リセット受信"); // リセットはACKを返さない
+      ESP.restart();
     }
     else {
       handleWebSocketMessage(num, payload, length);
