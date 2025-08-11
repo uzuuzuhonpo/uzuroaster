@@ -85,7 +85,7 @@
     }
 
     /* Buttons */
-    .button {
+.button {
       background-color: var(--primary-color);
       color: var(--text-light);
       padding: 2px 12px;
@@ -102,18 +102,21 @@
       height: 36px;
     }
 
-    .button:hover {
-      background-color: var(--primary-hover);
-  	  transform: scale(1.03);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* マウス（PC）でのホバー時のみに適用 */
+    @media (hover: hover) and (pointer: fine) {
+      .button:hover {
+        background-color: var(--primary-hover);
+        transform: scale(1.03);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
     }
 
+    /* タップ（クリック）した瞬間に適用 */
     .button:active {
       background-color: var(--primary-active);
-  	  transform: scale(0.97);
+      transform: scale(0.97);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-
     
     #start-button {
       background-color: #2e9d32;
@@ -469,30 +472,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Responsive Design */
-    @media (max-width: 992px) {
-      .main-area {
-        flex-direction: column;
-      }
-      .main-area {
-        height:1000px!important;
-      }
-      .table-section,
-      .chart-section {
-        width: 95%!important;
-        max-height: 100%;
-      }
-      .profileTtable {
-      width: 90%;
-      }
-	  th,td {
-		max-width: 100px;
-	  }
-    }
-
-    #fileInput {
-      display: none;
-    }
 
 /**************************************************************************************************/
 
@@ -643,12 +622,12 @@
   overflow-y: scroll;
   border: 1px solid #ccc;
   border-radius: 10px;
-  margin: 0px 2px 0px 5px;
+  margin: 0px 2px 0px 2px;
 }
 #chart-area {
   border: 1px solid #ccc;
   border-radius: 10px;
-  margin: 0px 5px 0px 2px;
+  margin: 0px 2px 0px 2px;
 }
 
 #table_title {
@@ -670,22 +649,6 @@
   top: 0;
   background-color: white; /* 背景色をつけておくとスクロール時に見やすい */
   z-index: 1;
-}
-
-
-@media (max-width: 768px) { /* スマホ用 */
-
-  #chart-area {
-    width: 100%;
-  }
-
-  #profileTable {
-    width: 100%;
-  }
-
-  body {
-   /*  font-size: 24px!important;  モバイルではフォントサイズを小さく */
-  }
 }
 
 .fullscreen-canvas {
@@ -760,8 +723,8 @@
 
 #debug_console {
     position: fixed;
-    width: 200px;
-    height: 80px;
+    width: 240px;
+    height: 100px;
     background-color: rgba(0, 0, 0, 0.8);
     padding: 10px;
     border-radius: 5px;
@@ -858,7 +821,8 @@
   <button class="debug_button" onclick="OffsetIncrement(-0.1)">-0.1</button>
   <button class="debug_button" onclick="OffsetIncrement(-1)">-1</button>
   <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>&nbsp;
-  <button class="debug_button" onclick="OffsetReset()">RESET</button>
+  <button class="debug_button" onclick="OffsetReset()">RESET</button><br>
+  <button class="debug_button" onclick="location.href='./admin'">Admin</button>
 </div>
     <!-- ヘッダー部分 -->
     <div class="header">
@@ -868,7 +832,8 @@
       </div>
     <div>
       <button class="button red-button" onclick="ResetButtonCommand()">RESET</button>
-      <button class="button" onclick="helpButtonCommand()">マニュアル</button>
+      <button class="button" onclick="helpButtonCommand()">HELP</button>
+      <button class="button" onclick="manualButtonCommand()">マニュアル</button>
       <button class="button" onclick="configButtonCommand()">設定</button>
       <button class="button" onclick="WebButtonCommand()">Web</button>
     </div>
@@ -1066,6 +1031,29 @@
 </script>
 <style>
 /* Responsive Design */
+    @media (max-width: 768px) {
+      #profileTable {
+        width: 95%;
+        margin: 0 auto;
+      }
+      .main-area {
+        height:1000px!important;
+      }
+      .table-section,
+      .chart-section {
+        width: 100%!important;
+        max-height: 100%;
+        margin: 2px!important;
+      }
+	  th,td {
+		max-width: 100px;
+	  }
+    }
+
+    #fileInput {
+      display: none;
+    }
+
     @media (max-width: 768px) {
       /* ヘッダー部分 */
       .header {

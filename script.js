@@ -8,6 +8,7 @@ const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
+const versionStr = "1.0.1x";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -425,6 +426,10 @@ function sendSafe(data) {
 }
 
 function helpButtonCommand() {
+  alert("Version" + versionStr);
+}
+
+function manualButtonCommand() {
   window.open("uzu_roaster_manual.html", "_blank");
 }
 
@@ -877,7 +882,6 @@ function downloadJSON() {
     const time = parseFloat(row.cells[0].firstChild.value);
     const temp = parseFloat(row.cells[1].firstChild.value);
     if (!isNaN(time) && !isNaN(temp)) {
-      // 同じ時間が出てきたら、後に出てきた方で上書き
       latestEntries.set(time, temp);
     }
   });
@@ -887,12 +891,10 @@ function downloadJSON() {
     return;
   }
 
-  // 時間順にソートしてからJSON化
   const profile = Array.from(latestEntries.entries())
     .sort((a, b) => a[0] - b[0])
     .map(([time, temp]) => ({ time, temp }));
 
-  // タイトルとメモを取得
   const title = document.getElementById("profileTitle")?.value || "未設定";
   const memo = document.getElementById("profileMemo")?.value || "未設定";
 
@@ -903,13 +905,30 @@ function downloadJSON() {
     profile
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  // ファイル名に現在の日時を追加
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  const filename = `roast_profile_${year}${month}${day}_${hours}${minutes}${seconds}.json`;
+
+  const jsonString = JSON.stringify(data, null, 2);
+  const base64Encoded = btoa(unescape(encodeURIComponent(jsonString)));
+  const dataUri = `data:application/json;base64,${base64Encoded}`;
+  
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "roast_profile.json";
+  a.href = dataUri;
+  a.download = filename;
+  
+  a.target = "_blank";
+  
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
 
   document.getElementById('roast_message').textContent = "プロファイルの保存処理が完了しました";
 }
