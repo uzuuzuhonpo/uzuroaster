@@ -8,7 +8,7 @@ const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
-const versionStr = "1.0.1x";
+const versionStr = "1.0.1";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -24,6 +24,19 @@ window.addEventListener('resize', () => {
     resizeOverlayCanvas();
   }
 });
+
+let isPythonApplication = false;
+////////////////////////////////////////////////////////////////
+// Pythonからの呼び出し用関数
+////////////////////////////////////////////////////////////////
+window.updateFromPython = function(temp) {
+    console.log("UZUからの生データ:", temp);
+		updateConnectionStatus(true); // USBシリアルからデータがあれば接続中というテイ
+    isPythonApplication = true;
+    if (typeof curr_temp !== 'undefined') {
+        curr_temp = temp; 
+    }
+};
 
 ////////////////////////////////////////////////////////////////
 // グラフのクリックで全画面表示切り替え
@@ -230,6 +243,9 @@ socket.onopen = () => {
 	console.log("WebSocket接続");
 };
 socket.onclose = () => {  
+    if (isPythonApplication == true) {  // Pythonから動いてる場合はクローズしない
+      return;
+    }
     updateConnectionStatus(false);
     document.getElementById('roast_message').textContent = "接続が解除されました";
     //sendStopCommand(); // 焙煎を停止
