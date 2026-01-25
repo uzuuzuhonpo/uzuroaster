@@ -812,7 +812,51 @@
     <div class="spinner"></div>
     <p>プロファイル送信中...</p>
   </div>
-</div><div id="debug_console" style="display:none">
+</div>
+
+<!-- ファイル読込モーダル（非表示時は display: none） -->
+<div id="jsonInputModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:9999; justify-content:center; align-items:center;">
+    
+    <div style="background:#2c2c2c; color:white; margin: 10px auto; padding:20px; border-radius:12px; width:90%; height:auto; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border:1px solid #444;">
+        
+        <div onclick="closeJSONInputModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:24px; color:#aaa;">&times;</div>
+
+        <h3 style="margin-top:0; color:#c8a78f;">プロファイル入力</h3>
+        <p style="font-size:12px; color:#eee;">JSONデータをペーストするか記述してください</p>
+        
+        <textarea id="jsonInput" 
+            style="width:100%; height:80%; min-height: 400px; background:#eee; color:#000; border:1px solid #555; border-radius:5px; padding:20px; font-family:monospace; box-sizing:border-box;" 
+            placeholder='{"roast_data": [...]}'></textarea>
+
+        <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="closeJSONInputModal()" style="background:#444; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">閉じる</button>
+            
+            <button onclick="applyJSONInputModal()" style="background:#c8a78f; color:#000; border:none; padding:8px 20px; border-radius:5px; cursor:pointer; font-weight:bold;">プロファイル読込</button>
+        </div>
+    </div>
+</div>
+<!-- ファイル保存モーダル（非表示時は display: none） -->
+<div id="jsonSaveModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:9999; justify-content:center; align-items:center;">
+    
+    <div style="background:#2c2c2c; color:white; margin: 10px auto; padding:20px; border-radius:12px; width:90%; height:auto; position:relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border:1px solid #444;">
+        
+        <div onclick="closeJSONSaveModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:24px; color:#aaa;">&times;</div>
+
+        <h3 style="margin-top:0; color:#c8a78f;">プロファイル表示</h3>
+        <p style="font-size:12px; color:#eee;">JSONデータをコピーして手動保存してください</p>
+        
+        <textarea id="jsonSave" 
+            style="width:100%; height:80%; min-height: 400px; background:#eee; color:#000; border:1px solid #555; border-radius:5px; padding:20px; font-family:monospace; box-sizing:border-box;"></textarea>
+
+        <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="closeJSONSaveModal()" style="background:#444; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">閉じる</button>
+            
+            <button onclick="applyJSONAllCopyModal()" style="background:#c8a78f; color:#000; border:none; padding:8px 20px; border-radius:5px; cursor:pointer; font-weight:bold;">プロファイルコピー</button>
+        </div>
+    </div>
+</div>
+
+<div id="debug_console" style="display:none">
 
   <button class="debug_button" onclick="OffsetIncrement(0.1)">+0.1</button>
   <button class="debug_button" onclick="OffsetIncrement(1)">+1</button>
@@ -821,8 +865,7 @@
   <button class="debug_button" onclick="OffsetIncrement(-0.1)">-0.1</button>
   <button class="debug_button" onclick="OffsetIncrement(-1)">-1</button>
   <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>&nbsp;
-  <button class="debug_button" onclick="OffsetReset()">RESET</button><br>
-  <button class="debug_button" onclick="location.href='./admin'">Admin</button>
+  <button class="debug_button" onclick="OffsetReset()">RESET</button>
 </div>
     <!-- ヘッダー部分 -->
     <div class="header">
@@ -895,7 +938,7 @@
 <button type="button" class="button table_edit" onclick="openFileDialog()">
     <span>📁 プロファイル読込</span>
 </button>
-<input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">      <button onclick="downloadJSON()" class="button table_edit">💾 プロファイル保存</button>
+<input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">      <button onclick="openJSONSaveModal()" class="button table_edit">💾 プロファイル保存</button>
       <button class="button table_edit" onclick="sendCurrentProfile();">📈 プロファイル整列</button>
       <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
       <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare();">📈 比較プロファイル表示</button>
