@@ -6,112 +6,157 @@
     <title>UZU ROASTER（うずロースター）取扱説明書</title>
     <style>
         body {
-            font-family: 'Segoe UI', 'Meiryo', sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            background-color: #f8f8f8;
-            color: #333;
+            font-family: 'SF Pro Display', 'Helvetica Neue', 'Segoe UI', 'Meiryo', sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+            font-size: 14px;
+            word-break: break-all;      /* どこでもええから無理やり改行しろ！ */
         }
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
         }
         h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
+            color: #1a202c;
+            border-bottom: 3px solid #8b5a3c;
+            padding-bottom: 15px;
+            margin-bottom: 40px;
             text-align: center;
+            font-size: 2.2em;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
         h2 {
-            color: #34495e;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            margin-top: 25px;
-            margin-bottom: 15px;
+            color: #2d3748;
+            border-bottom: 2px solid #cbd5e0;
+            padding-bottom: 8px;
+            padding-top: 8px;
+           margin-top: 35px;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            background-color: #dadada;
         }
         h3 {
-            color: #2980b9;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            color: #4a5568;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 600;
         }
         h4 {
-            color: #1abc9c;
-            margin-top: 15px;
-            margin-bottom: 8px;
+            color: #6b7280;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        h5 {
+            color: #6b7280;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
         }
         p {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            text-align: justify;
         }
         ul, ol {
-            margin: 10px 0 10px 20px;
+            margin: 12px 0 12px 24px;
             padding: 0;
         }
         li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         code {
-            background-color: #eef;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #2d3748;
         }
         pre {
-            background-color: #eee;
-            padding: 10px;
-            border-radius: 5px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
             overflow-x: auto;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
         }
         .note, .tip, .warning {
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-left: 5px solid;
-            border-radius: 4px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            border-radius: 6px;
+            position: relative;
         }
         .note {
-            border-color: #2196F3;
-            background-color: #e7f3fe;
+            border-color: #4299e1;
+            background-color: #ebf8ff;
+            color: #2b6cb0;
         }
         .tip {
-            border-color: #4CAF50;
-            background-color: #e9ffee;
+            border-color: #48bb78;
+            background-color: #f0fff4;
+            color: #2f855a;
+            word-break: break-all;      /* どこでもええから無理やり改行しろ！ */
+            overflow-wrap: break-word; /* こっちも念のため（単語の切れ目を探す） */
+            white-space: pre-wrap;     /* 改行やスペースを維持しつつ、端っこで折り返す */
         }
         .warning {
-            border-color: #f44336;
-            background-color: #ffe9e7;
+            border-color: #ed8936;
+            background-color: #fffaf0;
+            color: #c05621;
         }
         /* 目次スタイル */
         .table-of-contents {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 30px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         .table-of-contents h2 {
             border-bottom: none;
             margin-top: 0;
-            margin-bottom: 10px;
-            color: #2c3e50;
+            margin-bottom: 16px;
+            color: #1a202c;
+            font-size: 1.3em;
         }
         .table-of-contents ul {
             list-style: none;
@@ -119,14 +164,69 @@
             margin: 0;
         }
         .table-of-contents ul ul {
-            margin-left: 15px;
+            margin-left: 20px;
+            margin-top: 8px;
         }
         .table-of-contents a {
             text-decoration: none;
-            color: #3498db;
+            color: #4a5568;
+            padding: 4px 0;
+            display: block;
+            transition: color 0.2s ease;
         }
         .table-of-contents a:hover {
+            color: #8b5a3c;
             text-decoration: underline;
+        }
+        /* ボタン風リンク */
+        a[href^="http"] {
+            color: #4299e1;
+            text-decoration: none;
+            border-bottom: 1px dotted #4299e1;
+        }
+        a[href^="http"]:hover {
+            color: #2b6cb0;
+            border-bottom-style: solid;
+        }
+        /* 強調テキスト */
+        strong {
+            color: #1a202c;
+            font-weight: 600;
+        }
+        /* HR スタイル */
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #cbd5e0, transparent);
+            margin: 40px 0;
+        }
+        /* 章番号のスタイル改善 */
+        h2::before {
+            content: "　";
+            color: #8b5a3c;
+            font-weight: bold;
+        }
+        /* テーブルキャプション */
+        caption {
+            caption-side: top;
+            text-align: center;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+                /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: #ffffff;
+                padding: 10px;
+            }
+            body {
+                padding: 0px;
+            }
         }
     </style>
 </head>
@@ -141,36 +241,42 @@
                 <li><a href="#section-preparation">🚀 準備と接続</a></li> <li><a href="#section-main-features">✨ UZU ROASTERの主な機能</a></li> <li><a href="#section-artisan-usb">☕ Artisanと連携する（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-artisan-requirements">🧰 必要なもの</a></li>
-                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバーのインストール）</a></li>
+                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）</a></li>
                         <li><a href="#subsection-artisan-settings">⚙️ 3. Artisanの設定手順</a></li>
                         <li><a href="#subsection-artisan-test">✅ 接続テスト＆確認</a></li> <li><a href="#subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント</a></li> </ul>
                 </li>
-                <li><a href="#section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ）を使う（Wi-Fi接続編）</a>
+                <li><a href="#section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>
                     <ul>
                         <li><a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a></li> </ul>
                 </li>
-                <li><a href="#section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ）の詳しい操作方法</a> <ul>
-                        <li><a href="#subsection-web-app-overview">1. Webアプリ概要</a></li> <li><a href="#subsection-web-app-basic-screen">2. 基本画面と各エリアの説明</a></li> 
+                <li><a href="#section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</a>
+                    <ul>
+                        <li><a href="#subsection-initial-setup-usb">🔧 初期設定と接続</a></li> </ul>
+                </li>
+                <li><a href="#section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ版/Python版共通）の詳しい操作方法</a> <ul>
+                        <li><a href="#subsection-web-app-overview">1. うずロースターコントローラーアプリ概要</a></li> <li><a href="#subsection-web-app-basic-screen">2. 基本画面と各エリアの説明</a></li> 
                         <li><a href="#subsection-web-app-profile-edit">3. 焙煎プロファイルの作成・編集</a></li> 
                         <li><a href="#subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み</a></li>
                         <li><a href="#subsection-web-app-roast-control">5. 焙煎開始・停止の操作</a></li> 
                         <li><a href="#subsection-web-app-assist">6. リアルタイム表示と焙煎アシスト機能</a></li> </ul>
                 </li>
                 <li><a href="#section-custom-webserver">🌏 カスタムウェブサーバー機能</a> <ul>
-                        <li><a href="#section-custom-webserver_uzu">☕ うずロースターを使った「キャプティブポータル広告宣伝システム」の概要</a></li> 
-                        <li><a href="#section-custom-webserver-fs">Web画面（LittleFS）の構成と更新</a></li> </ul>
+                        <li><a href="#section-custom-webserver_uzu">☕ UZU ROASTERを使った「キャプティブポータル広告宣伝システム」の概要</a></li> 
+                        <li><a href="#section-custom-webserver-fs">📁 Web画面（LittleFS）の構成と更新</a></li> </ul>
                 </li>
                 <li><a href="#section-troubleshooting">💡 トラブルシューティング（困ったときは）</a></li> 
                 <li><a href="#section-product-specs">📋 製品仕様</a></li> 
                 <li><a href="#section-inquiry">📞 お問い合わせ</a></li>
                 <li><a href="#section-attachment">🎁 付録</a></li>
                 <ul>
-                <li><a href="#section-web-serial-commands">💬 Web/USBシリアルコマンド一覧</a></li> 
+                <li><a href="#section-web-serial-commands">💬 Web/USBシリアルコマンド一覧（基本コマンド）</a></li> 
                 <li><a href="#section-sensor-specs">📈 温度センサーと表示の仕様</a></li>
+                <li><a href="#section-firmware-update">📈 ファームウェアアップデート</a></li>
                 <li><a href="#section-webserial-manual">🌐 WebSerial（ブラウザ焙煎ビューアー）接続マニュアル【応用編】</a> <ul>
-                        <li><a href="#subsection-webserial-whatis">💡 WebSerialとは？</a></li>
+<!--                        <li><a href="#subsection-webserial-whatis">💡 WebSerialとは？</a></li>
                         <li><a href="#subsection-webserial-environment">🧪 必要な環境</a></li>
-                    </ul>
+-->
+                </ul>
                 </li>
                 <li><a href="#section-loadmap">🧪 開発ロードマップ</a></li>
                 </ul>   
@@ -178,16 +284,80 @@
         </div>
 
         <h2 id="section-product-overview">📦 製品概要</h2>
-        <p>UZU ROASTER（うずロースター）は、小型のコーヒー焙煎機や手鍋に接続し、**温度センサーのデータをリアルタイムで取得**するIoTデバイスです。取得したデータは、PCソフトの「Artisan」や、うずロースター内蔵のWebページ（うずロースターコントローラー）上で表示され、焙煎を強力にアシストします。Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
+        <p>UZU ROASTER（うずロースター）は、小型のコーヒー焙煎機や手鍋に接続し、**温度センサーのデータをリアルタイムで取得**するIoTデバイスです。取得したデータは、PCソフトの「Artisan」や、UZU ROASTER内蔵のWebページ（うずロースターコントローラー）上で表示され、焙煎を強力にアシストします。Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
+        <br>
+        <br>
+
+<svg style="display: block; margin: 0 auto; width: 100%; max-width: 420px; height: auto;" viewBox="0 0 420 180">            <!-- グラデーション定義 -->
+            <defs>
+                <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="70%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4a4a4a;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            
+            <!-- 本体（グラデーション） -->
+            <rect x="10" y="10" width="400" height="160" rx="12" fill="url(#bodyGradient)" stroke="#444" stroke-width="2" />
+        
+            <!-- USB-TypeC -->
+            <g transform="translate(20, 100)">
+                <text x="22.5" y="-10" font-family="monospace" font-size="9" fill="#ccc" text-anchor="middle">USB-TypeC</text>
+            </g>
+
+            <!-- OP LED -->
+            <g transform="translate(130, 90)">
+                <circle cx="0" cy="0" r="9" fill="#000" stroke="#333" />
+                <circle cx="0" cy="0" r="5" fill="#ff0000" />
+                <text x="0" y="-15" font-family="monospace" font-size="8" fill="#ccc" text-anchor="middle">OP LED</text>
+            
+                <!-- STATUS LED -->
+                <g transform="translate(0, 25)">
+                    <circle cx="0" cy="0" r="9" fill="#000" stroke="#333" />
+                    <circle cx="0" cy="0" r="5" fill="#3333ff">
+                        <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                    <text x="0" y="22" font-family="monospace" font-size="8" fill="#ccc" text-anchor="middle">STATUS LED</text>
+                </g>
+            </g>
+            
+            <!-- THERMOCOUPLE -->
+            <g transform="translate(345, 30)">
+                <rect x="0" y="0" width="50" height="68" rx="4" fill="#111" stroke="#333" />
+            
+                <!-- (-) 端子 -->
+                <g transform="translate(10, 5)">
+                    <rect x="0" y="0" width="30" height="25" rx="3" fill="#2e7d32" />
+                    <circle cx="15" cy="12.5" r="4" fill="none" stroke="#fff" stroke-width="1" />
+                    <line x1="12" y1="12.5" x2="18" y2="12.5" stroke="#fff" stroke-width="1.5" />
+                    <text x="35" y="16" font-family="monospace" font-size="10" fill="#ccc"> (-)</text>
+                </g>
+
+                <!-- (+) 端子 -->
+                <g transform="translate(10, 35)">
+                    <rect x="0" y="0" width="30" height="25" rx="3" fill="#2e7d32" />
+                    <line x1="10" y1="12.5" x2="20" y2="12.5" stroke="#fff" stroke-width="1.5" />
+                    <line x1="15" y1="7.5" x2="15" y2="17.5" stroke="#fff" stroke-width="1.5" />
+                    <text x="35" y="16" font-family="monospace" font-size="10" fill="#ccc"> (+)</text>
+                </g>
+                
+                <text x="25" y="-5" font-family="monospace" font-size="9" fill="#ccc" text-anchor="middle">THERMOCOUPLE</text>
+            </g>
+
+            <!-- UZU ROASTER ロゴ -->
+            <text x="390" y="155" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.05)" text-anchor="end" font-style="italic" font-weight="bold">UZU ROASTER</text>
+        </svg>
+        <div style="text-align: center; margin: 10px auto; color: #000; font-size: 1.1em;">
+        図1: UZU ROASTER本体と各部名称
+        </div>
 
         <h2 id="section-preparation">🚀 準備と接続</h2>
         <ol>
             <li>
                 <h3>K型熱電対の接続:</h3>
-                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。**プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。** もし常温でマイナス付近の値が表示される場合、接続が逆になっている可能性があります。</p>
+                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。**プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
                 <ul>
-                    <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）、U字端子</li>
-                    <li><strong>ご注意:</strong> 接続不可能な端子の場合は、お手数ですが追加工して形状を合わせてください。</li>
+                    <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）</li>
+                    <li><strong>接続不能な端子形状の場合:</strong> お手数ですが追加工して形状を合わせてください。</li>
                     <li><strong>熱電対の設置:</strong> 熱電対は、焙煎対象となるロースターや鍋にしっかりと組み込んでください。</li>
                 </ul>
             </li>
@@ -197,7 +367,8 @@
         <p>UZU ROASTERはコーヒー焙煎をサポートする以下の3つの主要な機能を提供します。</p>
         <ol>
             <li>**Artisan連携（USBシリアル）:** PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
-            <li>**うずロースターコントローラー（Webアプリ）:** UZU ROASTER本体に内蔵されたWebサーバー機能により、PCやスマホのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
+            <li>**うずロースターコントローラー（Webアプリ版）:** UZU ROASTER本体に内蔵されたWebサーバー機能によりWi-FiでAP接続して、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
+            <li>**うずロースターコントローラー（Python版）:** Wi-FiではなくUSBシリアルでPC（Windows）に接続して使用します。Web版とは異なり、プロファイルの保存、読み込みが可能です。</li>
             <li>**カスタムWebサーバー機能:** ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
         </ol>
 
@@ -229,13 +400,13 @@
             <p>このデータ形式は、Web/USBシリアルコマンドにより柔軟に変更可能です。</p>
         </div>
 
-        <h3 id="subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバーのインストール）:</h3>
-        <p>UZU ROASTERをUSBでPCに接続するために、USBシリアルドライバーのインストールが必要です。</p>
+        <h3 id="subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）:</h3>
+        <p>UZU ROASTERをUSBでPCに接続するために、USBシリアルドライバのインストールが必要です。</p>
         <ul>
             <li><strong>Windowsの場合:</strong><br>
-                <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank">https://www.wch.cn/downloads/CH341SER_ZIP.html</a> から「CH340 USBシリアルドライバー」をダウンロードし、PCにインストールしてください。</li>
+                <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank">https://www.wch.cn/downloads/CH341SER_ZIP.html</a> から「CH340 USBシリアルドライバ」をダウンロードし、PCにインストールしてください。</li>
             <li><strong>Artisanが動作する他のOS（macOS/Linuxなど）の場合:</strong><br>
-                お使いのOSに対応するCH340 USBシリアルドライバーを別途インストールしてください。</li>
+                お使いのOSに対応するCH340 USBシリアルドライバを別途インストールしてください。</li>
         </ul>
 
         <h3 id="subsection-artisan-settings">⚙️ 3. Artisanの設定手順:</h3>
@@ -256,8 +427,8 @@
             <li><code>ポート</code>: UZU ROASTERが接続されているCOMポートを指定します。<br>
                 （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code> など）</li>
             <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER側と合わせてください）</li>
-            <li><code>データー長</code>: <code>8</code></li>
-            <li><code>パリティービット</code>: <code>N</code></li>
+            <li><code>データ長</code>: <code>8</code></li>
+            <li><code>パリティビット</code>: <code>N</code></li>
             <li><code>ストップビット</code>: <code>1</code></li>
             <li><code>タイムアウト</code>: <code>0.7</code></li>
         </ul>
@@ -274,8 +445,8 @@
         </div>
 
         <h3 id="subsection-artisan-test">✅ 接続テスト＆確認:</h3>
-        <p>設定画面を閉じたら、Artisanの上部ツールバーにある【START】ボタンをクリックしてください。グラフに温度がリアルタイムで表示されます。</p>
-        <p>UZU ROASTERからは、温度データが約0.5秒（500ms）ごとにArtisanへ送信されます。Artisanのその他の設定も、必要に応じて調整してください。（Artisanではサンプリング周期は1秒以上が推奨されています）</p>
+        <p>設定画面を閉じたら、Artisanの上部ツールバーにある【START】ボタンをクリックしてください。チャートに温度がリアルタイムで表示されます。</p>
+        <p>UZU ROASTERからは、デフォルトで温度データが約0.5秒（500ms）ごとにArtisanへ送信されます。Artisanのその他の設定も、必要に応じて調整してください。（Artisanではサンプリング周期は1秒以上が推奨されています）</p>
         </p>
 
         <h3 id="subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント:</h3>
@@ -289,14 +460,14 @@
             <tbody>
                 <tr>
                     <td>COMポートが見つからない</td>
-                    <td>Windowsの場合はデバイスマネージャー、macOS/Linuxの場合はターミナルでCOMポート番号を再度確認してください。ドライバーのインストールが正しく完了しているかも確認しましょう。</td>
+                    <td>Windowsの場合はデバイスマネージャー、macOS/Linuxの場合はターミナルでCOMポート番号を再度確認してください。ドライバのインストールが正しく完了しているかも確認しましょう。</td>
                 </tr>
                 <tr>
                     <td>温度が「nan」や0.0ばかり表示される</td>
                     <td>K型熱電対の接続が抜けていないか、あるいは正しく接続されているか（＋/−の向きなど）確認してください。熱電対やセンサー自体の故障も考えられます。</td>
                 </tr>
                 <tr>
-                    <td>グラフの表示が止まっている</td>
+                    <td>チャートの表示が止まっている</td>
                     <td>Artisanの【START】ボタンを押し忘れていないか確認してください。</td>
                 </tr>
                 <tr>
@@ -308,94 +479,158 @@
 
         <hr>
 
-        <h2 id="section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ）を使う（Wi-Fi接続編）</h2>
-        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動します。PCやスマホのブラウザから直接アクセスし、焙煎をコントロール可能です。</p>
+        <h2 id="section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</h2>
+        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動します。PCやスマートフォンのブラウザから直接アクセスし、焙煎をコントロール可能です。</p>
 
         <h3 id="subsection-initial-setup-wifi">🔧 初期設定と接続:</h3>
         <ol>
             <li>
                 <h4>起動とWi-Fi接続:</h4>
                 <ul>
-                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。</li>
+                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。USB-TypeCで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
                     <li>お使いのPCまたはスマートフォンのWi-Fi設定を開き、Wi-Fi接続先（SSID）として <code>UZU-ROASTER</code> を選択します。</li>
                     <li>デフォルトのパスワードは <code>00000000</code> です。</li>
-                    （※）接続すると、Wi-Fiネットワークはインターネットに未接続の状態になりますが、UZU ROASTERとの通信には問題ありません。</span></li>
+                    （※）接続すると、Wi-Fiネットワークは『インターネット未接続』と表示されますが、そのままUZU ROASTERとの接続を維持してください。</span></li>
                 </ul>
             </li>
             <li>
                 <h4>うずロースターコントローラーへのアクセス:</h4>
                 <ul>
-                    <li>通常、Wi-Fi接続後、キャプティブポータル機能により、自動的にデフォルトのブラウザにうずロースターの画面が表示されます。</li>
+                    <li>通常、Wi-Fi接続後、キャプティブポータル機能により、自動的にデフォルトのブラウザにうずロースターコントローラーの画面が表示されます。</li>
                     <li>もし自動で表示されない場合は、Chrome、Edgeなどの任意のブラウザで、以下のURLアドレスに直接アクセスしてください。<br>
-                        URLアドレス: <code>http://192.168.4.1</code></li>
+                        URLアドレス: <code>http://192.168.4.1</code>（デフォルトIPアドレス）</li>
                 </ul>
             </li>
             <li>
                 <h4>WebSocket通信の開始:</h4>
-                <p>ホストデバイス（PC/スマホ）とうずロースターはWebSocket機能を使って接続されます。Webページを開くと、自動的にUZU ROASTER本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
-                （※）WiFiが正常に接続されていても接続状態にならない場合は、しばらく待ってから再度ページを更新するか、異なるブラウザで再度アクセスしてみてください。</li> 
+                <p>ホストデバイス（PC/スマートフォン）とUZU ROASTERはWebSocket機能を使って接続されます。Webページを開くと、自動的にUZU ROASTER本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
+                （※）Wi-Fiが正常に接続されていても接続状態にならない場合は、しばらく待ってから再度ページを更新するか、異なるブラウザで再度アクセスしてみてください。</li> 
+                （※）スリープ状態（画面消灯）になるとUZU ROASTERとの接続が切れるため、焙煎中はスマートフォンの画面を常時点灯に設定してご使用ください。</li> 
                 
             </li>
         </ol>
         <br><br>
         <hr>
+        <h2 id="section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</h2>
+        <p>うずロースターコントローラー（Python版）はWi-Fiを使用せずにUSB接続でPCとUZU ROASTERと接続します。Webアプリ版との違いは、焙煎プロファイルを直接ファイルに保存、読み込みが出来るようになっていることです。</p>
 
-        <h2 id="section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ）の詳しい操作方法</h2>
-        <p>「うずロースター」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
+        <h3 id="subsection-initial-setup-usb">🔧 初期設定と接続:</h3>
+        <ol>
+            <li>
+                <h4>起動とUSB接続:</h4>
+                <ul>
+                    <li><a href="#subsection-pc-preparation">PC側の準備（USBシリアルドライバのインストール）</a>を参照してUSBドライバをインストールします。</li>
+                    <li>UZU ROASTERとPC（Windows）をUSBで接続します。</li>
+                    <li>うずロースターコントローラー（Python版）を起動するとUZU ROASTERを自動で認識します。</li>
+                </ul>
+            </li>
+        </ol>
+        <br><br>
+        <hr>
 
-        <h3 id="subsection-web-app-overview">1. Webアプリ概要:</h3>
-        <p>UZU ROASTERのWebアプリは、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をグラフで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
+        <h2 id="section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ版/Python版共通）の詳しい操作方法</h2>
+
+<div style="text-align: center; margin: 10px 0; position: relative;"">
+ <iframe 
+    src="index.html" 
+    width="100%" 
+    height="auto" 
+    style="border: 2px solid #ccc; border-radius: 8px; max-width: 100%; min-height:650px; transform: scale(0.8); transform-origin: center;"
+    loading="lazy">
+  </iframe>
+<div style="position: absolute; top: 0; left: 0; width: 100%; height:100%; z-index: 10;"></div>
+  <p style="font-size: 1em; text-align: center; margin-bottom: 30px;">図2: うずロースターコントローラー操作画面</p>
+</div>
+
+
+        <p>「うずロースターコントローラー」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
+
+        <h3 id="subsection-web-app-overview">1. うずロースターコントローラーアプリ概要:</h3>
+        <p>うずロースターコントローラーアプリは、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をチャートで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
 
         <h3 id="subsection-web-app-basic-screen">2. 基本画面と各エリアの説明:</h3>
         <ul>
+            <li><strong>温度表示エリア:</strong><br>
+                焙煎経過時間、リアルタイム温度（C.Temp)、リアルタイムRoR（温度上昇速度・C.RoR）、プロファイル温度（P.Temp）、プロファイルRoR（温度上昇速度・P.RoR）が表示されます。</li>
             <li><strong>プロファイルテーブル:</strong><br>
                 時間（秒）と目標温度（℃）を入力し、オリジナルの焙煎プロファイルを作成可能です。行の追加・削除、各値の編集が可能です。</li>
-            <li><strong>グラフエリア:</strong><br>
-                目標となる「プロファイル温度」、現在の「リアルタイム温度」、そして「RoR（温度上昇速度）」がグラフで表示されます。グラフをクリックすると、全画面表示/解除を切り替えられます。</li>
+            <li><strong>チャートエリア:</strong><br>
+                目標となる「プロファイル温度」、現在の「リアルタイム温度」、そして「RoR（温度上昇速度）」がチャートで表示されます。チャートエリアをクリックすると、全画面表示/解除をトグルで切り替えられます。</li>
             <li><strong>操作ボタン:</strong>
                 <ul>
-                    <li><strong>スタート:</strong> チャートへの記録を開始します。</li>
-                    <li><strong>ストップ:</strong> チャートへの記録を停止します。</li>
-                    <li><strong>リセット:</strong> 現在のプロファイルやデバイスの状態を初期化します。</li>
-                    <li><strong>設定:</strong> デバッグコンソールの表示/非表示を切り替えます。</li>
-                    <li><strong>マニュアル:</strong> UZU ROASTERのオンラインマニュアルを開きます。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#2e8b57; color:#fff; border:1px solid #1e5a38; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">▶ スタート</span>： チャートへの記録を開始します。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>： チャートへの記録を停止します。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が切断される事があります）</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">⇄</span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">設定</span>： デバッグコンソールの表示/非表示を切り替えます。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">マニュアル</span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
                 </ul>
             </li>
         </ul>
 
         <h3 id="subsection-web-app-profile-edit">3. 焙煎プロファイルの作成・編集:</h3>
         <ul>
-            <li><strong>行の追加:</strong> テーブル下部の「＋」ボタンをクリックすると、新しい時間と温度の行が追加されます。</li>
+            <li><strong>行の追加:</strong> テーブル下部の<span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;">行追加</span>ボタンをクリックすると、新しい時間と温度の行が追加されます。</li>
             <li><strong>値の編集:</strong> 各行の「時間」と「温度」欄に数値を直接入力してください。入力値は自動的に0～1799秒、0～260℃の範囲に制限されます。</li>
-            <li><strong>行の削除:</strong> 各行の右端にある「🗑」（ゴミ箱）ボタンで、不要な行を削除可能です。</li>
-            <li><strong>プロファイルの並び替え:</strong> 「プロファイル整列」ボタンをクリックすると、入力した時間が降順になるようにプロファイルが自動で整列され、チャートに反映されます。</li>
+            <li><strong>行の削除:</strong> 各行の右端にある<span style="display:inline-block; padding:2px 8px; background:#fff; color:#444; border:1px solid #444; border-radius:12px; font-size:1em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">&nbsp;&nbsp;🗑&nbsp;&nbsp;</span>（ゴミ箱）ボタンで、不要な行を削除可能です。<span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">全削除</span>ボタンで全ての行が削除されます。</li>
+            <li><strong>プロファイルの並び替え:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
+                📈</span>プロファイル整列</span>ボタンをクリックすると、入力した時間が降順になるようにプロファイルが自動で整列され、チャートに反映されます。
+                時間オフセット、温度オフセットが設定されている場合、プロファイルデータの経過時間、温度がそれぞれオフセット分加算されます。
+                <br>（※）マイナス値の設定も可能です。チャート範囲からはみ出したデータはその境界でクリップ、または消去されます。（時間範囲0～1799秒からはみ出したデータは消去、温度範囲0～260度からはみ出したデータはその境界でクリッピング）</li>
         </ul>
 
         <h3 id="subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み:</h3>
         <ul>
-            <li><strong>プロファイルの保存:</strong> 「プロファイル保存」ボタンをクリックすると、現在作成中のプロファイルがJSONファイルとしてPCにダウンロードされます。</li>
-            <li><strong>プロファイルの読み込み:</strong> 「プロファイル読込」ボタンから、以前に保存したJSONファイルや、CSVファイル（EXCEL等で編集可能）、alogファイル（Artisan用ファイル）を選択してプロファイルを読み込めます。</li>
-            <li><strong>焙煎データからプロファイル作成:</strong> 「焙煎データ⇒プロファイル」ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
+            <li><strong>プロファイルの読み込み:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📁</span>プロファイル読込</span>ボタンをクリックすると、プロファイルデータを貼り付けるウィンドウが表示されます。以前に保存したJSONテキストや、CSVテキスト（EXCEL等で編集可能）、alogテキスト（Artisan用プロファイル）を貼り付けて「プロファイル読み込み」ボタンをクリックしてください。<br>
+                Python版の場合、以前に保存したJSONファイルや、CSVファイル（EXCEL等で編集可能）、alogファイル（Artisan用ファイル）を選択してプロファイルを読み込みます。</li>
+            <li><strong>プロファイルの保存:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">💾</span>プロファイル保存</span>ボタンをクリックすると、別ウィンドウにプロファイルデータが表示されます。コピーしてメモ帳などに貼り付けて保存してください。<br>
+                Python版の場合、現在有効なプロファイルがJSONファイルとしてPCに保存できます。</li>
+            <li><strong>焙煎データからプロファイル作成:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📋</span>焙煎データ⇒プロファイル</span>ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
+            <li><strong>プロファイルの比較:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>比較プロファイル表示</span>ボタンをクリックすると、現在表示されているプロファイルのチャートを比較用のチャートとして表示します。新たにプロファイルを読み込むことで2種類のプロファイルを重ねて表示可能です。</li>
+            <li><strong>標準プロファイル機能:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>標準プロファイル</span>ボタンをクリックすると、焙煎度に応じたプロの推奨曲線（ターゲットライン）をプロファイルとして読み込みます。</li>
         </ul>
+        <section style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.01); border-radius: 8px; border: 1px solid #6f4e37;">
+            <h4 style="color: #3d2b1f; border-bottom: 1px solid #444; padding-bottom: 10px;">■ 標準プロファイル機能 (Standard Guide)</h3>
+            <div style="display: flex; gap: 10px; margin: 15px 0;">
+                <div style="flex: 1; padding: 10px; background: #c49a6c; color: #fff; border-radius: 4px; font-size: 0.8em; text-align: center;">LIGHT</div>
+                <div style="flex: 1; padding: 10px; background: #6f4e37; color: #fff; border-radius: 4px; font-size: 0.8em; text-align: center;">MEDIUM</div>
+                <div style="flex: 1; padding: 10px; background: #3d2b1f; color: #fff; border-radius: 4px; font-size: 0.8em; text-align: center;">DARK</div>
+            </div>
+
+            <ul style="line-height: 1.6;">
+                <li><strong style="color: #c49a6c;">LIGHT ROAST (浅煎り)</strong>: 
+                    スコット・ラオ理論をベースに設計。RoR（温度上昇率）を一貫して下降させ、10分前後で仕上げることで酸味と芳醇なアロマを最大化します。</li>
+                <li><strong style="color: #6f4e37;">MEDIUM ROAST (中煎り)</strong>: 
+                    UZU推奨の黄金比曲線。12分/225℃をターゲットとし、ドライイングフェーズを適切に確保。甘みとボディのバランスを追求した汎用性の高い設定です。</li>
+                <li><strong style="color: #3d2b1f;">DARK ROAST (深煎り)</strong>: 
+                    15分かけてじっくり240℃付近を目指します。後半の熱量をコントロールし、豆を焦がさず芯まで火を通すことで、スモーキーで重厚なコクを生み出します。</li>
+            </ul>
+        </section>
 
         <h3 id="subsection-web-app-roast-control">5. 焙煎開始・停止の操作:</h3>
         <ul>
-            <li>焙煎を始める際に「スタート」ボタンを押すことで、温度データのチャート記録が開始されます。</li>
-            <li>焙煎が終了したら「ストップ」ボタンを押して、チャートへの記録を停止してください。</li>
+            <li>焙煎を始める際に<span style="display:inline-block; padding:2px 8px; background:#2e8b57; color:#fff; border:1px solid #1e5a38; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">▶ スタート</span>ボタンを押すことで、温度データのチャート記録が開始されます。</li>
+            <li>焙煎が終了したら<span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>ボタンを押して、チャートへの記録を停止してください。</li>
             <li>焙煎時間が30分（1799秒）を超えると、自動的にチャートへの記録は停止します。</li>
+            <li>温度表示エリアの「経過時間」をクリックすると、チャートの焙煎時間表示が分⇔秒、交互に切り替わります。</li>
+            <li><span style="display:inline-block; padding:2px 6px; background:#888; color:#f8f8f8; border:0px solid #777; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;">◀</span>
+                <span style="display:inline-block; padding:2px 6px; background:#888; color:#f8f8f8; border:0px solid #777; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;">||</span>
+                <span style="display:inline-block; padding:2px 6px; background:#888; color:#f8f8f8; border:0px solid #777; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;">▶</span>
+                ボタンをクリックすると、チャートの横軸が伸縮します。</li>
+            <li>チャート右下の📊ボタンをクリックすると、チャート上の経過時間・各温度の表示/非表示が交互に切り替わります。</li>
         </ul>
 
         <h3 id="subsection-web-app-assist">6. リアルタイム表示と焙煎アシスト機能:</h3>
-        <p>現在の温度とRoR、そして目標となるプロファイル温度とRoRがリアルタイムでグラフに表示されます。特に、プロファイル温度と現在温度の差（乖離）が小さくなるよう、矢印や方向表示で焙煎をアシストします。</p>
+        <p>現在の温度とRoR、そして目標となるプロファイル温度とRoRがリアルタイムでチャートに表示されます。また、プロファイル温度が表示されている場合、プロファイル温度と現在温度の差（乖離）が小さくなるよう、矢印やターゲットの温度差を表示して焙煎をアシストします。</p>
 
         <ul>
             <li>
                 <h4>プロファイル温度・現在温度の比較と焙煎インジケーター:</h4>
-                <p>焙煎スタート後、グラフ上には目標となる「プロファイル温度」と、実際に測定されている「現在温度」が描画されます。この2つの温度の差（乖離）を瞬時に把握することで、現在の焙煎が目標プロファイルに対して「高いか低いか」を直感的に判断可能です。これらのアシスト機能により、初心者の方でも安定した焙煎を行うことが可能です。</p>
+                <p>焙煎スタート後、チャート上には目標となる「プロファイル温度」と、実際に測定されている「現在温度」が描画されます。この2つの温度の差（乖離）を瞬時に把握することで、現在の焙煎が目標プロファイルに対して「高いか低いか」を直感的に判断可能です。これらのアシスト機能により、初心者の方でも安定した焙煎を行うことが可能です。</p>
             </li>
             <li>
                 <h4>RoR（温度上昇率）の可視化:</h4>
-                <p>RoR（Rate of Rise、温度上昇率）は、1分あたりの温度変化量（℃/分）としてグラフに表示されます。</p>
+                <p>RoR（Rate of Rise、温度上昇率）は、1分あたりの温度変化量（℃/分）としてチャートに表示されます。</p>
                 <ul>
                     <li><strong>プロファイルRoR</strong>（目標の上昇率）</li>
                     <li><strong>現在RoR</strong>（実測の上昇率）</li>
@@ -404,7 +639,7 @@
             </li>
             <li>
                 <h4>焙煎インジケーターによる操作ガイド:</h4>
-                <p>チャート上に有効な焙煎プロファイルが表示されている場合、グラフ上の現在温度地点には「焙煎インジケーター」が表示されます。このインジケーターの矢印は、現在温度が目標より高い場合は下向き、低い場合は上向きに表示されます。さらに、RoRの差や温度変化の加速度も考慮して矢印の角度が変化するため、より細やかな調整ガイドを提供します。</p>
+                <p>チャート上に有効な焙煎プロファイルが表示されている場合、チャート上の現在温度地点には「焙煎インジケーター」が表示されます。このインジケーターの矢印は、現在温度が目標より高い場合は下向き、低い場合は上向きに表示されます。さらに、RoRの差や温度変化の加速度も考慮して矢印の角度が変化するため、より細やかな調整ガイドを提供します。</p>
                 <ul>
                     <li><strong>矢印が上向き:</strong> 火力を上げる、または温度上昇を促す必要があることを示します。</li>
                     <li><strong>矢印が下向き:</strong> 火力を下げる、または温度上昇を抑える必要があることを示します。</li>
@@ -423,47 +658,47 @@
         <br>
         <hr>
         <h2 id="section-custom-webserver">🌏 カスタムウェブサーバー機能</h3>
-            <h3  id="section-custom-webserver_uzu">☕ うずロースターを使った「キャプティブポータル広告宣伝システム」の概要</h3>
+            <h3  id="section-custom-webserver_uzu">☕ UZU ROASTERを使った「キャプティブポータル広告宣伝システム」の概要</h3>
 このシステムは、内蔵CPUであるESP32のWi-Fi機能を活用し、特定の場所でユーザーに自動的に広告や情報を提供します。
 <ul>
 <ol>
 <b>1. システムの主要な構成要素</b></ol>
 <ul>
-<ol>ESP32 マイクロコントローラー:</ol>
+<ol>■ ESP32 マイクロコントローラー:</ol>
 <ul>Wi-Fiアクセスポイント (AP) モードで動作し、独自のWi-Fiネットワークを作成します。
 Webサーバー機能も内蔵し、簡易的なウェブページをホストします。
 </ul>
-<ol>キャプティブポータル機能:</ol>
+<ol>■ キャプティブポータル機能:</ol>
 <ul>ユーザーがESP32が作成したWi-Fiに接続すると、インターネットにアクセスする前に強制的に特定のウェブページ（広告ページ）が表示される仕組みです。
 </ul>
-<ol>広告コンテンツ（HTML/CSS/JavaScript）:</ol>
+<ol>■ 広告コンテンツ（HTML/CSS/JavaScript）:</ol>
 <ul>ESP32のWebサーバー上に置かれる、ユーザーに表示したい広告や情報の内容です。画像、テキスト、動画などを含めることができます。
 </ul>
 </ul>
 <ol>
 <b> 2. システムの動作フロー</b></ol>
 <ul>
-<ol>ESP32の起動:</ol> <ul>ESP32が起動し、Wi-Fiアクセスポイントとして稼働します（デフォルト例: Wi-Fi名「UZU-ROASTER」、パスワード「00000000」）。
-</ul><ol>ユーザーの接続: </ol><ul>ユーザーがスマートフォンやPCで、このESP32のWi-Fiネットワークに接続します。
-</ul><ol>キャプティブポータルの検知: </ol><ul>ユーザーのデバイスは、インターネットに接続されていないことを検知し、自動的にWebブラウザを起動してキャプティブポータルのページ（ESP32のWebサーバーがホストしているページ）を表示しようとします。
-</ul><ol>広告の表示: </ol><ul>ユーザーのブラウザに、ESP32のWebサーバーに保存されている広告宣伝用のHTMLページが表示されます。このページにQRコードを含めることで、ユーザーがスマートフォン等で簡単に情報を取得できるようになります。
-</ul><ol>情報提供/インターネット接続（オプション）:</ol><ul>
+<ol>■ ESP32の起動:</ol> <ul>ESP32が起動し、Wi-Fiアクセスポイントとして稼働します（デフォルト例: Wi-Fi名「UZU-ROASTER」、パスワード「00000000」）。
+</ul><ol>■ ユーザーの接続: </ol><ul>ユーザーがスマートフォンやPCで、このESP32のWi-Fiネットワークに接続します。
+</ul><ol>■ キャプティブポータルの検知: </ol><ul>ユーザーのデバイスは、インターネットに接続されていないことを検知し、自動的にWebブラウザを起動してキャプティブポータルのページ（ESP32のWebサーバーがホストしているページ）を表示しようとします。
+</ul><ol>■ 広告の表示: </ol><ul>ユーザーのブラウザに、ESP32のWebサーバーに保存されている広告宣伝用のHTMLページが表示されます。このページにQRコードを含めることで、ユーザーがスマートフォン等で簡単に情報を取得できるようになります。
+</ul><ol>■ 情報提供/インターネット接続（オプション）:</ol><ul>
 広告表示後、さらに情報提供を行ったり、ボタンをクリックすることで外部のインターネットへの接続を許可したりすることも可能です（ただし、ESP32自体がインターネット接続機能を持つ場合は、より複雑な設定が必要です）。
 </ul>
 </ul>
 <ol><b>3. 想定される利用シーン</b></ol>
 <ul>
 この機能を使用することで、以下のようなシーンでの利用が考えられます。
-<ol>小規模なイベントや店舗: </ol> <ul>一時的なイベント会場や小さな店舗で、特定の製品やサービス、イベント情報を宣伝。
-</ul><ol>観光案内: </ol> <ul>特定の観光スポットで、地域の情報やおすすめルートを提供。
-</ul><ol>個人での情報発信: </ol> <ul>自作のプロジェクトや趣味の情報を共有。
+<ol>■ 小規模なイベントや店舗: </ol> <ul>一時的なイベント会場や小さな店舗で、特定の製品やサービス、イベント情報を宣伝。
+</ul><ol>■ 観光案内: </ol> <ul>特定の観光スポットで、地域の情報やおすすめルートを提供。
+</ul><ol>■ 個人での情報発信: </ol> <ul>自作のプロジェクトや趣味の情報を共有。
 </ul>
 </ul>
 <ol><b>   4. 技術的な課題と考慮事項</b></ol>
 <ul>
-<ol>ESP32のメモリ制限: </ol> <ul>ROM容量は4.5MBです。大量の画像や動画を含む複雑なWebページは、ESP32の限られたメモリには収まらない可能性があります。
-</ul><ol>同時接続数: </ol> <ul>デフォルトで10台まで接続可能です。
-</ul><ol>法的規制: </ol> <ul>公衆Wi-Fiを提供する場合は、地域によってはセキュリティやログ保存に関する法的規制がある場合があります。
+<ol>■ ESP32のメモリ制限: </ol> <ul>ROM容量は4.5MBです。大量の画像や動画を含む複雑なWebページは、ESP32の限られたメモリには収まらない可能性があります。
+</ul><ol>■ 同時接続数: </ol> <ul>デフォルトで10台まで接続可能です。
+</ul><ol>■ 法的規制: </ol> <ul>公衆Wi-Fiを提供する場合は、地域によってはセキュリティやログ保存に関する法的規制がある場合があります。
 </ul>
 </ul>
             <h3 id="section-custom-webserver-fs">📁 Web画面（LittleFS）の構成と更新</h3>
@@ -478,7 +713,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         </ul>
         <div class="tip">
             <h4>Web画面の更新方法:</h4>
-            <p>ご自身でWeb画面の内容を更新したい場合は、Arduino IDEの「データフォルダをアップロード」機能をご利用ください。</p>
+            <p>ご自身でWeb画面の内容を更新する場合は、<code>192.168.4.1/admin/</code>ページ（デフォルトIPアドレス + "/admin/"）の<a href="#admin-file-uploader">UZU ROASTERファイル更新機能</a>を使用するか、Arduino IDEの「データフォルダをアップロード」機能をご利用ください。</p>
         </div>
 
         <hr>
@@ -493,7 +728,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
             <tbody>
                 <tr>
                     <td>Web画面が表示されない</td>
-                    <td>・Wi-FiがUZU-ROASTERに接続されているか確認し、ブラウザで <code>http://192.168.4.1</code> に直接アクセスしてみてください。<br>
+                    <td>・Wi-FiがUZU-ROASTERに接続されているか確認し、ブラウザで <code>http://192.168.4.1</code> （デフォルトIPアドレス）に直接アクセスしてみてください。<br>
                     ・少し時間をおいてブラウザを更新するか、違うブラウザでお試しください。</td>
                 </tr>
                 <tr>
@@ -506,7 +741,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>Wi-Fi接続後にUZU ROASTERを見失った場合</td>
-                    <td>・USBシリアルモニタでUZU ROASTERの現在のIPアドレスを確認してみてください。（デフォルトは192.168.4.1です）<br>・もう一度WiFiを切断⇒接続してキャプティブポータル機能をお試しください。</td>
+                    <td>・USBシリアルモニタでUZU ROASTERの現在のIPアドレスを確認してみてください。（デフォルトは192.168.4.1です）<br>・もう一度Wi-Fiを切断⇒接続してキャプティブポータル機能をお試しください。</td>
                 </tr>
             </tbody>
         </table>
@@ -514,7 +749,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <hr>
         <h2 id="section-product-specs">📋 製品仕様</h3>
         <table>
-            <caption>UZU ROASTER 製品仕様</caption>
+            <caption>UZU ROASTER ハードウェア仕様</caption>
             <thead>
                 <tr>
                     <th>項目</th>
@@ -532,6 +767,9 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 <tr>
                     <td>温度範囲</td>
                     <td>0～1200℃（K型熱電対の対応範囲に準拠）</td> </tr>
+                <tr>
+                    <td>温度測定周期</td>
+                    <td>最速200[ms] （デフォルト1000[ms]）</td> </tr>
                 <tr>
                     <td>Wi-Fi機能</td>
                     <td>IEEE 802.11 b/g/n対応</td>
@@ -562,13 +800,13 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <ul>
             <li>メール: <a href="mailto:uzuuzuhonpo@gmail.com">uzuuzuhonpo@gmail.com</a></li>   
             <li>Web: <a href="https://uzuuzu.shop">https://uzuuzu.shop</a>   </li>
-            <li>Twitter: <a href="https://x.com/uzuuzuhonpo">@uzuuzuhonpo</a></li>
+            <li>X: <a href="https://x.com/uzuuzuhonpo">@uzuuzuhonpo</a></li>
         </ul>
         <hr>
   
         <h2 id="section-attachment">🎁付録</h2>
-        <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド一覧</h3>
-        <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。</p>
+        <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド一覧（基本コマンド）</h3>
+        <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。<br></p>
         <table>
             <thead>
                 <tr>
@@ -587,7 +825,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td><code>interval 1000</code></td>
-                    <td>温度データの取得間隔をミリ秒1000ms（1秒）に設定します。（数値は変更可能）</td>
+                    <td>温度データの取得間隔をミリ秒単位（1000ms=1秒）で設定します。（数値は変更可能）</td>
                 </tr>
                 <tr>
                     <td><code>reset</code></td>
@@ -623,23 +861,70 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
             </tbody>
         </table>
-
+        <p><span style="font-size: 0.9em">（※）これらのコマンドは予告なく変更・追加される可能性があります。最新のコマンドは "help" コマンドで確認してください。</span></p>
         <hr>
 
         <h3 id="section-sensor-specs">📈 温度センサーと表示の仕様</h3>
         <ul>
             <li><strong>センサー:</strong> Adafruit MAX31855 使用（K型熱電対対応）</li>
-            <li><strong>平均化処理:</strong> 移動平均（10点、最大最小2点ずつ除外）により、安定した温度値を提供します。</li>
+            <li><strong>平均化処理:</strong> 移動平均（20点、最大最小4点ずつ除外）により、安定した温度値を提供します。</li>
             <li><strong>表示桁数:</strong> 小数第1位まで表示されます。（設定変更可能）</li>
-            <li><strong>更新間隔:</strong> USBシリアルのデフォルトは500ms（0.5秒）です。Web/USBシリアルコマンドで変更可能です。<br>
-            WiFi経由（うずロースターコントローラー）は1秒更新です。</li>
+            <li><strong>更新間隔:</strong> USBシリアルのデフォルトは500ms（0.5秒）更新です。Web/USBシリアルコマンドで変更可能です。（最小200ms）<br>
+            うずロースターコントローラー使用時（Wi-Fi経由、またはUSBシリアル）は1秒更新です。</li>
             <li><strong>RoR演算:</strong> 20秒の移動平均演算でフィルタリングしています。</li>
         </ul>
+        <div class="tip">
+            <h4>ヒント:</h4>
+            <p>UZU ROASTER起動直後の4秒間は移動平均計算のサンプル数が不足しているため一時的に数値が変動する場合がありますが、データ蓄積完了後は安定した計測へと移行します。</p>
+        </div>
         <hr>
+        <h3 id="section-firmware-update">🗃️ ファームウェアアップデート</h3>
+        UZU ROASTERのファームウェアは、Arduino IDEを使用して簡単にアップデートできます。
+        （※注意: ファームウェアアップデートは、USBシリアル接続を使用して行います。Wi-Fi接続ではアップデートできません）
+        以下の手順で、ESP32側のファームウェア（UZU ROASTER）とブラウザ側のWeb画面（うずロースターコントローラー）をアップデート可能です。
+        <br>
+        （※）ファームウェアアップデートは基本的にサポートを行っておりません。実施する時は慎重に行ってください。<br>
+        （※）ESP32側のファームウェア（UZU ROASTER）は有償によるアップデート対応も可能です。
+        <br>
+        <h4>ESP32側のファームウェアアップデート方法</h4>
+        <ul>
+        <li>ホストPCにArduino IDE最新版をダウンロードしてインストールします。（<a href="https://www.arduino.cc/en/software/">Arduino公式サイト</a>）</li>
+        <li>UZU ROASTERの最新版ソースコード（*.inoファイル）は<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からダウンロードします。</li>
+        <li>*.inoファイルを適宜コンパイルし、ファームウェアをダウンロードします。</li>
+        </ul>
+        <br>
+         【コンパイル済みバイナリ指定のアップデート例（Windows）】<br>
+         コマンドラインから次のコマンドを実行します。
+                <div class="tip">
+C:\path_to_arduino\packages\esp32\tools\esptool_py\4.9.dev3/esptool.exe" --chip esp32 --port "COM4" --baud 921600  --before default_reset --after hard_reset write_flash  -z --flash_mode keep --flash_freq keep --flash_size keep 0x1000 "C:path_to_arduino_sketch/Artisan_sample.ino.bootloader.bin" 0x8000 "C:path_to_arduino_sketch/Artisan_sample.ino.partitions.bin" 0xe000 "C:path_to_arduino\Arduino15\packages\esp32\hardware\esp32\3.2.0/tools/partitions/boot_app0.bin" 0x10000 "C:path_to_arduino_project/Artisan_sample.ino.bin" 
+        </div>
+         <ul>
+        <li> 環境によってパスは変動します。</li>
+        <li> Arduino IDEがインストールされていればesptool.exeは既にインストールされています。</li>
+        <li> 各バイナリファイルは<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からダウンロードしてください。</li>
+        </ul>
+        <br>
+
+        <h4>ブラウザ側（うずロースターコントローラー）のアップデート方法</h4>
+        アップデートするにはUZU ROASTER内部の<code>index.html</code>、<code>script.js</code>ファイルを更新する必要があります。<br>
+        2通りの更新方法がありますので、お好きな方を選んでください。（機能は制限されますが、UZU ROASTERファイル更新機能を使ってアップデートする方が簡単です）
+        <h5 id="admin-file-uploader">①UZU ROASTERファイル更新機能を使ってアップデートする場合</h5>
+        <p><code>192.168.4.1/admin/</code>ページ（デフォルトIPアドレス + "/admin/"）にアクセスするとUZU ROASTERファイル更新機能が使用できます。</p>
+        <ul>
+        <li><a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>から<code>index.html</code>、<code>script.js</code>をダウンロードします。</li>
+        <li>画面の指示に従って、<code>index.html</code>、<code>script.js</code>をアップロードします。</li>
+        </ul>
+        <h5>②Arduino IDEを使ってアップデートする場合</h5>
+        <ul>
+        <li><a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>から<code>index.html</code>、<code>script.js</code>をダウンロードします。</li>
+        <li>Arduino IDEから<a href="#section-custom-webserver-fs"><b>Web画面（LittleFS）の構成と更新</b></a>を参照し、LittleFSに<code>index.html</code>、<code>script.js</code>をアップロードします。
+        （LittleFSにアップロードしなくても、ホストPCでindex.htmlファイルをブラウザに表示することでうずロースターコントローラーが利用可能です）</li>
+        </ul>
+       <hr>
         <h3 id="section-webserial-manual">🌐 WebSerial（ブラウザ焙煎ビューアー）接続マニュアル【応用編】</h3>
 
         <h4 id="subsection-webserial-whatis">💡 WebSerialとは？</h4>
-        <p>WebSerialは、Google ChromeやEdgeなどのWebSerial対応ブラウザから、ESP32などのUSB接続されたシリアルデバイスに直接アクセスできる技術です。これにより、PCに専用のアプリケーションやドライバーをインストールすることなく、ブラウザだけでシリアル通信が可能になります。</p>
+        <p>WebSerialは、Google ChromeやEdgeなどのWebSerial対応ブラウザから、ESP32などのUSB接続されたシリアルデバイスに直接アクセスできる技術です。これにより、PCに専用のアプリケーションやドライバをインストールすることなく、ブラウザだけでシリアル通信（コマンド送信/データ受信）が可能になります。</p>
 
         <h4 id="subsection-webserial-environment">🧪 必要な環境</h4>
         <table>
@@ -656,15 +941,11 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>接続方式</td>
-                    <td>PCとUZU ROASTERをUSB Type-Cケーブルで接続</td>
-                </tr>
-                <tr>
-                    <td>ESP32側処理</td>
-                    <td><code>Serial.print()</code> で温度を定期送信（例: <code>25.3\n</code> のように改行付き）</td>
+                    <td>PCとUZU ROASTERをWi-Fi接続</td>
                 </tr>
                 <tr>
                     <td>アクセスURL</td>
-                    <td><code>http://192.168.4.1/webserial</code></td>
+                    <td><code>http://192.168.4.1/webserial/</code>（デフォルトIPアドレス + "/webserial/"）</td>
                 </tr>
             </tbody>
         </table>
@@ -675,9 +956,73 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <ul>
             <li><strong>Version 2.0:</strong> 3Dプリンターとの連携による焙煎コントロール機能</li>
             <li><strong>Version 3.0:</strong> 小型焙煎機への組み込みによる高度な温度コントロール機能</li>
-            <li><strong>Version 4.0:</strong> ロボットアームとの連携による自動焙煎コントロール機能</li>
+            <li><strong>Version 4.0:</strong> ロボットアーム/ヒューマノイドロボットとの連携による自動焙煎コントロール機能</li>
         </ul>
         <hr>
+<pre style="line-height: 0.5; font-size: 0.5em; font-weight: bold; letter-spacing: 0; font-family: monospace;">
+@@@@@@@@@@@@@@  @@          @@@@@@          @@@@@@@@@@@@@@    UZU ROASTER Special Site
+@@@@@@@@@@@@@@  @@          @@@@@@          @@@@@@@@@@@@@@    
+@@          @@  @@    @@@@            @@@@  @@          @@
+@@          @@  @@    @@@@            @@@@  @@          @@
+@@  @@@@@@  @@  @@@@    @@  @@  @@@@@@@@    @@  @@@@@@  @@    https://uzuuzu.shop/uzuroaster/uzuroaster.html
+@@  @@@@@@  @@  @@@@    @@  @@  @@@@@@@@    @@  @@@@@@  @@
+@@  @@@@@@  @@  @@@@@@  @@@@@@@@    @@@@@@  @@  @@@@@@  @@
+@@  @@@@@@  @@  @@@@@@  @@@@@@@@    @@@@@@  @@  @@@@@@  @@
+@@  @@@@@@  @@    @@@@  @@@@@@@@@@          @@  @@@@@@  @@
+@@  @@@@@@  @@    @@@@  @@@@@@@@@@          @@  @@@@@@  @@
+@@          @@  @@@@@@    @@@@  @@@@@@@@    @@          @@
+@@          @@  @@@@@@    @@@@  @@@@@@@@    @@          @@
+@@@@@@@@@@@@@@  @@  @@  @@  @@  @@  @@  @@  @@@@@@@@@@@@@@
+@@@@@@@@@@@@@@  @@  @@  @@  @@  @@  @@  @@  @@@@@@@@@@@@@@
+                    @@@@    @@@@  @@    @@
+                    @@@@    @@@@  @@    @@
+@@@@    @@@@@@      @@  @@      @@@@  @@      @@  @@@@@@@@
+@@@@    @@@@@@      @@  @@      @@@@  @@      @@  @@@@@@@@
+@@@@@@  @@      @@        @@  @@@@@@@@    @@@@@@@@@@@@@@@@
+@@@@@@  @@      @@        @@  @@@@@@@@    @@@@@@@@@@@@@@@@
+  @@  @@@@@@@@  @@@@@@    @@  @@@@  @@  @@@@            @@
+  @@  @@@@@@@@  @@@@@@    @@  @@@@  @@  @@@@            @@
+        @@    @@  @@    @@  @@  @@@@@@@@@@@@      @@  @@@@
+        @@    @@  @@    @@  @@  @@@@@@@@@@@@      @@  @@@@
+    @@@@  @@@@        @@@@    @@@@@@    @@@@  @@      @@
+    @@@@  @@@@        @@@@    @@@@@@    @@@@  @@      @@
+@@@@@@@@@@    @@@@  @@  @@@@  @@@@  @@  @@@@@@@@@@@@@@@@@@
+@@@@@@@@@@    @@@@  @@  @@@@  @@@@  @@  @@@@@@@@@@@@@@@@@@
+        @@@@@@@@@@  @@@@    @@@@  @@        @@    @@@@  @@
+        @@@@@@@@@@  @@@@    @@@@  @@        @@    @@@@  @@
+@@        @@    @@  @@@@@@    @@  @@@@      @@        @@@@
+@@        @@    @@  @@@@@@    @@  @@@@      @@        @@@@
+      @@    @@        @@@@      @@@@  @@      @@      @@
+      @@    @@        @@@@      @@@@  @@      @@      @@
+@@@@      @@  @@      @@  @@@@@@@@          @@@@@@@@  @@@@
+@@@@      @@  @@      @@  @@@@@@@@          @@@@@@@@  @@@@
+    @@  @@  @@        @@@@  @@@@        @@    @@@@  @@  @@
+    @@  @@  @@        @@@@  @@@@        @@    @@@@  @@  @@
+    @@@@      @@@@@@@@@@@@  @@    @@@@@@@@@@  @@@@    @@@@
+    @@@@      @@@@@@@@@@@@  @@    @@@@@@@@@@  @@@@    @@@@
+@@@@    @@@@@@  @@@@@@@@@@    @@  @@    @@@@@@@@@@@@    @@
+@@@@    @@@@@@  @@@@@@@@@@    @@  @@    @@@@@@@@@@@@    @@
+                @@@@  @@  @@  @@      @@@@      @@      @@
+                @@@@  @@  @@  @@      @@@@      @@      @@
+@@@@@@@@@@@@@@    @@  @@  @@  @@  @@@@@@@@  @@  @@@@@@  @@
+@@@@@@@@@@@@@@    @@  @@  @@  @@  @@@@@@@@  @@  @@@@@@  @@
+@@          @@  @@  @@@@@@    @@@@@@  @@@@      @@
+@@          @@  @@  @@@@@@    @@@@@@  @@@@      @@
+@@  @@@@@@  @@  @@@@        @@@@@@@@  @@@@@@@@@@@@@@  @@@@
+@@  @@@@@@  @@  @@@@        @@@@@@@@  @@@@@@@@@@@@@@  @@@@
+@@  @@@@@@  @@      @@@@    @@@@@@  @@@@@@@@  @@        @@
+@@  @@@@@@  @@      @@@@    @@@@@@  @@@@@@@@  @@        @@
+@@  @@@@@@  @@        @@  @@@@@@@@@@@@  @@        @@@@@@@@
+@@  @@@@@@  @@        @@  @@@@@@@@@@@@  @@        @@@@@@@@
+@@          @@  @@@@  @@        @@@@@@  @@@@@@    @@  @@@@
+@@          @@  @@@@  @@        @@@@@@  @@@@@@    @@  @@@@
+@@@@@@@@@@@@@@  @@@@  @@@@      @@@@    @@@@@@@@@@    @@
+@@@@@@@@@@@@@@  @@@@  @@@@      @@@@    @@@@@@@@@@    @@
+</pre>
+        <br>
+        <hr>
+        <p style="text-align: center; font-size: 0.9em;">© 2026 うずうず本舗 / うずうず珈琲焙煎工房 All rights reserved.</p>
+
     </div>
 </body>
 </html>

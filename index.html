@@ -3,14 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="chart.js"></script>
-	  <title>UZU ROASTER</title>
+  <script src="chart.js"></script>
+  <title>UZU ROASTER</title>
   <style>
+    /* ========================================
+       カラー変数定義
+       ======================================== */
     :root {
-      --primary-color: #8b5d3b;
+      --primary-color: #976b4b;
+      --secondary-color: #b88252;
       --primary-hover: #ba7d4d;
       --primary-active: #6a452c;
       --accent-color: #aa3b3f;
+      --success-color: #2e9d32;
+      --success-hover: #388e3c;
+      --danger-color: #c62828;
+      --danger-hover: #d32f2f;
       --text-light: #fff8f0;
       --text-dark: #333333;
       --text-medium: #444444;
@@ -18,8 +26,38 @@
       --border-color: #ccc;
       --background-light: #fff;
       --background-medium: #f9f5f0;
-      --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      --background-dark: #2c2c2c;
+      --shadow: inset 0 -2px 0px rgba(0, 0, 0, 0.3);
+      --light: inset 0 2px 0px rgba(255, 255, 255, 0.3);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+      --overlay-bg: rgba(0, 0, 0, 0.6);
     }
+
+    /* ========================================
+    基本スタイル
+    ======================================== */
+    .mode1 {
+      filter: hue-rotate(80deg) saturate(0.8);
+    }
+    .mode2 {
+      filter: sepia(0.5) hue-rotate(-10deg) saturate(1.2) brightness(0.9);
+    }
+    .mode3 {
+      filter: hue-rotate(180deg) brightness(0.8) saturate(1.5) contrast(1.1);
+    }
+    .mode4 {
+      filter: hue-rotate(60deg) saturate(0.5) brightness(1.1) contrast(1.2) sepia(0.2);
+    }
+    .mode5 {
+      filter: saturate(0) brightness(1.1) contrast(1);
+    }
+    .mode6 {
+      filter: saturate(0) brightness(0.7) contrast(5);
+    }
+
+    /* ========================================
+       基本スタイル
+       ======================================== */
     * {
       box-sizing: border-box;
       font-family: sans-serif, 'Segoe UI', Tahoma, Geneva, Verdana;
@@ -30,10 +68,333 @@
       padding: 5px;
       background-color: var(--background-light);
       color: var(--text-dark);
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
-/*********************************************************************************************/
-    /* Header Section */
+    /* ========================================
+       ボタン共通スタイル
+       ======================================== */
+    .button {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      padding: 2px 12px;
+      margin: 2px 0px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow), var(--light);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .button:hover {
+        filter: brightness(1.2);
+        transform: scale(1.03);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .button:active {
+      filter: brightness(0.8);
+      transform: scale(0.97);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:disabled,
+    .button:disabled:hover,
+    .button:disabled:active {
+      background-color: #ccc !important;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+      filter: brightness(1); 
+    }
+
+    /* ボタンバリエーション */
+    .button-success {
+      background-color: var(--success-color);
+    }
+
+    .button-success:hover {
+      background-color: var(--success-hover);
+    }
+
+    .button-danger {
+      background-color: var(--danger-color);
+    }
+
+    .button-danger:hover {
+      background-color: var(--danger-hover);
+    }
+
+    .button-header {
+      min-width: 100px;
+    }
+
+    .button-chart-control {
+      width: 20px;
+      padding: 2px;
+      margin: 0px;
+      height: 36px;
+      border: 0px solid #555;
+      background-color: #888;
+      border-radius: 3px;
+      font-weight: bold;
+      color: var(--text-light);
+      text-align: center;
+      box-shadow: var(--shadow), var(--light);
+    }
+
+    .button-debug {
+      width: 40px;
+      height: 30px;
+      font-size: 10px;
+    }
+
+    /* ========================================
+       モーダル・ダイアログ共通スタイル
+       ======================================== */
+    .font-size-16 {
+      font-size: 16px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .show {
+      display: block!important;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--background-dark);
+      color: white;
+      margin: 10px auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 95vh;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid #444;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 24px;
+      color: #aaa;
+    }
+
+    .modal-title {
+      margin-top: 0;
+      color: #c8a78f;
+    }
+
+    .modal-description {
+      font-size: 16px;
+      color: #eee;
+    }
+
+    .modal-textarea {
+      width: 100%;
+      height: 250px;
+      background: #eee;
+      color: #000;
+      border: 1px solid #555;
+      border-radius: 5px;
+      padding: 20px;
+      font-family: monospace;
+      box-sizing: border-box;
+      resize: none;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .modal-textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 8px rgba(33, 33, 33, 0.5);
+    }
+
+    .modal-actions {
+      margin-top: 15px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-button {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-button:hover {
+      background: rgb(110, 98, 87)!important;
+    }
+
+    .modal-button-primary {
+      background: #c8a78f;
+      color: #000;
+      font-weight: bold;
+      padding: 8px 20px;
+    }
+
+    .modal-button-primary:hover {
+      background: #d4b89f;
+    }
+
+    /* ========================================
+       ローディングオーバーレイ
+       ======================================== */
+    #uploadOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 25000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #uploadModal {
+      background-color: var(--background-light);
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 5px solid #ddd;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    /* ========================================
+       アニメーション定義
+       ======================================== */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes blink {
+      0%   { opacity: 0; }
+      50%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(0.8); opacity: 0.8; }
+      50%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0.8; }
+    }
+
+@keyframes vanish-effect {
+  0% {transform: scaleX(1) scaleY(1); opacity: 1; }
+  40% {
+    transform: scaleX(0.04) scaleY(1); opacity: 1; }
+  100% {
+    transform: scaleX(0.04) scaleY(0.04); opacity: 0;}
+}
+/* 出るエフェクト（逆の動き） */
+@keyframes appear-effect {
+  0% { transform: scaleX(0.01) scaleY(1); opacity: 0; }
+  80% { transform: scaleX(1.1) scaleY(1); opacity: 1; }
+  100% { transform: scaleX(1) scaleY(1); opacity: 1; }
+}
+
+.vanish {
+  display: block;
+  animation: vanish-effect 0.8s cubic-bezier(0.645, 0.345, 0.355, 1) forwards;
+  pointer-events: none; /* アニメーション中は触れないようにする */
+}
+.appear {
+  display: block !important;
+  animation: appear-effect 0.2s cubic-bezier(0.215, 0.61, 0.155, 1) forwards !important;
+}
+
+    /* --- 出現：ふわっと浮きつつパカッと開く --- */
+@keyframes slide-in-smart {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) scaleY(0.02);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.9) scaleY(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) scaleY(1);
+  }
+}
+
+/* --- 消滅：光の線になって左へシュパァァン！ --- */
+@keyframes slide-out-smart {
+  0% {
+    opacity: 1;
+    transform: scale(1) scaleY(1);
+  }
+  30% {
+    opacity: 0.5;
+    transform: scaleX(0.01) scaleY(2);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(0.05) scaleY(0.02);
+  }
+}
+
+/* 制御用クラス */
+.fx-open {
+  display: block !important;
+  animation: slide-in-smart 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+.fx-close {
+  animation: slide-out-smart 0.6s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+  pointer-events: none; /* 閉じてる最中はクリック無効 */
+}
+
+    /* ========================================
+       ヘッダーセクション
+       ======================================== */
     .header {
       display: flex;
       justify-content: space-between;
@@ -71,88 +432,16 @@
       background-color: #0066ff;
       border-radius: 50%;
       animation: blink 1s infinite ease-in-out;
-      margin-right: 10px;
-    }
-
-    @keyframes blink {
-      0%   { opacity: 0; }
-      50%  { opacity: 1; }
-      100% { opacity: 0; }
+      margin: 8px;
     }
 
     .hidden {
       display: none !important;
     }
 
-    /* Buttons */
-.button {
-      background-color: var(--primary-color);
-      color: var(--text-light);
-      padding: 2px 12px;
-      margin: 2px 0px;
-      font-size: 14px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: var(--shadow);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 36px;
-    }
-
-    /* マウス（PC）でのホバー時のみに適用 */
-    @media (hover: hover) and (pointer: fine) {
-      .button:hover {
-        background-color: var(--primary-hover);
-        transform: scale(1.03);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-    }
-
-    /* タップ（クリック）した瞬間に適用 */
-    .button:active {
-      background-color: var(--primary-active);
-      transform: scale(0.97);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    #start-button {
-      background-color: #2e9d32;
-      color: #eeeeee;
-    }
-    
-    #start-button:hover {
-      background-color: #388e3c;
-    }
-    .red-button {
-      color: #eeeeee;
-      background-color: #c62828;
-    }
-    
-    .red-button:hover {
-      background-color: #d32f2f;
-    }
-
-    .header-button {
-		min-width: 100px;
-	}
-
-
-/* ホバー・アクティブを無効時に無効化 */
-	button:disabled,
-	button:disabled:hover,
-	button:disabled:active {
-	  background-color: #ccc!important;
-	  transform: none;
-	  box-shadow: none;
-      cursor: not-allowed;
-	}
-
-
-
-     /* Profile Metadata */
+    /* ========================================
+       プロファイルメタデータ
+       ======================================== */
     .profile-meta {
       display: flex;
       gap: 20px;
@@ -186,16 +475,20 @@
       box-shadow: 0 0 0 2px rgba(139, 93, 59, 0.2);
     }
 
-    #profileTitle {
-      height: 36px;
-    }
-
+    #profileTitle,
     #profileMemo {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      border-bottom: solid 1.5px #444;
+      width: 300px;
       height: 36px;
       resize: none;
     }
 
-    /* Display Information */
+    /* ========================================
+       表示エリア
+       ======================================== */
     .display-area {
       display: flex;
       background-color: var(--background-medium);
@@ -206,7 +499,6 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow);
       border: solid 1px var(--primary-active);
-
     }
 
     .display-item {
@@ -243,13 +535,16 @@
       font-size: 16px;
       align-self: center;
     }
+
     #control-buttons {
-      margin-left:auto;
+      margin-left: auto;
       display: flex;
       gap: 10px;
     }
 
-    /* Table Controls */
+    /* ========================================
+       テーブルコントロール
+       ======================================== */
     .table-controls {
       display: flex;
       gap: 10px;
@@ -257,21 +552,25 @@
       flex-wrap: wrap;
     }
 
-/*****************************************************************************/
-    /* Main Content */
+    /* ========================================
+       メインエリア
+       ======================================== */
     .main-area {
       display: flex;
-      gap: 20px;
+      gap: 10px;
       align-items: stretch;
       height: 500px;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 5px;
     }
 
-    /* Table Section */
+    /* テーブルセクション */
     .table-section {
       flex: 1;
       min-width: 300px;
       max-width: 500px;
-      border: 1px solid var(--border-color); 
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       overflow: hidden;
       box-shadow: var(--shadow);
@@ -279,46 +578,52 @@
       flex-direction: column;
       scrollbar-width: none;
       height: 100%;
+      min-height:300px;
+      box-sizing: border-box;
     }
 
     .table-container {
       flex: 1;
       overflow-y: scroll;
+      overflow-x: hidden;
       margin: 10px;
       height: 100%;
+    }
+
+    #table_contents {
+      overflow-y: scroll;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 0px 2px 0px 2px;
+    }
+
+    #table_title {
+      text-align: center;
+      font-size: 1em;
+      padding: 1px;
+    }
+
+    #profileTable {
+      width: 90%;
+      border-collapse: collapse;
+      margin: 1% 3%;
+    }
+
+    #profileTable thead {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
     }
 
     table, th, td {
       border: 1px solid gray;
       border-collapse: collapse;
     }
-    
-    tr, th, td {
-		margin: 0 auto;
-		padding: 0;
-	}
-    td input {
-		border: 0px;
-		padding: 0;
-		width: 100%;
-		height: 20px;
-		font-size: 100%;
-	}
-    td button, tr button {
-		border: solid 0.5px rgba(0, 0, 0, 0.2);
-		background-color: rgba(0, 0, 0, 0.0);
-		border-radius: 8px;
-		padding: 1px;
-		width: 95%;
-		height: 90%;
-		font-size: 90%;
-		margin: 0 auto;
-	}
-	
 
-    table {
-      width: 90%;
-      border-collapse: collapse;
+    tr, th, td {
+      margin: 0 auto;
+      padding: 0;
     }
 
     th, td {
@@ -331,7 +636,7 @@
     }
 
     th {
-      background-color: var(--primary-color);
+      background-color: var(--secondary-color);
       color: var(--text-light);
       position: sticky;
       top: 0;
@@ -348,6 +653,11 @@
     }
 
     td input {
+      border: 0px;
+      padding: 0;
+      width: 100%;
+      height: 20px;
+      font-size: 100%;
       max-width: 100%;
       height: 100%;
       padding: 0px 5px;
@@ -362,38 +672,58 @@
       background-color: var(--background-light);
     }
 
-    td button {
-      background-color: transparent;
+    td button, tr button {
+      border: solid 0.5px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.0);
+      border-radius: 8px;
+      padding: 1px;
+      width: 95%;
+      height: 90%;
+      font-size: 90%;
+      margin: 0 auto;
       cursor: pointer;
-      padding: 0;
-      align-items: center;
     }
 
-    .table-action-button {
-      padding: 4px 8px;
-      background-color: transparent;
-      border: 1px solid rgba(0, 0, 0, 0.2);
+    .offset-main-wrapper {
+      display: flex;
+      gap: 8px; /* 左ユニットと右ユニットの間のスキマ */
+    }
+    /* 縦の列（1-2、3-4をそれぞれまとめる） */
+    .offset-unit-column {
+      display: flex;
+      flex-direction: column; /* 縦に並べる */
+      width: 80px;
+      gap: 1px; /* 上のボタンと下の入力欄のスキマ */
+    }
+    .offset-caption-small {
+      font-size: 10px; /* 部長指定の10px！ */
+      width: 80px;
+      cursor: pointer;
+      padding: 1px 0;
+      background-color: #f0f0f0;
+    }
+    .offset-input-box {
+      width: 80px;
+      padding: 1px;
+      font-size: 16px;
+      border: 1px solid #ccc;
       border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      box-sizing: border-box; /* 幅200pxからはみ出さない魔法の呪文 */
     }
 
-    .table-action-button:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-
-/*****************************************************************************/
-    /* Chart Section */
+    /* ========================================
+       チャートセクション
+       ======================================== */
     .chart-section {
       flex: 2;
-      /* min-width: 500px; */
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 15px;
-      box-shadow: var(--shadow); 
+      box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
       min-height: 300px;
+      box-sizing: border-box;
     }
 
     .chart-container {
@@ -401,777 +731,651 @@
       height: 100%;
     }
 
-/****************** Popup/Modal *******************************/
-    .popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      z-index: 30001;
-      width: 90%;
-      max-width: 600px;
-      display: none;
-    }
-
-    .popup h3 {
-      margin-top: 0;
-      color: var(--primary-color);
-    }
-
-    .popup textarea {
+    #chart-area {
+      flex-grow: 1;
       width: 100%;
-      height: 200px;
-      padding: 12px;
+      min-height: 200px;
+      position: relative;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      margin: 15px 0;
-      resize: vertical;
+      border-radius: 10px;
+      margin: 0px 2px 0px 2px;
+      transition: transform 0.5s ease-in-out;
+      transform-origin: top center;
     }
 
-    .popup-actions {
-      text-align: right;
+    #chart-area.fullscreen {
+      transform: scale(1.5);
+      z-index: 10;
     }
 
-    /* Loading Overlay */
-    #uploadOverlay {
+    #roastChart {
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    .fullscreen-canvas {
       position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      background: white;
+    }
+
+    #overlayCanvas {
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      z-index: 25000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      z-index: 15000;
+      pointer-events: none;
     }
 
-    #uploadModal {
-      background-color: var(--background-light);
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      text-align: center;
+    /* チャート上の温度表示 */
+    .chart-info-box {
+      position: absolute;
+      width: 150px;
+      right: 60px;
+      font-family: monospace;
+      font-size: 24px;
+      font-weight: bold;
+      background: rgba(128, 128, 128, 0.1);
+      padding: 2px 2px;
+      border-radius: 4px;
+      border: solid 1px rgba(0, 0, 0, 0.2);
+      pointer-events: auto;
+      cursor: pointer;
+      display: block;
+      text-align: right;
     }
 
-    .spinner {
+    .chart-info-label {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 10px;
+      font-weight: normal;
+      color: rgba(48, 48, 48, 0.7);
+    }
+
+    #chart-infos-button {
+      opacity: 30%; 
+      cursor:pointer;
+      position: absolute;
+      bottom: 5px;
+      right: 0.5%;
+      color: #2e2627;
+    }
+
+    #currentTime {
+      bottom: 240px;
+      color: #3f3738;
+    }
+
+    #currentTemp {
+      bottom: 105px;
+      color: #e72e4d;
+    }
+
+    #currentRoR {
+      bottom: 60px;
+      color: #E0B775;
+    }
+
+    #profileTemp {
+      bottom: 195px;
+      color: #7160ae9d;
+    }
+
+    #profileRoR {
+      bottom: 150px;
+      color: #797a88;
+    }
+
+    /* ========================================
+       チャートオーバーレイ要素
+       ======================================== */
+    .image-overlay {
+      display: none;
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+      z-index: 10000;
+      border-radius: 50%;
+      background-color: rgba(255, 0, 0, 0.6);
+      transform-origin: 50% 50%;
+      filter: blur(2.5px);
+    }
+
+    .pointer-animation {
+      animation: pulse 1s infinite alternate ease-in-out;
+    }
+
+    .image-arrow {
+      position: absolute;
       width: 40px;
       height: 40px;
-      border: 5px solid #ddd;
-      border-top: 5px solid var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-
-/**************************************************************************************************/
-
-    
-
-.thead-button {
-	height: 75%;
-	width: 90px;
-	margin: 0px 2px!important;
-	padding: 0px;
-}
-
- #roasting-indicator {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-color: #0000ff;
-  border-radius: 50%;
-  animation: blink 1s infinite ease-in-out;
-  margin: 8px;
-  }
-
-@keyframes blink {
-  0%   { opacity: 0; }
-  50%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.hidden {
-  visibility: hidden;
-  }
-
-
-.chart-control-button {
-  width: 20px;
-  text-align: center;
-  padding:2px;
-  margin: 0px;
-  height: 36px;
-  border: 1px solid #555;
-  border-radius: 3px;
-  font-weight: bold;
-  color: #777;
-}
-
-.table-button {
-	height: 20px;
-	text-align: center;
-}
-
-#profileTitle, #profileMemo {
-	border-top: none;
-	border-left:none;
-	border-right: none;
-	border-bottom: solid 1.5px #444;
-	width: 300px;
-}
-
-#top-overall {
-	display: flex;
-}
-
-#chart-area {
-  flex-grow: 1;
-  width: 100%;
-  min-height: 200px; 
-  position: relative; 
-}
-
-#roastChart {
-  width: 100% !important;
-  height: auto !important;
-}
-
-       textarea {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            resize: none;
-            width: 95%;
-            transition: box-shadow 0.3s ease;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #aa3b3f;
-            box-shadow: 0 0 8px rgba(33, 33, 33, 0.5);
-        }
-
-        /* ポップアップスタイル */
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border: 1px solid #443b2f;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 30010;
-            width: 95%;
-            max-width: 800px;
-            height: auto; /* 高さ自動調整 */
-            overflow-y: auto; /* 必要に応じてスクロールバーを表示 */
-            max-height: 80vh; /* 最大高さを設定 */
-        }
-
-        .popup textarea {
-            height: 200px;
-            margin: 10px;
-            border: 1px solid #443b2f;
-        }
-         .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 30000;
-        }
-        #popup-button-area {
-			text-align: right;
-		}
-
-        /* showクラスが付与された際のスタイル */
-        .popup.show, .popup-overlay.show {
-            display: block;
-        }
-        .popup button {
-            padding: 10px 10px;
-            background-color: #8f334b;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            text-align: right;
-        }
-
-        .popup button:hover {
-            background-color: #b30056;
-        }
-
-#table_contents {
-  overflow-y: scroll;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  margin: 0px 2px 0px 2px;
-}
-#chart-area {
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  margin: 0px 2px 0px 2px;
-}
-
-#table_title {
-  text-align: center;
-  font-size: 1em;
-  padding: 1px;
-}
-
-/* テーブル本体は固定幅 */
-#profileTable {
-  width: 90%;
-  border-collapse: collapse;
-  margin: 1% 3%;
-}
-
-/* ヘッダーを固定する（ブラウザによっては `display: block`が必要） */
-#profileTable thead {
-  position: sticky;
-  top: 0;
-  background-color: white; /* 背景色をつけておくとスクロール時に見やすい */
-  z-index: 1;
-}
-
-.fullscreen-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9999;
-  background: white; /* 白背景にするのがおすすめ */
-}
-
-#uploadOverlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 25000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#uploadModal {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 5px solid #ccc;
-  border-top: 5px solid #007bff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-#chart-area {
-  transition: transform 0.5s ease-in-out;
-  transform-origin: top center;
-}
-
-#chart-area.fullscreen {
-  transform: scale(1.5); /* 好きな倍率に調整 */
-  z-index: 10;
-}
-
-.image-overlay {
-    display: none; /* 初期状態では非表示 */
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-    z-index: 10000;
-    border-radius: 50%;
-    background-color: rgba(255,0,0,0.6);
-    transform-origin: 50% 50%;
-    filter: blur(2.5px);
-}
-
-.pointer-animation {
-    animation: pulse 1s infinite alternate ease-in-out;
-}
-
-#debug_console {
-    position: fixed;
-    width: 240px;
-    height: 100px;
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    z-index: 28000; /* 高いz-indexで他の要素の上に表示 */
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(0.8); /* 最初は等倍 */
-        opacity: 0.8; /* オプション: 透明度も変化させる */
-    }
-    50% {
-        transform: scale(1.2); /* 途中で1.5倍に拡大 */
-        opacity: 1; /* オプション: 透明度も変化させる */
-    }
-    100% {
-        transform: scale(0.8); /* 最後は等倍に戻る */
-        opacity: 0.8; /* オプション: 透明度も変化させる */
-    }
-}
-
-.image-arrow {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    pointer-events: none;
-    z-index: 20000;
-    transform-origin: left center; 
-    display: none; /* 初期状態では非表示 */
-    /* transition はそのまま */
-    transition:
-        left 0.5s ease-out,
-        top 0.5s ease-out,
-        transform 1s linear;
-}
-
-.image-arrow svg {
-    width: 100%; /* 親divのサイズに合わせる */
-    height: 100%; /* 親divのサイズに合わせる */
-    display: block; /* インライン要素なのでブロックにすると扱いやすい */
-    transform-origin: 0% 50%; /* または left center; */
-}
-
-.image-arrow svg path {
-    /* fill: currentColor; */ /* fill="currentColor"はHTML属性で指定済みなので不要 */
-    stroke: currentColor; /* 親のcolorプロパティを参照してストローク色を設定 */
-    stroke-width: 1px;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-}
-
-/* もし fill と stroke で別の色にしたい場合 */
-
-.image-arrow svg path {
-    fill: rgba(255, 0, 0, 0.5); /* SVGのfill="currentColor"とstroke="currentColor"の色をここで制御 */
-    stroke: rgba(0, 0, 0, 0.5);
-    stroke-width: 1px;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-}
-.debug_button {
-  width: 40px;
-  height: 20px;
-  font-size: 10px;
-}
-
-#overlayCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    /* メインチャートのCanvasと完全に同じサイズにする */
-    width: 100%; 
-    height: 100%;
-    z-index: 15000; /* 矢印（z-index: 20000）より下、Chart.jsのCanvasより上 */
-    pointer-events: none; /* 下のチャートへのクリックイベントを通過させる */
-}
-
-</style>
-</head>
-<body>
-<!-- モーダル（非表示時は display: none） -->
-<div id="uploadOverlay" style="display: none;">
-  <div id="uploadModal">
-    <div class="spinner"></div>
-    <p>プロファイル送信中...</p>
-  </div>
-</div><div id="debug_console" style="display:none">
-
-  <button class="debug_button" onclick="OffsetIncrement(0.1)">+0.1</button>
-  <button class="debug_button" onclick="OffsetIncrement(1)">+1</button>
-  <button class="debug_button" onclick="OffsetIncrement(10)">+10</button>&nbsp;
-  <button class="debug_button" onclick="CloseOffsetDialogBox()">✖</button><br>
-  <button class="debug_button" onclick="OffsetIncrement(-0.1)">-0.1</button>
-  <button class="debug_button" onclick="OffsetIncrement(-1)">-1</button>
-  <button class="debug_button" onclick="OffsetIncrement(-10)">-10</button>&nbsp;
-  <button class="debug_button" onclick="OffsetReset()">RESET</button><br>
-  <button class="debug_button" onclick="location.href='./admin'">Admin</button>
-</div>
-    <!-- ヘッダー部分 -->
-    <div class="header">
-      <div class="connection-status">
-        <div onclick="connectWebSocket()" id="socket-status" class="status-indicator" style="background-color:#cccccc"></div>
-        <span id="connection-label">未接続</span>
-      </div>
-    <div>
-      <button class="button red-button" onclick="ResetButtonCommand()">RESET</button>
-      <button class="button" onclick="helpButtonCommand()">HELP</button>
-      <button class="button" onclick="manualButtonCommand()">マニュアル</button>
-      <button class="button" onclick="configButtonCommand()">設定</button>
-      <button class="button" onclick="WebButtonCommand()">Web</button>
-    </div>
-  <!-- プロファイルメタデータ -->
-    <div class="profile-meta">
-      <div class="meta-field">
-        <label for="profileTitle">タイトル：</label>
-        <input type="text" id="profileTitle" placeholder="タイトルを入力">
-      </div>
-      <div class="meta-field">
-        <label for="profileMemo">メモ：</label>
-        <textarea id="profileMemo" rows="1" placeholder="メモを入力"></textarea>
-      </div>
-    </div>
-      <div class="roast-controls">
-        <div id="roasting-indicator" class="hidden"></div>
-      </div>
-    </div>
-
-<!-- <button onclick="sendCurrentProfile()">うずロースターに焙煎プロファイルをアップロード</button> -->
-    <div class="popup" id="popupTextarea">焙煎メモ<br>
-        <textarea id="popupText"></textarea>
-        <div id="popup-button-area"><button id="closePopup">閉じる</button></div>
-        
-    </div>
-        <div class="popup-overlay" id="popupOverlay"></div>
-
-      <!-- 表示エリア -->
-    <div class="display-area">
-      <div class="display-item" id="roast_time_area" style="cursor: pointer;">
-        <div class="display-label">経過時間</div>
-        <div class="display-value" id="roast_time">　</div>
-      </div>
-      <div class="display-item">
-        <div class="display-label">現在温度</div>
-        <div class="display-value" id="roast_temperature">　</div>
-      </div>
-      <div class="display-item">
-        <div class="display-label">RoR(現在温度)</div>
-        <div class="display-value" id="roast_ror">　</div>
-      </div>
-      <div class="display-item">
-        <div class="display-label">プロファイル温度</div>
-        <div class="display-value" id="profile_temperature">　</div>
-      </div>
-      <div class="display-item">
-        <div class="display-label">RoR(プロファイル温度)</div>
-        <div class="display-value" id="profile_ror">　</div>
-      </div>
-      <div class="display-item">
-        <div class="display-label">評価</div>
-        <div class="display-value" id="score">　</div>
-      </div>
-      <div id="roast_message">焙煎待機中</div>
-    </div>
-
-    <!-- テーブル操作ボタン -->
-    <div class="table-controls">
-<button type="button" class="button table_edit" onclick="openFileDialog()">
-    <span>📁 プロファイル読込</span>
-</button>
-<input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">      <button onclick="downloadJSON()" class="button table_edit">💾 プロファイル保存</button>
-      <button class="button table_edit" onclick="sendCurrentProfile();">📈 プロファイル整列</button>
-      <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
-      <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare();">📈 比較プロファイル表示</button>
-      <div id="control-buttons">
-        <div>
-        <button class="chart-control-button " onclick="shotenChart()" id="shorten-button">◀</button>
-        <button class="chart-control-button " onclick="resetWidthChart()" id="reset-width-button">||</button>
-        <button class="chart-control-button " onclick="enlargeChart()" id="enlarge-button">▶</button>
-        </div>
-        <button class="button header-button" onclick="sendStartCommand()" id="start-button">▶ スタート</button>
-        <button class="button header-button red-button" onclick="sendStopCommand()" id="stop-button">■ ストップ</button>
-      </div>    
-    </div>
-    
-    <!-- メインコンテンツエリア -->
-    <div class="main-area" id="main-area2">
-      <!-- テーブルセクション -->
-      <div class="table-section" id="table_contents">
-        <div class="table-container">
-          <div id="table_title">焙煎プロファイル</div>
-          <table id="profileTable">
-            <thead>
-              <tr>
-                <th>時間 (秒)</th>
-                <th>温度 (℃)</th>
-                <th>🗑</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- テーブル内容はJavaScriptで動的に生成 -->
-            </tbody>
-          </table>
-         </div> 
-        <div style="padding: 10px; text-align: center; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
-          <button class="button table_edit" onclick="addRow()">行追加</button>
-          <button id="all-delete-button" class="button button-accent red-button table_edit" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
-        </div>
-      </div>
-     <!-- チャートセクション -->
-      <div class="chart-section" id ="chart-section">
-        <div class="chart-container" id="chart-area">
-          <div class="image-overlay" id="chart-point"></div>
-          <div class="image-arrow" id="chart-arrow">
-
-<svg viewBox="0 0 30 24">
-  <path d="M2 10L18 10L18 6C18 5.4 18.4 5 19 5C19.3 5 19.5 5.1 19.7 5.3L27.7 11.3C28.1 11.7 28.1 12.3 27.7 12.7L19.7 18.7C19.3 19.1 18.7 19.1 18.3 18.7C18.1 18.5 18 18.2 18 18L18 14L2 14C1.4 14 1 13.6 1 13L1 11C1 10.4 1.4 10 2 10Z" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>
-
-
-
-
-          </div>
-          <canvas id="overlayCanvas"></canvas> 
-          <canvas id="roastChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-<script src="script.js"></script>
-</body>
-</html>
-
-<script>
-
-  document.addEventListener('DOMContentLoaded', () => {
-      const draggableElement = document.getElementById('debug_console');
-      // ドラッグハンドルを指定する場合 (h3要素など)
-      const dragHandle = draggableElement;
-      // ドラッグハンドルがない場合、draggableElement を直接使う
-      // const dragHandle = draggableElement; 
-
-      let isDragging = false;
-      let currentX;
-      let currentY;
-      let initialX;
-      let initialY;
-      let xOffset = 0;
-      let yOffset = 0;
-
-      // ドラッグを開始するイベント
-      dragHandle.addEventListener('mousedown', dragStart);
-
-      function dragStart(e) {
-          // e.button === 0 は左クリックを意味します
-          if (e.button === 0) { 
-              initialX = e.clientX - xOffset;
-              initialY = e.clientY - yOffset;
-
-              // ドラッグ中はテキスト選択を無効にする（オプション）
-              e.preventDefault(); 
-
-              isDragging = true;
-              // ドラッグ中はカーソルを移動中に変更
-              draggableElement.style.cursor = 'grabbing'; 
-
-              // マウス移動とマウスアップのイベントリスナーを body に追加
-              // これにより、要素の外でマウスを離してもイベントを捕捉できる
-              document.addEventListener('mousemove', drag);
-              document.addEventListener('mouseup', dragEnd);
-          }
-      }
-
-      function drag(e) {
-          if (isDragging) {
-              e.preventDefault(); // ここでもデフォルト動作を防ぐ
-
-              // 新しい位置を計算
-              currentX = e.clientX - initialX;
-              currentY = e.clientY - initialY;
-
-              xOffset = currentX;
-              yOffset = currentY;
-
-              // 要素の位置を更新 (transform を使うのがパフォーマンス上推奨)
-              draggableElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-
-              // あるいは、left/top を直接変更 (transform の方がスムーズ)
-              // draggableElement.style.left = (e.clientX - initialX) + 'px';
-              // draggableElement.style.top = (e.clientY - initialY) + 'px';
-          }
-      }
-
-      function dragEnd(e) {
-          isDragging = false;
-          // ドラッグ終了後はカーソルを元に戻す
-          draggableElement.style.cursor = 'grab'; 
-
-          // マウス移動とマウスアップのイベントリスナーを削除
-          document.removeEventListener('mousemove', drag);
-          document.removeEventListener('mouseup', dragEnd);
-      }
-  });
-</script>
-<style>
-/* Responsive Design */
-    @media (max-width: 768px) {
-      #profileTable {
-        width: 95%;
-        margin: 0 auto;
-      }
-      .main-area {
-        height:1000px!important;
-      }
-      .table-section,
-      .chart-section {
-        width: 100%!important;
-        max-height: 100%;
-        margin: 2px!important;
-      }
-	  th,td {
-		max-width: 100px;
-	  }
-    }
-
-    #fileInput {
+      pointer-events: none;
+      z-index: 20000;
+      transform-origin: left center;
       display: none;
+      transition: left 0.5s ease-out, top 0.5s ease-out, transform 1s linear;
     }
 
+    .image-arrow svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform-origin: 0% 50%;
+    }
+
+    .image-arrow svg path {
+      fill: rgba(255, 0, 0, 0.5);
+      stroke: rgba(0, 0, 0, 0.5);
+      stroke-width: 1px;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    /* ========================================
+       デバッグコンソール
+       ======================================== */
+    #debug_console {
+      position: fixed;
+      width: 260px;
+      height: auto;
+      background-color: rgba(20, 20, 20, 0.95);
+      padding: 0px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      z-index: 28000;
+      display: none;
+      border: 1px solid #ff4444;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      font-family: monospace;
+      overflow: hidden;
+    }
+
+    #draggable-zone {
+      width: 100%;
+      height: 22px;
+      background: repeating-linear-gradient(45deg, #440000, #440000 10px, #ff4444 10px, #ff4444 20px);
+      text-align: center;
+      font-size: 0.7em;
+      color: #fff;
+      font-weight: bold;
+      line-height: 22px;
+      cursor: move;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* ========================================
+       レスポンシブデザイン
+       ======================================== */
     @media (max-width: 768px) {
-      /* ヘッダー部分 */
       .header {
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
       }
-      
+
       .connection-status {
         justify-content: center;
       }
-      
+
       .header > div:nth-child(2) {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
         gap: 5px;
       }
-      
-      /* プロファイルメタ */
+
       .profile-meta {
         flex-direction: column;
         gap: 10px;
       }
-      
+
       .meta-field {
         min-width: auto;
         width: 100%;
       }
-      
+
       #profileTitle, #profileMemo {
         width: 100%;
       }
-      
-      /* 表示エリア */
+
       .display-area {
         flex-wrap: wrap;
         justify-content: center;
         gap: 15px;
         padding: 10px;
       }
-      
+
       .display-item {
         width: 140px;
       }
-      
+
       #roast_message {
         width: 100%;
         text-align: center;
         margin-top: 10px;
       }
-      
-      /* テーブルコントロール */
+
       .table-controls {
         flex-direction: column;
         gap: 8px;
         align-items: stretch;
       }
-      
+
       .table-controls > div {
         display: flex;
         flex-wrap: wrap;
         gap: 5px;
         justify-content: center;
       }
-      
+
       #control-buttons {
         margin-left: 0;
         justify-content: center;
         flex-wrap: wrap;
       }
-      
-      /* メインエリア */
+
       .main-area {
         flex-direction: column;
-        height: auto;
+        height: 1000px !important;
         gap: 15px;
       }
-      
+
       .table-section {
-        width: 100%;
+        width: 100% !important;
         max-width: 100%;
         height: 350px;
         order: 2;
+        margin: 2px !important;
       }
-      
+
       .chart-section {
-        width: 100%;
+        width: 100% !important;
         max-width: 100%;
         height: 400px;
         order: 1;
         min-height: 400px;
       }
-      
-      /* ボタンサイズ調整 */
+
       .button {
         padding: 8px 12px;
         font-size: 14px;
         min-width: 80px;
       }
-      
-      .header-button {
+
+      .button-header {
         min-width: 90px;
       }
-      
-      /* テーブル調整 */
+
       th, td {
         padding: 4px 8px;
         font-size: 14px;
+        max-width: 100px;
       }
-      
+
       .display-value {
         font-size: 24px;
       }
-      
+
       .display-label {
         font-size: 12px;
       }
+
+      #profileTable {
+        width: 95%;
+        margin: 0 auto;
+      }
     }
-    
-</style>
+
+    /* ========================================
+       ユーティリティクラス
+       ======================================== */
+    .hidden-file-input {
+      display: none;
+    }
+
+    #top-overall {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================
+     ローディングモーダル
+     ======================================== -->
+<div id="uploadOverlay" style="display: none;">
+  <div id="uploadModal">
+    <div class="spinner"></div>
+    <p>プロファイル送信中...</p>
+  </div>
+</div>
+
+<!-- ========================================
+     JSON入力モーダル
+     ======================================== -->
+<div id="jsonInputModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-close" onclick="closeJSONInputModal()">&times;</div>
+    <h3 class="modal-title">プロファイル入力</h3>
+    <p class="modal-description">JSONデータをペースト、記述、またはリストから選択してください</p>
+    <textarea id="jsonInput" class="modal-textarea font-size-16" placeholder='{"roast_data": [...]}'></textarea>
+    <div id="profileList" style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #444;">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-button" onclick="closeJSONInputModal()">閉じる</button>
+      <button class="modal-button modal-button-primary" onclick="applyJSONInputModal()">プロファイル読込</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     JSON保存モーダル
+     ======================================== -->
+<div id="jsonSaveModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-close" onclick="closeJSONSaveModal()">&times;</div>
+    <h3 class="modal-title">プロファイル表示</h3>
+    <p class="modal-description">JSONデータをコピーして手動保存、またはローカルストレージに保存してください</p>
+    <textarea id="jsonSave" class="modal-textarea"></textarea>
+    <div class="modal-actions">
+      <input type="text" id="profileTitleInput" style="border-radius:５px;" placeholder="プロファイル名を入力...">      
+      <button class="modal-button  modal-button-primary" onclick="saveProfileToLocalStorage()">ストレージ保存</button>
+    </div>   
+    <div class="modal-actions">
+      <button class="modal-button" onclick="closeJSONSaveModal()">閉じる</button>
+      <button class="modal-button modal-button-primary" onclick="applyJSONAllCopyModal()">プロファイルコピー</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     焙煎度選択モーダル
+     ======================================== -->
+<div id="profModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 320px; background:#1a1a1a;">
+    <h3 style="text-align:center; font-weight:300; letter-spacing:2px; margin-bottom:25px; color:#fff;">焙煎度 [ROAST LEVEL]</h3>
+    <div style="display:flex; flex-direction:column; gap:15px;">
+      <button onclick="applyPreset('light')" class="modal-button" style="width:100%; padding:15px; background:#c49a6c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
+        浅煎り [LIGHT ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(High / Cinnamon)</span>
+      </button>
+      <button onclick="applyPreset('medium')" class="modal-button" style="width:100%; padding:15px; background:#6f4e37; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
+        中煎り [MEDIUM ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(City / Fullcity)</span>
+      </button>
+      <button onclick="applyPreset('dark')" class="modal-button" style="width:100%; padding:15px; background:#3d2b1f; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
+        深煎り [DARK ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(French / Italian)</span>
+      </button>
+    </div>
+    <button onclick="closeProfModal()" style="background:none; border:none; color:#e6e6e6; width:100%; margin-top:20px; cursor:pointer; font-size:12px;">閉じる</button>
+  </div>
+</div>
+
+<!-- ========================================
+     焙煎メモポップアップ
+     ======================================== -->
+<div id="popupTextarea" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background: var(--overlay-bg); backdrop-filter:blur(8px); z-index:30010;">
+  <div style="background:#2c2c2c; color:white; padding:20px; border-radius:12px; max-width:600px; width:90%; box-shadow:0 10px 10px rgba(0,0,0,0.6); border:1px solid #444; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
+    焙煎メモ<br>
+    <textarea id="popupText" class="modal-textarea font-size-16"></textarea>
+    <div style="text-align:right; margin-top:15px;">
+      <button id="closePopup" class="modal-button modal-button-primary">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     デバッグコンソール
+     ======================================== -->
+<div id="debug_console">
+  <div id="draggable-zone">SYSTEM DEBUG MODE</div>
+  <div style="padding:15px;">
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:12px;">
+      <button class="button-debug" onclick="OffsetIncrement(0.1)" style="background:#333; color:#ff8888; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+0.1</button>
+      <button class="button-debug" onclick="OffsetIncrement(1)" style="background:#333; color:#ff6666; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+1</button>
+      <button class="button-debug" onclick="OffsetIncrement(10)" style="background:#333; color:#ff4444; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+10</button>
+      <button class="button-debug" onclick="OffsetIncrement(-0.1)" style="background:#333; color:#88ff88; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-0.1</button>
+      <button class="button-debug" onclick="OffsetIncrement(-1)" style="background:#333; color:#66ff66; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-1</button>
+      <button class="button-debug" onclick="OffsetIncrement(-10)" style="background:#333; color:#44ff44; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-10</button>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-bottom:15px;">
+      <button class="button-debug" onclick="OffsetReset()" style="flex:2; background:#444; color:#fff; border:1px solid #666; padding:6px; border-radius:4px; cursor:pointer; font-size:0.8em;">RESET</button>
+      <button class="button-debug" onclick="CloseOffsetDialogBox()" style="flex:1; background:#800; color:#fff; border:none; padding:6px; border-radius:4px; cursor:pointer; font-size:0.8em;">✖</button>
+    </div>
+
+    <div style="background:#000; border:1px solid #444; border-radius:4px; padding:5px; display:flex; align-items:center; gap:5px;">
+      <span style="color:#ff4444; font-size:0.8em;">&gt;</span>
+      <input type="text" id="cmdInput" placeholder="COMMAND..." style="width: 100%; background:transparent; border:none; color:#0f0; outline:none; font-size:0.85em; font-family:monospace;" onkeydown="if(event.key==='Enter') sendDebugCommand()">
+      <button onclick="sendDebugCommand()" style="background:#222; color:#aaa ; border:1px solid #444; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">EXEC</button>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
+      <button class="button-debug" onclick="changeColorMode(1)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M1</button>
+      <button class="button-debug" onclick="changeColorMode(2)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M2</button>
+      <button class="button-debug" onclick="changeColorMode(3)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M3</button>
+      <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M4</button>
+      <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M5</button>
+      <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">M6</button>
+      <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     ヘッダーセクション
+     ======================================== -->
+<div class="header">
+  <div class="connection-status" onclick="webReconnect()" style="cursor:pointer;" title="クリックで再接続">
+    <div id="socket-status" class="status-indicator" style="background-color:#cccccc"></div>
+    <span id="connection-label">未接続</span>
+  </div>
+  <div>
+    <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
+    <button class="button" title="再読み込み" onclick="location.reload()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">⇄</span></button>
+    <button class="button"  title="UZU ROASTER情報" onclick="helpButtonCommand()">HELP</button>
+    <button class="button"  title="取扱説明書" onclick="manualButtonCommand()">マニュアル</button>
+    <button class="button"  title="デバッグコンソール" onclick="configButtonCommand()">設定</button>
+    <button class="button"  title="うずうず本舗公式Web" onclick="WebButtonCommand()">Web</button>
+  </div>
+  <div class="profile-meta">
+    <div class="meta-field">
+      <label for="profileTitle">タイトル：</label>
+      <input type="text" id="profileTitle" placeholder="タイトルを入力">
+    </div>
+    <div class="meta-field">
+      <label for="profileMemo">メモ：</label>
+      <textarea id="profileMemo" rows="1" placeholder="メモを入力" onClick=""></textarea>
+    </div>
+  </div>
+  <div class="roast-controls">
+    <div id="roasting-indicator" class="hidden"></div>
+  </div>
+</div>
+
+<!-- ========================================
+     表示エリア
+     ======================================== -->
+<div class="display-area">
+  <div class="display-item" id="roast_time_area" style="cursor: pointer;">
+    <div class="display-label">経過時間</div>
+    <div class="display-value" id="roast_time">　</div>
+  </div>
+  <div class="display-item" id="roast_temperature_area">
+    <div class="display-label">現在温度</div>
+    <div class="display-value" id="roast_temperature">　</div>
+  </div>
+  <div class="display-item" id="roast_ror_area">
+    <div class="display-label">RoR(現在温度)</div>
+    <div class="display-value" id="roast_ror">　</div>
+  </div>
+  <div class="display-item" id="profile_temperature_area">
+    <div class="display-label">プロファイル温度</div>
+    <div class="display-value" id="profile_temperature">　</div>
+  </div>
+  <div class="display-item" id="profile_ror_area">
+    <div class="display-label">RoR(プロファイル温度)</div>
+    <div class="display-value" id="profile_ror">　</div>
+  </div>
+  <div class="display-item">
+    <div class="display-label">評価</div>
+    <div class="display-value" id="score">　</div>
+  </div>
+  <div id="roast_message">焙煎待機中</div>
+</div>
+
+<!-- ========================================
+     テーブルコントロール
+     ======================================== -->
+<div class="table-controls">
+  <button type="button" class="button table_edit" onclick="openFileDialog()">📁 プロファイル読込</button>
+  <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
+  <button onclick="openJSONSaveModal()" class="button table_edit">💾 プロファイル保存</button>
+  <button class="button table_edit" onclick="sendCurrentProfile();">📈 プロファイル整列</button>
+  <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
+  <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare();">📈 比較プロファイル表示</button>
+  <button id="button-default-profile" class="button table_edit" onclick="showProfModal();">📈 標準プロファイル</button>
+  <div id="control-buttons">
+    <div>
+      <button title="チャート拡大" class="button button-chart-control" onclick="shotenChart()" id="shorten-button">◀</button>
+      <button title="チャート等倍" class="button button-chart-control" onclick="resetWidthChart()" id="reset-width-button">||</button>
+      <button title="チャート縮小" class="button button-chart-control" onclick="enlargeChart()" id="enlarge-button">▶</button>
+    </div>
+    <button class="button button-header button-success" onclick="sendStartCommand()" id="start-button">▶ スタート</button>
+    <button class="button button-header button-danger" onclick="sendStopCommand()" id="stop-button">■ ストップ</button>
+  </div>
+</div>
+
+<!-- ========================================
+     メインコンテンツ
+     ======================================== -->
+<div class="main-area" id="main-area2">
+  <!-- テーブルセクション -->
+  <div class="table-section" id="table_contents">
+    <div class="table-container">
+      <div id="table_title">焙煎プロファイル</div>
+      <table id="profileTable">
+        <thead>
+          <tr>
+            <th>時間 (秒)</th>
+            <th>温度 (℃)</th>
+            <th>🗑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- テーブル内容はJavaScriptで動的に生成 -->
+        </tbody>
+      </table>
+    </div>
+    <div style="padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
+      
+      <div class="offset-main-wrapper">
+        <div class="offset-unit-column">
+          <span class="offset-caption-small">時間オフセット</span>
+          <input type="number" id="offset-input-time" class="offset-input-box" value="0" 
+                oninput="if(value > 1799) value = 1799; if(value < -1799) value = -1799;">
+        </div>
+
+        <div class="offset-unit-column">
+          <span class="offset-caption-small">温度オフセット</span>
+          <input type="number" id="offset-input-temp" class="offset-input-box" value="0" 
+                oninput="if(value > 260) value = 260; if(value < -260) value = -260;">
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; transform: translateY(4px);">
+          <button class="button table_edit" onclick="addRow()">行追加</button>
+          <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = document.getElementById('profileTable');while (t.rows.length > 1) {t.deleteRow(1); }">🗑 全削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- チャートセクション -->
+  <div class="chart-section" id="chart-section">
+    <div class="chart-container" id="chart-area">
+      <div class="image-overlay" id="chart-point"></div>
+      <div class="image-arrow" id="chart-arrow">
+        <svg viewBox="0 0 30 24">
+          <path d="M2 10L18 10L18 6C18 5.4 18.4 5 19 5C19.3 5 19.5 5.1 19.7 5.3L27.7 11.3C28.1 11.7 28.1 12.3 27.7 12.7L19.7 18.7C19.3 19.1 18.7 19.1 18.3 18.7C18.1 18.5 18 18.2 18 18L18 14L2 14C1.4 14 1 13.6 1 13L1 11C1 10.4 1.4 10 2 10Z" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <canvas id="overlayCanvas"></canvas>
+      <canvas id="roastChart"></canvas>
+      <div id="chart-infos-button" title="情報表示">
+        <span style='color:#882222;font-size:20px;'>📊</span>
+      </div>
+      <div id="chart-area-infos" style="transform-origin:99% 100%;">
+        <div id="currentTime" class="chart-info-box">
+          <span class="chart-info-label">Time</span><span id="currentTimeInside">　</span>
+        </div>
+        <div id="currentTemp" class="chart-info-box">
+          <span class="chart-info-label">C.Temp</span><span id="currentTempInside">　</span>
+        </div>
+        <div id="currentRoR" class="chart-info-box">
+          <span class="chart-info-label">C.RoR</span><span id="currentRoRInside">　</span>
+        </div>
+        <div id="profileTemp" class="chart-info-box">
+          <span class="chart-info-label">P.Temp</span><span id="profileTempInside">　</span>
+        </div>
+        <div id="profileRoR" class="chart-info-box">
+          <span class="chart-info-label">P.RoR</span><span id="profileRoRInside">　</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+  // ドラッグ可能なデバッグコンソール
+  document.addEventListener('DOMContentLoaded', () => {
+    const draggableElement = document.getElementById('debug_console');
+    const dragHandle = document.getElementById('draggable-zone');
+
+    let isDragging = false;
+    let currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+
+    dragHandle.addEventListener('mousedown', dragStart);
+
+    function dragStart(e) {
+      if (e.button === 0) {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+        e.preventDefault();
+        isDragging = true;
+        draggableElement.style.cursor = 'grabbing';
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+      }
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        xOffset = currentX;
+        yOffset = currentY;
+        draggableElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+      }
+    }
+
+    function dragEnd(e) {
+      isDragging = false;
+      draggableElement.style.cursor = 'grab';
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', dragEnd);
+    }
+  });
+</script>
+
+</body>
+</html>

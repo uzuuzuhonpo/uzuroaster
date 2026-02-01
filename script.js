@@ -2,13 +2,13 @@ const textarea = document.getElementById('profileMemo');
 const popup = document.getElementById('popupTextarea');
 const popupText = document.getElementById('popupText');
 const closeButton = document.getElementById('closePopup');
-const popupOverlay = document.getElementById('popupOverlay');
 
 const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
-const versionStr = "1.0.1x";
+const UzuRoasterVersionStr = "1.0.0";
+const UzuRoasterControllerVersionStr = "1.0.0";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -20,10 +20,51 @@ const Version = "UZU ROASTER     Ver. 1.0.0\n\n OKを押すと新しいタブで
       + "\n"; // バージョン情報
 window.addEventListener('resize', () => {
   if (roastChart) {
-    roastChart.resize();
+    updateScreen();
     resizeOverlayCanvas();
   }
 });
+
+////////////////////////////////////////////////////////////////
+// Pythonからの呼び出し用関数
+////////////////////////////////////////////////////////////////
+window.updateFromPython = function(data) {
+  try {
+      // もしdataが文字列ならパース（念のため）
+      const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+      updateConnectionStatus(true); // USBシリアルからデータがあれば接続中というテイ
+      receiveWebMessage(parsedData);
+      console.log(parsedData);
+      
+  } catch (e) {
+      console.error("❌ JS側エラー:", e.message);
+  }
+};
+
+// --- カラーモード管理 ---
+// ① ページ読み込み時に自動で呼ぶ初期化関数
+window.addEventListener('DOMContentLoaded', () => {
+    // 保存されたモードを読み込む（なければ '0'）
+    const savedMode = localStorage.getItem('uzu_color_mode') || '0';
+    changeColorMode(parseInt(savedMode), false); 
+});
+
+// ② カラーモード切り替え（isSaveは保存するかどうかのフラグ）
+function changeColorMode(modeNum, isSave = true) {
+    // クラスの付け替え
+    for (let i = 1; i <= 6; i++) {
+        document.body.classList.remove('mode' + i);
+    }
+    
+    if (modeNum >= 1 && modeNum <= 6) {
+        document.body.classList.add('mode' + modeNum);
+    }
+
+    // ③ ストレージに保存（初期化時は保存しなくていいので判定を入れる）
+    if (isSave) {
+        localStorage.setItem('uzu_color_mode', modeNum);
+    }
+}
 
 ////////////////////////////////////////////////////////////////
 // グラフのクリックで全画面表示切り替え
@@ -50,10 +91,16 @@ chartCanvas.addEventListener('click', () => {
     document.getElementById('table_contents').style.display="flex";
     chartCanvas.style.position = "relative";
     isFullscreen = false;
-    mainAreaResize(mainArea2);
-    animateToElement(chartCanvas); // アニメーションを適用
   }
+  mainAreaResize(mainArea2);
+  animateToElement(chartCanvas); // アニメーションを適用
 });
+
+function updateScreen() {
+  const mainArea2 = document.getElementById('main-area2');
+  mainAreaResize(mainArea2);
+  roastChart.resize();
+}
 
 ////////////////////////////////////////////////////////////////
 // シンプルボーダー拡大アニメーション
@@ -178,162 +225,269 @@ adjustHeightToViewport('#main-area2');
 ////////////////////////////////////////////////////////////////
 // スマホ判定と要素幅設定
 ////////////////////////////////////////////////////////////////
-        // ===== メイン関数: スマホ判定で要素幅を100%に設定 =====
-        function setMobileWidthIfMobile(element) {
-            if (isMobile()) {
-              element.style.width = '100vw';
-              return true;
-            }
-            return false;
-        }
+// ===== メイン関数: スマホ判定で要素幅を100%に設定 =====
+function setMobileWidthIfMobile(element) {
+    if (isMobile()) {
+      element.style.width = '100vw';
+      return true;
+    }
+    return false;
+}
 
-        // ===== スマホ判定関数 =====
-        function isMobile() {
-            // 方法1: 画面幅での判定 (768px以下をモバイルとする)
-            const isNarrowScreen = window.innerWidth <= 768;
-            return isNarrowScreen;
+// ===== スマホ判定関数 =====
+function isMobile() {
+    // 方法1: 画面幅での判定 (768px以下をモバイルとする)
+    const isNarrowScreen = window.innerWidth <= 768;
+    return isNarrowScreen;
+}
+
+////////////////////////////////////////////////////////////////
+// --- UZU ROASTER プロファイルストレージ管理 ---
+////////////////////////////////////////////////////////////////
+// ページ読み込み時にリストを初期化
+window.addEventListener('DOMContentLoaded', () => {
+    updateProfileList();
+});
+
+// 保存モーダルを開いた時に現在のJSONからタイトルを自動セット
+function openJSONSaveModalCustom() {
+    const jsonStr = document.getElementById('jsonSave').value;
+    try {
+        const data = JSON.parse(jsonStr);
+        // JSON内のtitleをインプット欄にデフォルトセット
+        document.getElementById('profileTitleInput').value = data.title || "";
+    } catch (e) {
+        console.error("JSON解析失敗、デフォルト名を使います");
+        document.getElementById('profileTitleInput').value = "";
+    }
+}
+
+// 【保存】ストレージに保存（50個制限）
+function saveProfileToLocalStorage() {
+    const jsonStr = document.getElementById('jsonSave').value;
+    let title = document.getElementById('profileTitleInput').value.trim();
+    
+    if (!title) {
+        alert("タイトルを入力してください");
+        return;
+    }
+
+    let index = JSON.parse(localStorage.getItem('uzu_profile_index') || "[]");
+    
+    // 新規保存かつ50個超えのチェック
+    if (!index.includes(title) && index.length >= 50) {
+        alert("【警告】保存上限（50個）に達しています。不要なプロファイルを削除してください\nファイル読込ダイアログからストレージのプロファイルを削除できます");
+        return;
+    }
+
+    try {
+        let data = JSON.parse(jsonStr);
+        data.title = title; // 入力されたタイトルでJSON内も更新
+        
+        // ストレージ保存
+        localStorage.setItem('uzu_profile_data_' + title, JSON.stringify(data));
+        
+        // インデックス更新（重複してなければ追加）
+        if (!index.includes(title)) {
+            index.push(title);
+            localStorage.setItem('uzu_profile_index', JSON.stringify(index));
         }
+        
+        alert("ストレージに保存しました： " + title);
+        updateProfileList(); // リストを更新
+        const modal = document.getElementById('jsonSaveModal');
+        modal.classList.add('fx-close');
+        setTimeout(() => {
+          if (modal.classList.contains('fx-close')) {
+              modal.classList.remove('fx-open');
+              modal.style.display = 'none';
+              modal.classList.remove('fx-close');
+          }
+        }, 600);
+    } catch (e) {
+        alert("JSONデータが正しくありません。");
+    }
+}
+
+// 【リスト更新】削除ボタン付きのリスト生成
+function updateProfileList() {
+    const index = JSON.parse(localStorage.getItem('uzu_profile_index') || "[]");
+    const listElement = document.getElementById('profileList');
+    if (!listElement) return;
+
+    listElement.innerHTML = ''; // リセット
+
+    index.forEach(title => {
+        const container = document.createElement('div');
+        // style属性をcssTextで指定（スマホ対策）
+        container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; margin-bottom:2px; padding:1px; border-radius:4px;";
+
+        // タイトルボタン（クリックで読み込み）
+        const btn = document.createElement('div');
+        btn.innerText = title;
+        // style属性をcssTextで指定（スマホ対策）
+        btn.style.cssText = "flex-grow:1; cursor:pointer; color:#fff; font-size:16px; max-width:calc(100% - 60px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;border:1px solid rgba(255,255,255,0.3); padding:0px 1px; border-radius:3px; background:#333;";
+        btn.onclick = () => {
+            const data = localStorage.getItem('uzu_profile_data_' + title);
+            document.getElementById('jsonInput').value = data;
+        };
+
+        // 削除ボタン（X）
+        const delBtn = document.createElement('button');
+        delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;削除</span>";
+        // style属性をcssTextで指定（スマホ対策）
+        delBtn.style.cssText = "background:#800; color:#fff; border:none; padding:1px 8px; cursor:pointer; border-radius:3px; margin-left:10px;";
+        delBtn.onclick = (e) => {
+            e.stopPropagation(); // 親のクリックイベントを防ぐ
+            if (confirm("プロファイル「" + title + "」を完全に削除してもいいですか？")) {
+                deleteProfile(title);
+            }
+        };
+
+        container.appendChild(btn);
+        container.appendChild(delBtn);
+        listElement.appendChild(container);
+    });
+}
+
+// 【削除】
+function deleteProfile(title) {
+    localStorage.removeItem('uzu_profile_data_' + title);
+    let index = JSON.parse(localStorage.getItem('uzu_profile_index') || "[]");
+    index = index.filter(t => t !== title);
+    localStorage.setItem('uzu_profile_index', JSON.stringify(index));
+    updateProfileList();
+}
 
 ////////////////////////////////////////////////////////////////
 // ポップアップのテキストエリアをクリックしたときの処理
 ////////////////////////////////////////////////////////////////
 textarea.addEventListener('click', () => {
     popupText.value = textarea.value;
-    popup.classList.add('show');
-    popupOverlay.classList.add('show');
-    // ポップアップ表示時にテキストエリアにフォーカスを当てる
+    popup.classList.add('fx-open');
     popupText.focus();
 });
 
 closeButton.addEventListener('click', () => {
     textarea.value = popupText.value;
-    popup.classList.remove('show');
-    popupOverlay.classList.remove('show');
-});
-
-popupOverlay.addEventListener('click', () => {
-    textarea.value = popupText.value;
-    popup.classList.remove('show');
-    popupOverlay.classList.remove('show');
+    popup.classList.add('fx-close');
+    setTimeout(() => {
+      if (popup.classList.contains('fx-close')) {
+          popup.classList.remove('fx-open');
+          popup.style.display = 'none';
+          popup.classList.remove('fx-close');
+    }
+    }, 600);
 });
 
 let socket = null;
 let keepAliveTimeout = null; // キープアライブタイマー
-connectWebSocket();
-ResetKeepAliveTimer();
 const pendingResponses = new Map();
 const liveData = [];
 let isRoasting = false;
 
-socket.onopen = () => {
-		updateConnectionStatus(true);
-	console.log("WebSocket接続");
-};
-socket.onclose = () => {  
-    updateConnectionStatus(false);
-    document.getElementById('roast_message').textContent = "接続が解除されました";
-    //sendStopCommand(); // 焙煎を停止
-    SetRoastingState(false);
-    HideChartIndicators();
-    console.log("WebSocket切断");
-};
-socket.onmessage = (event) => {
-  try {
-    const data = JSON.parse(event.data);
-    const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
-    const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
-    if ("time" in data && "temp" in data) {
-      if (data.time > -1 && isRoasting) {
-        document.getElementById('roast_message').textContent = "焙煎中";
+connectWebSocket();
+ResetKeepAliveTimer();
 
-        const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
-        document.getElementById('roast_time').innerHTML = formatSecondsToMinutesSeconds(data.time); 
-        document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
-        if (roastChart.data.datasets[0].data.length === 0) {
-            document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
-            document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
-        }
-        else {	
-          //document.getElementById('profile_temperature').textContent = data.temp_prof.toFixed(1) + unit_temp;
-          const profileTemp = getOneSecondIntervalProfile(getProfileDataFromTable());
-          if (profileTemp[0].time >= data.time) {
-            document.getElementById('profile_temperature').innerHTML = profileTemp[0].temp.toFixed(1) + unit_temp;
-          }   
-          else if (profileTemp[profileTemp.length - 1].time >= data.time) {    
-            document.getElementById('profile_temperature').innerHTML = profileTemp[data.time - profileTemp[0].time].temp.toFixed(1) + unit_temp;      
-          }   
-          else {
-            document.getElementById('profile_temperature').innerHTML = profileTemp[profileTemp.length - 1].temp.toFixed(1) + unit_temp;      
-          }
-
-          if (roastChart.data.datasets[2].data.length > 0) {
-            if (roastChart.data.datasets[2].data.length > data.time) {
-              document.getElementById('profile_ror').innerHTML = (roastChart.data.datasets[2].data[data.time].y).toFixed(1) + unit_ror;
-            }
-            else {
-              document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
-            }
-          }
-        }
-        document.getElementById('roast_ror').innerHTML = current_ror.y.toFixed(1) + unit_ror;//(roastChart.data.datasets[3].data[roastChart.data.datasets[3].data.length - 1].y).toFixed(1);//ESP32側でプロファイルデータを持たせる場合
-      }
-      else {	//焙煎中以外は現在温度のみ表示
-        if (!isMinutesSecondsFormat) {
-          document.getElementById('roast_time').innerHTML = "--" + unit_sec;
-        }
-        else {
-          document.getElementById('roast_time').innerHTML = "--:--"; 
-        }
-        document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
-        document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
-        document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
-        document.getElementById('roast_ror').innerHTML = "--" + unit_ror;        
-      }
-      
-      if (isRoasting == true && data.time >= 1800 - 1) {
-        sendStopCommand();
-      }
-  	}   
-  	
-    else if ("msg" in data) {
-      if (data.msg === "KEEP_ALIVE") {
-        ResetKeepAliveTimer(); // キープアライブタイマーをリセット
-        return;
-      }
-      else if (data.msg !== "") { 
-        document.getElementById('roast_message').textContent = data.msg; // メッセージを表示  } 
-      }
-    }
-    else if (data.id && pendingResponses.has(data.id)) {
-      pendingResponses.get(data.id)(data);
-      pendingResponses.delete(data.id);
-    } 
-    else {
-      console.log("その他のメッセージ:", data);
-    }
-  } catch (e) {
-    console.error("JSON解析エラー", e);
-    hideUploadOverlay(); 
+// 初期化後、WebSocket接続状態を確認（既に接続済みの場合のための処理）
+setTimeout(() => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    updateConnectionStatus(true);
   }
+}, 500);
+
+// 画面にフォーカスが戻った時（スリープ復帰時）に発動
+window.onfocus = function() {
+  webReconnect();
 };
+
+function webReconnect() {
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+  setTimeout(() => {
+    connectWebSocket();
+  }, 200);
+}
+
+function receiveWebMessage(data) {
+  const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
+  const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
+  if ("time" in data && "temp" in data) {
+    if (data.time > -1 && isRoasting) {
+      document.getElementById('roast_message').textContent = "焙煎中";
+
+      const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
+      document.getElementById('roast_time').innerHTML = formatSecondsToMinutesSeconds(data.time); 
+      document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
+      if (roastChart.data.datasets[0].data.length === 0) {
+          document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
+          document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
+      }
+      else {	
+        const profileTemp = getOneSecondIntervalProfile(getProfileDataFromTable());
+        if (profileTemp[0].time >= data.time) {
+          document.getElementById('profile_temperature').innerHTML = profileTemp[0].temp.toFixed(1) + unit_temp;
+        }   
+        else if (profileTemp[profileTemp.length - 1].time >= data.time) {    
+          document.getElementById('profile_temperature').innerHTML = profileTemp[data.time - profileTemp[0].time].temp.toFixed(1) + unit_temp;      
+        }   
+        else {
+          document.getElementById('profile_temperature').innerHTML = profileTemp[profileTemp.length - 1].temp.toFixed(1) + unit_temp;      
+        }
+
+        if (roastChart.data.datasets[2].data.length > 0) {
+          if (roastChart.data.datasets[2].data.length > data.time) {
+            document.getElementById('profile_ror').innerHTML = (roastChart.data.datasets[2].data[data.time].y).toFixed(1) + unit_ror;
+          }
+          else {
+            document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
+          }
+        }
+      }
+      document.getElementById('roast_ror').innerHTML = current_ror.y.toFixed(1) + unit_ror;
+    }
+    else {	//焙煎中以外は現在温度のみ表示
+      if (!isMinutesSecondsFormat) {
+        document.getElementById('roast_time').innerHTML = "--" + unit_sec;
+      }
+      else {
+        document.getElementById('roast_time').innerHTML = "--:--"; 
+      }
+      document.getElementById('roast_temperature').innerHTML = temp + unit_temp;
+      document.getElementById('profile_temperature').innerHTML = "--" + unit_temp;
+      document.getElementById('profile_ror').innerHTML = "--" + unit_ror;
+      document.getElementById('roast_ror').innerHTML = "--" + unit_ror;        
+    }
+    
+    if (isRoasting == true && data.time >= 1800 - 1) {
+      sendStopCommand();
+    }
+    updateChartDsiaplayValue();  
+  }  
+}
 
 function ResetKeepAliveTimer() {
+  if (window.pywebview) { return; }
   if (keepAliveTimeout) {     
     clearTimeout(keepAliveTimeout);
   } 
+
   keepAliveTimeout = setTimeout(() => {
+    if (window.pywebview) { return; }
     console.warn("キープアライブメッセージが受信できませんでした");
     updateConnectionStatus(false);
     document.getElementById('roast_message').textContent = "接続が解除されました";
     //sendStopCommand(); // 焙煎を停止
     HideChartIndicators();
-
-    connectWebSocket(); // 再接続を試みる
+    webReconnect(); // 再接続を試みる
     keepAliveTimeout = null; // タイマーをリセット
     ResetKeepAliveTimer();
   }, 30000); // 30秒ごとにキープアライブチェック
 }
 
+//デバッグ用関数群
+////////////////////////////////////////////////////////////////
 let TemperatureOffset = 0;
 function OffsetIncrement(offset){
   TemperatureOffset += offset;
@@ -344,8 +498,17 @@ function OffsetReset(){
 function CloseOffsetDialogBox(){
   document.getElementById('debug_console').style.display = "none";
 }
+function sendDebugCommand() {
+    const input = document.getElementById('cmdInput');
+    const text = input.value.trim(); // 前後の空白を消す
+    if (text !== "") {
+      window.pywebview.api.send_command(text); 
+      input.value = "";
+    }
+}
 
 function connectWebSocket() {
+  if (window.pywebview) { return; }
   // 81番ポートを指定してWebSocket接続URLを作成
   const currentHost = window.location.hostname;
   if (currentHost == "") {  // ローカルからアクセス
@@ -359,6 +522,54 @@ function connectWebSocket() {
     const websocketUrl = `ws://${currentHost}:81/`;
     socket = new WebSocket(websocketUrl);
   }
+
+  // イベントハンドラを設定
+  socket.onopen = () => {
+    updateConnectionStatus(true);
+    console.log("WebSocket接続");
+  };
+  
+  socket.onclose = () => {  
+    if (window.pywebview) {
+      return;
+    }
+    updateConnectionStatus(false);
+    document.getElementById('roast_message').textContent = "接続が解除されました";
+    SetRoastingState(false);
+    HideChartIndicators();
+    console.log("WebSocket切断");
+  };
+  
+  socket.onerror = (error) => {
+    console.error("WebSocketエラー:", error);
+    updateConnectionStatus(false);
+  };
+  
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      receiveWebMessage(data);
+      if ("msg" in data) {
+        if (data.msg === "KEEP_ALIVE") {
+          ResetKeepAliveTimer();
+          return;
+        }
+        else if (data.msg !== "") { 
+          document.getElementById('roast_message').textContent = data.msg;
+        } 
+      }
+      else if (data.id && pendingResponses.has(data.id)) {
+        pendingResponses.get(data.id)(data);
+        pendingResponses.delete(data.id);
+      } 
+      else {
+        console.log("その他のメッセージ:", data);
+      }
+    } catch (e) {
+      console.error("JSON解析エラー", e);
+      hideUploadOverlay(); 
+    }
+  };
 }
 
 function generateUniqueId() {
@@ -426,7 +637,13 @@ function sendSafe(data) {
 }
 
 function helpButtonCommand() {
-  alert("Version" + versionStr);
+  alert(`UZU ROASTER　Version${UzuRoasterVersionStr}
+うずロースターコントローラー　Version${UzuRoasterControllerVersionStr}
+
+Developed and Maintained
+うずうず本舗/うずうず珈琲焙煎工房
+
+`);
 }
 
 function manualButtonCommand() {
@@ -434,6 +651,22 @@ function manualButtonCommand() {
 }
 
 function ResetButtonCommand() {
+  const result = confirm("UZU ROASTERをリセットします。よろしいでしょうか？");
+  if (!result) {
+      return;
+  }
+
+  if (window.pywebview && window.pywebview.api) {
+    // Python版：API経由でコマンド送信
+    window.pywebview.api.send_command("reset");
+    alert("システムをリセットしました");
+    setTimeout(() => {    
+      location.reload(true);
+      window.pywebview.api.send_command("usbserial on");
+    }, 2000); // ESP32リセット時間待つ
+    return;
+  }
+
   const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "reset", id: id  };
   sendSafe(message);
@@ -441,12 +674,12 @@ function ResetButtonCommand() {
   // キャッシュを無視して強制的にリロード (サーバーから再取得)
   setTimeout(() => {    
     location.reload(true);
-  }, 300);
+  }, 1000);
 }
 
 function configButtonCommand() {
   const id = document.getElementById('debug_console');
-  if (id.style.display === "none") {
+  if (window.getComputedStyle(id).display === "none") {
     id.style.display = "block";
   } 
   else {
@@ -486,9 +719,85 @@ function resetWidthChart() {
   } // 焙煎中でない場合は更新
 }
 
+function toggleChartDisplay(flag) {
+    //const tempDiv = document.getElementById(flag);
+    const tempDiv = document.getElementById('chart-area-infos');
+    const infos_button = document.getElementById('chart-infos-button');
+
+    // 表示されてたら消す、消えてたら出す
+    if (flag) {
+        infos_button.style.opacity = '';
+        infos_button.style.transform = '';
+        infos_button.animate([
+        { transform: 'scale(1)', opacity: 1, offset: 0 },
+        { transform: 'scale(1.5)', opacity: 1, offset: 0.66 }, // 0.2秒地点
+        { transform: 'scale(1)', opacity: 0.3, offset: 1 }         // 0.3秒地点
+        ], {
+          duration: 300, // 0.3秒
+          easing: 'ease-out',
+          fill: 'forwards',
+          composite: 'replace' 
+        });
+        tempDiv.classList.remove('vanish');
+        tempDiv.classList.add('appear');
+        tempDiv.style.display = 'block';
+        setTimeout(() => {
+          tempDiv.classList.remove('appear');
+          infos_button.style.setProperty('opacity', '0.3', 'important');
+       }, 400);
+      } else {
+        tempDiv.classList.add('vanish');
+        setTimeout(() => {
+          tempDiv.style.display = 'none';
+          tempDiv.classList.remove('vanish'); 
+          infos_button.style.opacity = '';
+          infos_button.style.transform = '';
+          infos_button.animate([
+          { transform: 'scale(1)', opacity: 0.3, offset: 0 },
+          { transform: 'scale(1.5)', opacity: 0.8, offset: 0.66 }, // 0.2秒地点
+          { transform: 'scale(1)', opacity: 1, offset: 1 }         // 0.3秒地点
+          ], {
+            duration: 300, // 0.3秒
+            easing: 'ease-out',
+            fill: 'forwards',
+            composite: 'replace' 
+          });
+          setTimeout(() => {
+            infos_button.style.setProperty('opacity', '1.0', 'important');
+          }, 300);
+        }, 500);
+    }
+}
+
+function updateChartDsiaplayValue() {
+    const idMap = {
+        'roast_time':   'currentTimeInside',
+        'roast_temperature':   'currentTempInside',
+        'roast_ror':           'currentRoRInside',
+        'profile_temperature': 'profileTempInside',
+        'profile_ror':         'profileRoRInside'
+    };
+
+    Object.entries(idMap).forEach(([srcId, destId]) => {
+      const srcEl = document.getElementById(srcId);
+      const destEl = document.getElementById(destId);
+      if (srcEl && destEl) {
+          destEl.innerHTML = srcEl.innerHTML;
+      }
+    });
+}
+
+////////////////////////////////////////////////////////////////
 function sendStartCommand() {
   LiveData = [];
 	sortTable();
+  applyOffsetsToTable(); // テーブルのオフセットを適用  
+  if (window.pywebview && window.pywebview.api) {
+    // Python版：API経由でコマンド送信
+    window.pywebview.api.send_command("start");
+    executeStartCommand();
+    return;
+  }
   const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "start", id: id  };
   sendSafe(message);
@@ -506,12 +815,7 @@ function sendStartCommand() {
       clearTimeout(timeout);
       if (response.status === "ok") {
         console.log("焙煎スタートACK受信", response);
-	  	  document.getElementById('roast_message').textContent = "焙煎中";
-        roastChart.destroy();
-        initChart();
-	      updateChartWithProfile(getProfileDataFromTable());
-        SetRoastingState(true);
-        //HideChartIndicators();
+        executeStartCommand();
         resolve(response);
       } 
       else {
@@ -521,17 +825,34 @@ function sendStartCommand() {
       }
     });
   });
+
+  ////////////////////////////////////////////////////////////////
+  function executeStartCommand(){
+	  	  document.getElementById('roast_message').textContent = "焙煎中";
+        roastChart.destroy();
+        initChart();
+	      updateChartWithProfile(getProfileDataFromTable());
+        SetRoastingState(true);
+  }
 }
 
 function sendStopCommand() {
+  SetRoastingState(false);
+  HideChartIndicators();
+  
+  if (window.pywebview && window.pywebview.api) {
+    // Python版：API経由でコマンド送信
+    window.pywebview.api.send_command("stop");
+    executeStopCommand();
+    return;
+  }
+
   const id = generateUniqueId(); // 一意なIDをつける
   const message = { command: "stop", id: id  };
   sendSafe(message);
   console.log("ストップコマンド送信");
-  SetRoastingState(false);
-  HideChartIndicators();
   
-   return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       pendingResponses.delete(id);
       alert("焙煎ストップがタイムアウトしました。\nWiFi接続を確認してください。");
@@ -541,7 +862,7 @@ function sendStopCommand() {
     pendingResponses.set(id, (response) => {
       clearTimeout(timeout);
       if (response.status === "ok") {
-	  	  document.getElementById('roast_message').textContent = "焙煎を停止しました";
+        executeStopCommand();  
         resolve(response);
       } else {
         alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
@@ -549,6 +870,10 @@ function sendStopCommand() {
       }
     });
   });
+
+  function executeStopCommand(){
+    document.getElementById('roast_message').textContent = "焙煎を停止しました";
+  }
  
 }
 
@@ -589,7 +914,7 @@ function ShowChartIndicators() {
   }   
 }
 
-
+/*
 function sendProfileInBatches(profileData) {
   const BATCH_SIZE = 100;
   const totalBatches = Math.ceil(profileData.length / BATCH_SIZE);
@@ -639,45 +964,72 @@ function sendProfileInBatches(profileData) {
     sendNextBatch();
   });
 }
+*/
+
+const UZU_PRESETS = {
+  light: {
+    "type": "roast_profile",
+    "title": "Lao's Light (浅煎り)",
+    "memo": "スコット・ラオ理論準拠。10分で210℃着地。酸味と香りを最大化します。",
+    "profile": [ /* 5秒刻みデータ（略式記載、実際はロジックで生成） */ ]
+  },
+  medium: {
+    "type": "roast_profile",
+    "title": "Standard Medium (中煎り)",
+    "memo": "12分で225℃着地。甘みと苦みのバランスが良い黄金比プロファイルです。",
+    "profile": [ /* さっきの真・黄金比データ */ ]
+  },
+  dark: {
+    "type": "roast_profile",
+    "title": "Deep & Rich (深煎り)",
+    "memo": "15分かけて240℃へ。後半のRoRを落とし、芯までじっくり火を通します。",
+    "profile": [ /* 5秒刻みの徐冷データ */ ]
+  }
+};
+
+// プリセットを適用
+function applyPreset(key) {
+  const selectedData = UZU_PRESETS[key];
+  selectedData.profile = generateCurveData(key);
+  document.getElementById("profileTitle").value = selectedData.title;
+  document.getElementById("profileMemo").value = selectedData.memo;
+
+  // 5秒刻みの完全なデータを動的生成（ラオ・ルール計算式）
+  const table = document.getElementById('profileTable');
+  while (table.rows.length > 1) {
+    table.deleteRow(1);
+  }
+  selectedData.profile.forEach(point => {
+    // データポイントは{x: time, y: temp}形式
+    addRow(point.time, point.temp);
+  });
+  console.log("ガイドプロファイルでテーブルを上書きしました", selectedData.profile.length + "ポイント");
+  sendCurrentProfile();
+  closeProfModal();
+}
+
+// 数学的カーブ生成エンジン
+function generateCurveData(type) {
+  let curve = [];
+  let totalTime = (type === 'light') ? 600 : (type === 'medium') ? 720 : 900;
+  let targetTemp = (type === 'light') ? 210 : (type === 'medium') ? 225 : 240;
+  
+  for (let t = 0; t <= totalTime; t += 5) {
+    // 対数関数を使ってRoRを徐々に減衰させる計算（ラオ・ルール）
+    let progress = t / totalTime;
+    let temp = 25 + (targetTemp - 25) * (Math.log(1 + progress * 9) / Math.log(10));
+    curve.push({ "time": t, "temp": parseFloat(temp.toFixed(1)) });
+  }
+  return curve;
+}
 
 function sendCurrentProfile() {
   
-  {
-    sortTable();
-    const profileData = getProfileDataFromTable();
-    updateChartWithProfile(profileData);
-    return; // 直接アップロードはしない 
-  }
-
-
-  showUploadOverlay();
   sortTable();
+  applyOffsetsToTable(); // テーブルのオフセットを適用
   const profileData = getProfileDataFromTable();
   updateChartWithProfile(profileData);
- 
-  if (!profileData || profileData.length === 0) {
-    alert("焙煎プロファイルがありません。");
-    hideUploadOverlay(); 
-    return;
-  }
-
-  const converted = profileData.map(p => ({
-    x: Math.round(p.time),
-    y: Math.round(p.temp * 10) / 10
-  }));
-
-  sendProfileInBatches(converted)
-    .then(() => {
-      hideUploadOverlay(); // 成功
-      roastChart.data.datasets[0].borderColor = active_profile_color
-      roastChart.update();
-    })
-    .catch(err => {
-      hideUploadOverlay(); 
-		  alert("\nWiFi接続、うずロースターの電源を確認してください。\nアップロード失敗: " + err.message);
-      roastChart.data.datasets[0].borderColor = profile_color;
-      roastChart.update();
-	});
+  return; // 直接アップロードはしない 
 }
 
 function overwriteTableWithLastRoast() {
@@ -845,6 +1197,65 @@ function sortTable() {
   });
 }
 
+function applyOffsetsToTable() {
+    const table = document.getElementById('profileTable');
+    
+    // 1. オフセット値を取得
+    const inputTime = document.getElementById('offset-input-time');
+    const inputTemp = document.getElementById('offset-input-temp');
+    const timeOffset = parseInt(inputTime.value) || 0;
+    const tempOffset = parseInt(inputTemp.value) || 0;
+
+    // 2. 現在のテーブルから全データを吸い出す（ここは変更なし）
+    const currentData = [];
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const tInput = row.cells[0].querySelector('input');
+        const tempInput = row.cells[1].querySelector('input');
+        if (tInput && tempInput) {
+            currentData.push({
+                time: parseFloat(tInput.value) || 0,
+                temp: parseFloat(tempInput.value) || 0
+            });
+        }
+    }
+    // 3. テーブルを全削除
+    while (table.rows.length > 1) {
+        table.deleteRow(1);
+    }
+    // 4. ガードルールを適用して再追加
+    currentData.forEach(entry => {
+        let newTime = entry.time + timeOffset;
+        let newTemp = entry.temp + tempOffset;
+
+        if (newTime < 0 || newTime >= 1800) return;
+        newTemp = Math.min(Math.max(newTemp, 0), 260);
+
+        addRow(newTime, newTemp);
+    });
+    //時間がゼロの点がなくなったら、0秒で一番近い時間の温度の点を追加する
+    if (table.rows.length > 1 && table.rows[1].cells[0].firstChild.value != "0") {
+      let closestTemp = null;
+      let minDiff = Infinity;
+      for (let i = 1; i < table.rows.length; i++) {
+          const row = table.rows[i];
+          const tValue = parseFloat(row.cells[0].firstChild.value) || 0;
+          const tempValue = parseFloat(row.cells[1].firstChild.value) || 0;
+          const diff = Math.abs(tValue - 0);  
+          if (diff < minDiff) {
+              minDiff = diff;
+              closestTemp = tempValue;
+          }
+      }
+      addRow(0, closestTemp);
+      sortTable(); // 再度ソートして順番を整える
+    }
+    
+    //  5. 【お片付け】インプットフィールドをゼロに戻す！
+    inputTime.value = 0;
+    inputTemp.value = 0;
+}
+
 function createDeleteButton() {
   const button = document.createElement("button");
   button.textContent = "🗑";
@@ -861,6 +1272,9 @@ function createDeleteButton() {
      * WebSocket接続状態の表示を更新
      */
 function updateConnectionStatus(isConnected) {
+  if (window.pywebview) { 
+    isConnected = true;
+  }
   const statusIndicator = document.getElementById('socket-status');
   const connectionLabel = document.getElementById('connection-label');
   
@@ -888,15 +1302,15 @@ function downloadJSON() {
 
   if (latestEntries.size === 0) {
     alert("テーブルに有効なプロファイルがありません。");
-    return;
+    return false;
   }
 
   const profile = Array.from(latestEntries.entries())
     .sort((a, b) => a[0] - b[0])
     .map(([time, temp]) => ({ time, temp }));
 
-  const title = document.getElementById("profileTitle")?.value || "未設定";
-  const memo = document.getElementById("profileMemo")?.value || "未設定";
+  const title = document.getElementById("profileTitle")?.value || "";
+  const memo = document.getElementById("profileMemo")?.value || "";
 
   const data = {
     type: "roast_profile",
@@ -915,11 +1329,26 @@ function downloadJSON() {
   const seconds = String(now.getSeconds()).padStart(2, '0');
 
   const filename = `roast_profile_${year}${month}${day}_${hours}${minutes}${seconds}.json`;
-
   const jsonString = JSON.stringify(data, null, 2);
+
+  if (window.pywebview && window.pywebview.api) {
+    (async () => {
+      const success = await window.pywebview.api.save_file(jsonString);
+      if (success) {
+        document.getElementById('roast_message').textContent = "プロファイルの保存処理が完了しました";
+      }
+    })();
+    return true; // Python側で処理したらここで終了
+  }
+
+  if (true) { // 将来的にWebからファイル保存できなくなるので手動コピー
+    document.getElementById('jsonSave').value = jsonString;
+    return true;
+  }
+
   const base64Encoded = btoa(unescape(encodeURIComponent(jsonString)));
   const dataUri = `data:application/json;base64,${base64Encoded}`;
-  
+
   const a = document.createElement("a");
   a.href = dataUri;
   a.download = filename;
@@ -933,8 +1362,131 @@ function downloadJSON() {
   document.getElementById('roast_message').textContent = "プロファイルの保存処理が完了しました";
 }
 
+function showProfModal() {
+  const modal = document.getElementById('profModal');
+      modal.classList.add('fx-open');
+}
+
+function closeProfModal() {
+    const modal = document.getElementById('profModal');
+    modal.classList.add('fx-close');
+    setTimeout(() => {
+      if (modal.classList.contains('fx-close')) {
+          modal.classList.remove('fx-open');
+          modal.style.display = 'none';
+          modal.classList.remove('fx-close');
+    }
+    }, 600);
+    modal.classList.add('fx-open');
+}
+
+function closeJSONInputModal() {
+    const modal = document.getElementById('jsonInputModal');
+    modal.classList.add('fx-close');
+    document.getElementById('jsonSave').value = '';
+    setTimeout(() => {
+      if (modal.classList.contains('fx-close')) {
+          modal.classList.remove('fx-open');
+          modal.style.display = 'none';
+          modal.classList.remove('fx-close');
+    }
+    }, 600);
+}
+function closeJSONSaveModal() {
+    const modal = document.getElementById('jsonSaveModal');
+    modal.classList.add('fx-close');
+    document.getElementById('jsonInput').value = '';
+    setTimeout(() => {
+      if (modal.classList.contains('fx-close')) {
+          modal.classList.remove('fx-open');
+          modal.style.display = 'none';
+          modal.classList.remove('fx-close');
+    }
+    }, 600);
+    modal.classList.add('fx-open');
+}
+
+function openJSONInputModal() {
+    const modal = document.getElementById('jsonInputModal');
+    modal.classList.add('fx-open');
+    const textarea = document.getElementById('jsonInput');
+    textarea.value = "";
+    textarea.focus();
+}
+
+function openJSONSaveModal() {
+    if (!window.pywebview) {
+      const modal = document.getElementById('jsonSaveModal');
+      ret = downloadJSON();
+      if (ret == false) {
+      }
+      else {
+        modal.classList.add('fx-open');
+      }
+      openJSONSaveModalCustom();
+      const textarea = document.getElementById('jsonSave');
+      textarea.focus();
+      return;
+    }
+
+    downloadJSON();
+}
+
+function applyJSONInputModal() {
+    const rawData = document.getElementById('jsonInput').value;
+    const fileName = "dummyInputFileName.json";
+    const dummyFile = { name: fileName };
+    const dummyEvent = { target: { result: rawData } };
+    const result = executeFileLoad(dummyFile, dummyEvent);
+    if (result) {
+      closeJSONInputModal();
+    }
+}
+
+function applyJSONAllCopyModal() {
+  if (true) {
+    const area = document.getElementById('jsonSave');
+    area.select();
+    area.setSelectionRange(0, 99999); // スマホ用のおまじない
+    jsonString = area.value;
+    // クリップボードに直接書き込み（最新のやり方）
+    navigator.clipboard.writeText(jsonString).then(() => {
+        alert("クリップボードにコピーしました。メモ帳などにペーストして保存してください");
+    }).catch(err => {
+        // 万が一、ブラウザが拒否した時のバックアップ
+        console.error('コピー失敗', err);
+        alert("自動コピーできないようなので、手動でコピーしてください");
+    });
+
+    return;
+  }
+}
+
 function openFileDialog() {
-    document.getElementById('fileInput').click();
+  if (window.pywebview && window.pywebview.api) {
+      (async () => {
+        const loadedData = await window.pywebview.api.load_file();
+        if (loadedData) {
+            // 1. Python から届いたパスからファイル名を取得
+            const fileName = loadedData.path.split(/[\\/]/).pop();
+
+            // 2. ブラウザの File オブジェクトと Event オブジェクトの「フリ」をするダミーを作る
+            const dummyFile = { name: fileName };
+            const dummyEvent = { target: { result: loadedData.content } };
+
+            executeFileLoad(dummyFile, dummyEvent);
+        }
+    })();
+
+    return;
+  }
+
+  if (true) {
+    openJSONInputModal(); // JSONを貼り付けor書く
+  }
+  else {
+    document.getElementById('fileInput').click(); // 将来的にWebからはファイルアクセスできなくなるので
+  }
 }
 
 document.getElementById("fileInput").addEventListener("change", (event) => {
@@ -943,49 +1495,58 @@ document.getElementById("fileInput").addEventListener("change", (event) => {
 
   const reader = new FileReader();
   reader.onload = e => {
-    try {
-      let result;
-
-      // ファイル拡張子で判定（.alogか.jsonか）
-      if (file.name.endsWith(".alog")) {
-        // alog形式 → JSON変換
-        const alogText = e.target.result;
-        result = parseAlogManualScan(alogText, "", "");
-      } 
-      else if (file.name.endsWith(".csv")) {
-        const csvText = e.target.result;
-        result = parseCSV(csvText);
-      } 
-      else {
-        // 通常のJSONパース
-        result = JSON.parse(e.target.result);
-        if (!Array.isArray(result.profile)) throw "Invalid format";
-      }
-
-      // タイトルとメモを反映
-      document.getElementById("profileTitle").value = result.title || "";
-      document.getElementById("profileMemo").value = result.memo || "";
-
-      // テーブル初期化
-      const table = document.getElementById('profileTable');
-      while (table.rows.length > 1) table.deleteRow(1);
-
-      result.profile.forEach(entry => {
-        addRow(entry.time, entry.temp);
-      });
-
-      event.target.value = ""; // 同じファイルでもイベント発火させるため
-      sendCurrentProfile();
-
-    } catch (err) {
-      alert("プロファイル読み込みに失敗しました: " + err);
-      hideUploadOverlay(); 
-    }
+      executeFileLoad(file, e);
   };
-
   reader.readAsText(file);
 });
 
+function executeFileLoad(file, e){
+  try {
+    let result;
+
+    // ファイル拡張子で判定（.alogか.jsonか）
+    if (file.name.endsWith(".alog")) {
+      // alog形式 → JSON変換
+      const alogText = e.target.result;
+      result = parseAlogManualScan(alogText, "", "");
+    } 
+    else if (file.name.endsWith(".csv")) {
+      const csvText = e.target.result;
+      result = parseCSV(csvText);
+    } 
+    else {
+      // 通常のJSONパース
+      result = JSON.parse(e.target.result);
+      if (!Array.isArray(result.profile)) throw "Invalid format";
+    }
+
+    // タイトルとメモを反映
+    document.getElementById("profileTitle").value = result.title || "";
+    document.getElementById("profileMemo").value = result.memo || "";
+
+    // テーブル初期化
+    const table = document.getElementById('profileTable');
+    while (table.rows.length > 1) table.deleteRow(1);
+
+    result.profile.forEach(entry => {
+      addRow(entry.time, entry.temp);
+    });
+
+    if (window.event && window.event.target) {
+      event.target.value = ""; // 同じファイルでもイベント発火させるため
+    }
+
+    sendCurrentProfile();
+    document.getElementById('roast_message').textContent = "プロファイルを読み込みました";
+
+    return true;
+  } catch (err) {
+    alert("プロファイル読み込みに失敗しました: " + err);
+    //hideUploadOverlay(); 
+    return false;
+  }
+
+}
 
 function getProfileDataFromTable() {
     const table = document.getElementById('profileTable');
@@ -1119,34 +1680,40 @@ function initChart() {
               data: [],
               borderColor: active_profile_color,
               fill: true,
-              tension: 0.01,
+              tension: 0,
+              borderCapStyle: 'round',  // 線の先端を丸く
+              borderJoinStyle: 'round', // 線のつなぎ目を丸く            
               order: 20, // リアルタイム温度より下に表示
-              backgroundColor: gradient, 
-              borderWidth: 1,
-              pointRadius: 2, 
+              backgroundColor: 'rgba(0, 0, 0, 0.08)', 
+              borderWidth: 2, //1,
+              pointRadius: 0, // 2, 
               pointHoverRadius: 8
           }, {
               label: '現在温度',
               data: [], // ここを最初から空配列に
               borderColor: 'rgba(255, 66, 99, 1)',
               fill: false,
-              tension: 0.2,
+              tension: 0.1,
+              borderCapStyle: 'round',  // 線の先端を丸く
+              borderJoinStyle: 'round', // 線のつなぎ目を丸く            
               order: 1,
               backgroundColor: 'rgba(255, 66, 99, 0.8)',
               borderWidth: 3,
-              pointRadius: 2,
+              pointRadius: 0, //2,
               pointHoverRadius: 8
           }, {
               label: 'RoR (プロファイル温度）',
               data: [],
-              borderSColor: 'rgba(159, 152, 255, 0.5)', 
-              backgroundColor: 'rgba(157, 132, 255, 0.5)',
+              borderColor: 'rgba(75, 68, 178, 0.4)', 
+              backgroundColor: 'rgba(157, 132, 255, 0.4)',
               fill: false,
-              tension: 0.2,
+              tension: 0,
+              borderCapStyle: 'round',  // 線の先端を丸く
+              borderJoinStyle: 'round', // 線のつなぎ目を丸く            
               yAxisID: 'y1', // 別のY軸を使う
               order: 5, 
-              borderWidth: 1,
-              pointRadius: 1,
+              borderWidth: 2, //1,
+              pointRadius: 0, //1,
               pointHoverRadius: 8
           },{
               label: 'RoR (現在温度)',
@@ -1154,11 +1721,13 @@ function initChart() {
               borderColor: 'rgba(194, 120, 29, 0.5)', 
               backgroundColor: 'rgba(255, 223, 61, 0.5)',
               fill: false,
-              tension: 0.2,
+              borderCapStyle: 'round',  // 線の先端を丸く
+              borderJoinStyle: 'round', // 線のつなぎ目を丸く            
+              tension: 0.1,
               yAxisID: 'y1', // 別のY軸を使う
               order: 10, 
-              borderWidth: 1,
-              pointRadius: 1,
+              borderWidth: 2, //1,
+              pointRadius: 0, //1,
               pointHoverRadius: 8
           }]
       },
@@ -1243,7 +1812,6 @@ function initChart() {
   resizeOverlayCanvas();
 }
 
-// ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', () => {
   const roastTimeDisplay = document.getElementById('roast_time_area');
   if (roastTimeDisplay) {
@@ -1253,6 +1821,40 @@ window.addEventListener('DOMContentLoaded', () => {
       roastChart.update();
     });
   }
+
+  const displayMappings = {
+      // 'roast_temperature_area': 'currentTemp', 温度表示エリアはクリック無効
+      // 'roast_ror_area': 'currentRoR',
+      // 'profile_temperature_area': 'profileTemp',
+      // 'profile_ror_area': 'profileRoR',
+      'currentTime': 'currentTime',
+      'currentTemp': 'currentTemp',
+      'currentRoR': 'currentRoR',
+      'profileTemp': 'profileTemp',
+      'profileRoR': 'profileRoR',
+  };
+  Object.entries(displayMappings).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation(); // イベントを親の要素に伝えないための防波堤！
+            toggleChartDisplay(false);
+          });
+      }
+  });
+  const chart_infos_appear_button = document.getElementById('chart-infos-button');
+  chart_infos_appear_button.addEventListener('click', (e) => {
+    e.stopPropagation(); // イベントを親の要素に伝えないための防波堤！
+    const bt = window.getComputedStyle(chart_infos_appear_button);
+    const bt_value = parseFloat(bt.opacity);
+    if(bt_value > 0.7){
+      toggleChartDisplay(true);
+    }
+    else{
+      toggleChartDisplay(false);
+    }
+  });
+
   initChart();
   document.getElementById('stop-button').disabled = true;
   roastChart.resize();
@@ -1439,8 +2041,8 @@ function copyProfileChartToCompare(chart = roastChart) {
             data: profileData.map(p => ({ x: p.time, y: p.temp })),
             borderColor: 'rgba(52, 181, 89, 0.7)',
             backgroundColor: 'rgba(0, 104, 61, 0.04)',
-            borderWidth: 1,
-            pointRadius: 2,
+            borderWidth: 2, //1,
+            pointRadius: 0, //2,
             fill: true,
             tension: 0.01,
             order: 15
