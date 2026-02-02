@@ -581,11 +581,20 @@
 
         <h3 id="subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み:</h3>
         <ul>
-            <li><strong>プロファイルの読み込み:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📁</span>プロファイル読込</span>ボタンをクリックすると、プロファイルデータを貼り付けるウィンドウが表示されます。以前に保存したJSONテキストや、CSVテキスト（EXCEL等で編集可能）、alogテキスト（Artisan用プロファイル）を貼り付けて「プロファイル読み込み」ボタンをクリックしてください。<br>
+            <li><strong>プロファイルの読み込み:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
+                📁</span>プロファイル読込</span>ボタンをクリックすると、プロファイルデータを貼り付けるウィンドウが表示されます。以前に保存したJSONテキストや、CSVテキスト（EXCEL等で編集可能）、alogテキスト（Artisan用プロファイル）を貼り付けて「プロファイル読み込み」ボタンをクリックしてください。<br>
+                また、ローカルストレージに保存されたプロファイルを選択して読み込むことも可能です。<br>
                 Python版の場合、以前に保存したJSONファイルや、CSVファイル（EXCEL等で編集可能）、alogファイル（Artisan用ファイル）を選択してプロファイルを読み込みます。</li>
-            <li><strong>プロファイルの保存:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">💾</span>プロファイル保存</span>ボタンをクリックすると、別ウィンドウにプロファイルデータが表示されます。コピーしてメモ帳などに貼り付けて保存してください。<br>
+            <li><strong>プロファイルの保存:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
+                💾</span>プロファイル保存</span>ボタンをクリックすると、別ウィンドウにプロファイルデータが表示されます。コピーしてメモ帳などに貼り付けて保存してください。<br>
+                また、ローカルストレージにも最大50個のプロファイルを保存することも可能です。<br>
                 Python版の場合、現在有効なプロファイルがJSONファイルとしてPCに保存できます。</li>
-            <li><strong>焙煎データからプロファイル作成:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📋</span>焙煎データ⇒プロファイル</span>ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
+            <div class="tip"><h4>ヒント: ローカルストレージ</h4><ul><li>永続的な保存: 保存されたデータは、Chromeなどのブラウザを通じて、お使いのデバイス（PC、スマートフォン等）のストレージ内に直接保存されます。ブラウザを閉じたり、スマートフォンの電源を切ったりしても、データが消えることはありません。</li><li>保存上限: 最大50個までのプロファイルを保存できます。上限に達した場合は、不要なプロファイルを削除することで新しい記録を保存できるようになります。</li></ul>
+⚠️ 注意事項
+ブラウザごとの管理: データの保存はブラウザとURLごとに行われます。例えば、AndroidのChromeで保存したデータは、同じデバイスの他のブラウザからは参照できません。
+キャッシュ削除: ブラウザの「すべての履歴・サイトデータを削除」を実行すると、保存されたプロファイルも一緒に消去される場合があります。大切なデータは、定期的にJSON形式でテキスト保存（コピー＆ペースト）しておくことを推奨します。
+            </div>
+        <li><strong>焙煎データからプロファイル作成:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📋</span>焙煎データ⇒プロファイル</span>ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
             <li><strong>プロファイルの比較:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>比較プロファイル表示</span>ボタンをクリックすると、現在表示されているプロファイルのチャートを比較用のチャートとして表示します。新たにプロファイルを読み込むことで2種類のプロファイルを重ねて表示可能です。</li>
             <li><strong>標準プロファイル機能:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>標準プロファイル</span>ボタンをクリックすると、焙煎度に応じたプロの推奨曲線（ターゲットライン）をプロファイルとして読み込みます。</li>
         </ul>

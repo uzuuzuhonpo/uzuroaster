@@ -828,11 +828,14 @@ function sendStartCommand() {
 
   ////////////////////////////////////////////////////////////////
   function executeStartCommand(){
-	  	  document.getElementById('roast_message').textContent = "焙煎中";
-        roastChart.destroy();
-        initChart();
-	      updateChartWithProfile(getProfileDataFromTable());
-        SetRoastingState(true);
+    document.getElementById('roast_message').textContent = "焙煎中";
+    roastChart.destroy();
+    initChart();
+    updateChartWithProfile(getProfileDataFromTable());
+    SetRoastingState(true);
+
+    isCompareProfileShown = false;
+    document.getElementById('button-copy-profile').textContent = "📈 比較プロファイル表示";
   }
 }
 
@@ -2049,7 +2052,8 @@ function copyProfileChartToCompare(chart = roastChart) {
         });
         isCompareProfileShown = true;
         if (btn) btn.textContent = "📈 比較プロファイル解除";
-    } else if (isCompareProfileShown && compareIndex !== -1) {
+    } 
+    else if (isCompareProfileShown && compareIndex !== -1) {
         // 削除
         chart.data.datasets.splice(compareIndex, 1);
         isCompareProfileShown = false;
