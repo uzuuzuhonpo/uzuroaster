@@ -52,7 +52,7 @@
       filter: saturate(0) brightness(1.1) contrast(1);
     }
     .mode6 {
-      filter: saturate(0) brightness(0.7) contrast(5);
+      filter: saturate(0) brightness(0.7) contrast(4.2);
     }
 
     /* ========================================
@@ -541,6 +541,11 @@
       display: flex;
       gap: 10px;
     }
+
+    .profile_manupilation_title {
+      transform:translateY(8px);
+    }
+
 
     /* ========================================
        テーブルコントロール
@@ -1035,8 +1040,11 @@
         width: 95%;
         margin: 0 auto;
       }
+      .profile_manupilation_title
+      {
+        transform:translateY(0px);
+      }
     }
-
     /* ========================================
        ユーティリティクラス
        ======================================== */
@@ -1179,12 +1187,13 @@
     <span id="connection-label">未接続</span>
   </div>
   <div>
-    <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
     <button class="button" title="再読み込み" onclick="location.reload()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">⇄</span></button>
-    <button class="button"  title="UZU ROASTER情報" onclick="helpButtonCommand()">HELP</button>
-    <button class="button"  title="取扱説明書" onclick="manualButtonCommand()">マニュアル</button>
-    <button class="button"  title="デバッグコンソール" onclick="configButtonCommand()">設定</button>
-    <button class="button"  title="うずうず本舗公式Web" onclick="WebButtonCommand()">Web</button>
+    <button id="usb-connect-btn" class="button" title="USB接続" style="display:none;"><span style="color:rgba(255,255,255, 1);">USB</span></button>
+    <button class="button" title="UZU ROASTER情報" onclick="helpButtonCommand()">HELP</button>
+    <button class="button" title="取扱説明書" onclick="manualButtonCommand()">マニュアル</button>
+    <button class="button" title="デバッグコンソール" onclick="configButtonCommand()">設定</button>
+    <button class="button" title="うずうず本舗公式Web" onclick="WebButtonCommand()">Web</button>
+    <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
   </div>
   <div class="profile-meta">
     <div class="meta-field">
@@ -1236,13 +1245,14 @@
      テーブルコントロール
      ======================================== -->
 <div class="table-controls">
-  <button type="button" class="button table_edit" onclick="openFileDialog()">📁 プロファイル読込</button>
+  <span class="profile_manupilation_title">プロファイル操作</span>
+  <button type="button" class="button table_edit" title="プロファイル読込" onclick="openFileDialog()">📁 読込</button>
   <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
-  <button onclick="openJSONSaveModal()" class="button table_edit">💾 プロファイル保存</button>
-  <button class="button table_edit" onclick="sendCurrentProfile();">📈 プロファイル整列</button>
-  <button class="button table_edit" onclick="overwriteTableWithLastRoast();">📋 焙煎データ⇒プロファイル</button>
-  <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare();">📈 比較プロファイル表示</button>
-  <button id="button-default-profile" class="button table_edit" onclick="showProfModal();">📈 標準プロファイル</button>
+  <button onclick="openJSONSaveModal()" class="button table_edit" title="プロファイル保存">💾 保存</button>
+  <button class="button table_edit" onclick="sendCurrentProfile();" title="プロファイルテーブル整列・チャート更新">📊 整列</button>
+  <button class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="焙煎データ⇒プロファイルにコピー">📋 焙煎データ⇒</button>
+  <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare()"; title="比較用プロファイルとして表示">📈 比較</button>
+  <button id="button-default-profile" class="button table_edit" onclick="showProfModal()"; title="標準焙煎カーブ読込">📈 標準カーブ</button>
   <div id="control-buttons">
     <div>
       <button title="チャート拡大" class="button button-chart-control" onclick="shotenChart()" id="shorten-button">◀</button>

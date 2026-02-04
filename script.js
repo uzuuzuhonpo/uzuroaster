@@ -43,11 +43,11 @@ window.updateFromPython = function(data) {
 
 // --- カラーモード管理 ---
 // ① ページ読み込み時に自動で呼ぶ初期化関数
-window.addEventListener('DOMContentLoaded', () => {
+function initColorMode() {  
     // 保存されたモードを読み込む（なければ '0'）
     const savedMode = localStorage.getItem('uzu_color_mode') || '0';
     changeColorMode(parseInt(savedMode), false); 
-});
+}
 
 // ② カラーモード切り替え（isSaveは保存するかどうかのフラグ）
 function changeColorMode(modeNum, isSave = true) {
@@ -246,7 +246,10 @@ function isMobile() {
 ////////////////////////////////////////////////////////////////
 // ページ読み込み時にリストを初期化
 window.addEventListener('DOMContentLoaded', () => {
+    chartAreaInitialize();
     updateProfileList();
+    initColorMode();
+    connectionSelect();
 });
 
 // 保存モーダルを開いた時に現在のJSONからタイトルを自動セット
@@ -311,43 +314,43 @@ function saveProfileToLocalStorage() {
 
 // 【リスト更新】削除ボタン付きのリスト生成
 function updateProfileList() {
-    const index = JSON.parse(localStorage.getItem('uzu_profile_index') || "[]");
-    const listElement = document.getElementById('profileList');
-    if (!listElement) return;
+  const index = JSON.parse(localStorage.getItem('uzu_profile_index') || "[]");
+  const listElement = document.getElementById('profileList');
+  if (!listElement) return;
 
-    listElement.innerHTML = ''; // リセット
+  listElement.innerHTML = ''; // リセット
 
-    index.forEach(title => {
-        const container = document.createElement('div');
-        // style属性をcssTextで指定（スマホ対策）
-        container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; margin-bottom:2px; padding:1px; border-radius:4px;";
+  index.forEach(title => {
+      const container = document.createElement('div');
+      // style属性をcssTextで指定（スマホ対策）
+      container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; margin-bottom:2px; padding:1px; border-radius:4px;";
 
-        // タイトルボタン（クリックで読み込み）
-        const btn = document.createElement('div');
-        btn.innerText = title;
-        // style属性をcssTextで指定（スマホ対策）
-        btn.style.cssText = "flex-grow:1; cursor:pointer; color:#fff; font-size:16px; max-width:calc(100% - 60px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;border:1px solid rgba(255,255,255,0.3); padding:0px 1px; border-radius:3px; background:#333;";
-        btn.onclick = () => {
-            const data = localStorage.getItem('uzu_profile_data_' + title);
-            document.getElementById('jsonInput').value = data;
-        };
+      // タイトルボタン（クリックで読み込み）
+      const btn = document.createElement('div');
+      btn.innerText = title;
+      // style属性をcssTextで指定（スマホ対策）
+      btn.style.cssText = "flex-grow:1; cursor:pointer; color:#fff; font-size:16px; max-width:calc(100% - 60px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;border:1px solid rgba(255,255,255,0.3); padding:0px 1px; border-radius:3px; background:#333;";
+      btn.onclick = () => {
+          const data = localStorage.getItem('uzu_profile_data_' + title);
+          document.getElementById('jsonInput').value = data;
+      };
 
-        // 削除ボタン（X）
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;削除</span>";
-        // style属性をcssTextで指定（スマホ対策）
-        delBtn.style.cssText = "background:#800; color:#fff; border:none; padding:1px 8px; cursor:pointer; border-radius:3px; margin-left:10px;";
-        delBtn.onclick = (e) => {
-            e.stopPropagation(); // 親のクリックイベントを防ぐ
-            if (confirm("プロファイル「" + title + "」を完全に削除してもいいですか？")) {
-                deleteProfile(title);
-            }
-        };
+      // 削除ボタン（X）
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;削除</span>";
+      // style属性をcssTextで指定（スマホ対策）
+      delBtn.style.cssText = "background:#800; color:#fff; border:none; padding:1px 8px; cursor:pointer; border-radius:3px; margin-left:10px;";
+      delBtn.onclick = (e) => {
+          e.stopPropagation(); // 親のクリックイベントを防ぐ
+          if (confirm("プロファイル「" + title + "」を完全に削除してもいいですか？")) {
+              deleteProfile(title);
+          }
+      };
 
-        container.appendChild(btn);
-        container.appendChild(delBtn);
-        listElement.appendChild(container);
-    });
+      container.appendChild(btn);
+      container.appendChild(delBtn);
+      listElement.appendChild(container);
+  });
 }
 
 // 【削除】
@@ -1275,9 +1278,6 @@ function createDeleteButton() {
      * WebSocket接続状態の表示を更新
      */
 function updateConnectionStatus(isConnected) {
-  if (window.pywebview) { 
-    isConnected = true;
-  }
   const statusIndicator = document.getElementById('socket-status');
   const connectionLabel = document.getElementById('connection-label');
   
@@ -1815,7 +1815,7 @@ function initChart() {
   resizeOverlayCanvas();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+function chartAreaInitialize() {
   const roastTimeDisplay = document.getElementById('roast_time_area');
   if (roastTimeDisplay) {
     roastTimeDisplay.addEventListener('click', () => {
@@ -1824,7 +1824,6 @@ window.addEventListener('DOMContentLoaded', () => {
       roastChart.update();
     });
   }
-
   const displayMappings = {
       // 'roast_temperature_area': 'currentTemp', 温度表示エリアはクリック無効
       // 'roast_ror_area': 'currentRoR',
@@ -1861,7 +1860,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initChart();
   document.getElementById('stop-button').disabled = true;
   roastChart.resize();
-});
+}
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split(/\r?\n/);
