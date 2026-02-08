@@ -3,6 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UZU ROASTER | うずロースターコントローラー</title>
+  <meta name="description" content="UZU ROASTER(うずロースター)専用のWeb制御システム。リアルタイムの焙煎グラフ描画、プロファイル管理、USBシリアル接続およびWiFi接続に対応。ブラウザだけで本格的な焙煎ログを実現。">
+  <meta name="keywords" content="UZU ROASTER, うずロースター, 焙煎管理, 焙煎ログ, Web Serial API, コーヒーロースター, 自作焙煎, コーヒー焙煎ソフト, スマートフォン">
+
+  <meta property="og:title" content="UZU ROASTER - ブラウザで動く焙煎管理システム">
+  <meta property="og:description" content="USBでもWiFiでも。あなたの焙煎をデータ化してプロファイル管理。">
+  <meta property="og:image" content="https://uzuuzu.shop/uzuroastery/uzuroaster2.jpg"> <meta property="og:url" content="https://uzuuzu.shop/">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="chart.js"></script>
   <title>UZU ROASTER</title>
   <style>
@@ -40,19 +51,24 @@
       filter: hue-rotate(80deg) saturate(0.8);
     }
     .mode2 {
-      filter: sepia(0.5) hue-rotate(-10deg) saturate(1.2) brightness(0.9);
+      filter: sepia(0.5) hue-rotate(-10deg) saturate(1.2) brightness(0.93);
     }
     .mode3 {
-      filter: hue-rotate(180deg) brightness(0.8) saturate(1.5) contrast(1.1);
+      filter: hue-rotate(180deg) brightness(0.9) saturate(1.5) contrast(1.1);
     }
     .mode4 {
-      filter: hue-rotate(60deg) saturate(0.5) brightness(1.1) contrast(1.2) sepia(0.2);
+      filter: hue-rotate(60deg) saturate(0.5) brightness(1.0) contrast(1) sepia(0.2);
     }
     .mode5 {
-      filter: saturate(0) brightness(1.1) contrast(1);
+      filter: hue-rotate(-20deg) saturate(3) brightness(1) contrast(0.9);
     }
     .mode6 {
-      filter: saturate(0) brightness(0.7) contrast(4.2);
+      filter: saturate(0) brightness(0.85) contrast(1.5);
+    }
+    .mode7 {
+      filter: saturate(0) brightness(0.8) contrast(1);
+      mix-blend-mode: difference;
+      color: white;
     }
 
     /* ========================================
@@ -437,6 +453,38 @@
 
     .hidden {
       display: none !important;
+    }
+
+    /* 接続先ごとのアクセントカラー */
+    .usb { color:#004510; border: 2px solid #004510; }
+    .wifi { color:#004510; border: 2px solid #004510; }
+    .python { color:#082889; border: 2px solid #082889; }
+
+    .status_text {
+      display: inline-flex;    /* これでspan自体が整列の権限を持つ */
+      align-items: center;     /* 縦方向の真ん中 */
+      justify-content: center; /* 横方向の真ん中（必要なら） */
+      vertical-align: middle;  /* 外側のテキストと並ぶ時のズレ防止 */
+      font-size: 14px;
+      color:#004510;
+      text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
+      background-color: #fff;
+      border-radius:12px;
+      padding: 0px 8px 2px 8px;
+    }
+
+    .status_no_connection_text {
+      display: inline-flex;    /* これでspan自体が整列の権限を持つ */
+      align-items: center;     /* 縦方向の真ん中 */
+      justify-content: center; /* 横方向の真ん中（必要なら） */
+      vertical-align: middle;  /* 外側のテキストと並ぶ時のズレ防止 */
+      font-size: 14px;
+      color:#fff;
+      text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
+      background-color: #747474;
+      border: 2px solid #747474;
+      border-radius:12px;
+      padding: 0px 18px 2px 18px;
     }
 
     /* ========================================
@@ -1173,8 +1221,30 @@
       <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M4</button>
       <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M5</button>
       <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">M6</button>
+      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">M7</button>
       <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
     </div>
+    <div id="google_translate_element"></div>
+    <style>
+    body {
+      top: 0 !important;
+    }
+    .goog-te-banner-frame, 
+    .VIpgJd-ZVi9od-ORHb-OEVmcd {
+        display: none !important;
+    }
+    </style>
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'ja',
+          includedLanguages: 'ja,en,zh-CN,zh-TW,de,fr,es,it,pt,ru,ko', 
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false
+        }, 'google_translate_element');
+      }    
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </div>
 </div>
 

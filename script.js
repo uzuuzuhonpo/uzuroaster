@@ -41,6 +41,20 @@ window.updateFromPython = function(data) {
   }
 };
 
+window.pythonSerialDisConnected = function() {
+  updateConnectionStatus(false);
+};
+
+window.addEventListener('beforeunload', (event) => {
+    if (USBWriter) {
+        // await を使わずに、火急のメッセージを投げつける！効かないけど一応
+        // （writer.write自体はPromiseを返すが、ブラウザが閉じる瞬間にバッファに残っていれば、
+        //   OS側の送信待ち行列に残って、一瞬だけ猶予が生まれる可能性がある）
+        USBWriter.write("stop\n");
+        USBWriter.releaseLock();
+    }
+});
+
 // --- カラーモード管理 ---
 // ① ページ読み込み時に自動で呼ぶ初期化関数
 function initColorMode() {  
@@ -52,11 +66,11 @@ function initColorMode() {
 // ② カラーモード切り替え（isSaveは保存するかどうかのフラグ）
 function changeColorMode(modeNum, isSave = true) {
     // クラスの付け替え
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 7; i++) {
         document.body.classList.remove('mode' + i);
     }
     
-    if (modeNum >= 1 && modeNum <= 6) {
+    if (modeNum >= 1 && modeNum <= 7) {
         document.body.classList.add('mode' + modeNum);
     }
 
@@ -83,7 +97,6 @@ chartCanvas.addEventListener('click', () => {
     chartCanvas.style.top = "0";
     chartCanvas.style.left = "0";
     chartCanvas.style.zIndex = "1000"; // 他の要素の上に表示
-    chartCanvas.style.backgroundColor = "white"; // 背景色を白に設定
     chartCanvas.style.display = "block"; // ブロック要素として表示
     isFullscreen = true;
   } 
@@ -252,6 +265,74 @@ window.addEventListener('DOMContentLoaded', () => {
     connectionSelect();
 });
 
+function connectionSelect(){
+    const host = window.location.hostname;
+    const protocol = window.location.protocol;
+    const usbBtn = document.getElementById('usb-connect-btn');
+    updateConnectionStatus(false);
+    if (window.pywebview) { return; } 
+    // 1. まずはWiFi接続は試みてるので繋ぐならつなぐ
+    // 2. 「USBで繋ぎたい環境」かどうかを判定してボタンを出す
+    if (protocol === 'file:' || host === 'uzuuzu.shop') {
+        usbBtn.style.display = 'inline'; // 「USBで繋ぐ」ボタンを表示
+        USBInitialize();
+    }
+}
+
+let USBPort = null;
+let USBWriter = null;
+function USBInitialize(){
+  const connectBtn = document.getElementById('usb-connect-btn');
+  connectBtn.addEventListener('click', async () => {
+      connectBtn.disabled = true; // 連打防止
+      try {
+          // 1. ポートを選択して開く
+          USBPort = await navigator.serial.requestPort();
+          await USBPort.open({ baudRate: 115200 }); // ESP32のSerial.beginと同じ速度
+          const encoder = new TextEncoderStream();
+          const writableStreamClosed = encoder.readable.pipeTo(USBPort.writable);
+          USBWriter = encoder.writable.getWriter();
+          USBWrite("usbserial on\n");
+          // 2. 読み取りストリームの準備
+          const textDecoder = new TextDecoderStream();
+          const readableStreamClosed = USBPort.readable.pipeTo(textDecoder.writable);
+          const reader = textDecoder.readable.getReader();
+          let buffer = "";
+          // 3. 受信ループ
+          while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += value;
+              // 改行コードが来たら1行分として処理
+              if (buffer.includes('\n')) {
+                  const lines = buffer.split('\n');
+                  buffer = lines.pop(); // 最後の未完了行をバッファに戻す
+                  lines.forEach(line => {
+                    if (line.includes('{') && line.includes('}')) {
+                      updateFromPython(line); // Pythonからじゃないけど...
+                    }
+                    else {
+                      console.log("USB受信:", line);
+                    }
+                  });
+              }
+          }
+      } catch (error) {
+          console.error("USBエラー:", error);
+          alert("USB Serial接続に失敗しました。\n接続を確認してください");
+          connectBtn.disabled = false; // 再度クリック可能に
+          USBPort = null;
+          updateConnectionStatus(false);
+      }
+  });
+}
+
+function USBWrite(text) {
+  if (USBWriter) {  
+      USBWriter.write(text);
+  }
+}
+
 // 保存モーダルを開いた時に現在のJSONからタイトルを自動セット
 function openJSONSaveModalCustom() {
     const jsonStr = document.getElementById('jsonSave').value;
@@ -401,7 +482,7 @@ setTimeout(() => {
 
 // 画面にフォーカスが戻った時（スリープ復帰時）に発動
 window.onfocus = function() {
-  webReconnect();
+  //webReconnect();
 };
 
 function webReconnect() {
@@ -471,13 +552,13 @@ function receiveWebMessage(data) {
 }
 
 function ResetKeepAliveTimer() {
-  if (window.pywebview) { return; }
+  if (window.pywebview || USBPort) { return; }
   if (keepAliveTimeout) {     
     clearTimeout(keepAliveTimeout);
   } 
 
   keepAliveTimeout = setTimeout(() => {
-    if (window.pywebview) { return; }
+    if (window.pywebview || USBPort) { return; }
     console.warn("キープアライブメッセージが受信できませんでした");
     updateConnectionStatus(false);
     document.getElementById('roast_message').textContent = "接続が解除されました";
@@ -505,13 +586,21 @@ function sendDebugCommand() {
     const input = document.getElementById('cmdInput');
     const text = input.value.trim(); // 前後の空白を消す
     if (text !== "") {
-      window.pywebview.api.send_command(text); 
+      if (window.pywebview) { // PyWebView経由
+        window.pywebview.api.send_command(text);
+      }
+      else if (USBPort) { // USBシリアル経由
+        USBWrite(text + "\n");
+      }
+      else {  // WebSocket経由
+        sendWebCommand(text);
+      }
       input.value = "";
     }
 }
 
 function connectWebSocket() {
-  if (window.pywebview) { return; }
+  if (window.pywebview || USBPort) { return; }
   // 81番ポートを指定してWebSocket接続URLを作成
   const currentHost = window.location.hostname;
   if (currentHost == "") {  // ローカルからアクセス
@@ -530,10 +619,15 @@ function connectWebSocket() {
   socket.onopen = () => {
     updateConnectionStatus(true);
     console.log("WebSocket接続");
+    sendWebCommand("usbserial off");
+    console.log("usbserial offコマンド送信");
+    if (USBPort) {
+      USBPort = null; // USB接続フラグをリセット
+    } 
   };
   
   socket.onclose = () => {  
-    if (window.pywebview) {
+    if (window.pywebview || USBPort) {
       return;
     }
     updateConnectionStatus(false);
@@ -544,6 +638,7 @@ function connectWebSocket() {
   };
   
   socket.onerror = (error) => {
+    if (window.pywebview || USBPort) { return; }
     console.error("WebSocketエラー:", error);
     updateConnectionStatus(false);
   };
@@ -624,6 +719,13 @@ function showRoastingIndicator(flag) {
 	}
 }
 
+function sendWebCommand(data) {
+    const id = generateUniqueId(); // 一意なIDをつける
+    const message = { command: data, id: id  };
+    sendSafe(message);
+    return id;
+}
+
 function sendSafe(data) {
   try {
     if (socket.readyState === WebSocket.OPEN) {
@@ -637,6 +739,10 @@ function sendSafe(data) {
     hideUploadOverlay(); 
     // エラー処理（UIに通知とか、ログに出すとか）入れてもOK
   }
+}
+
+function USBConnectionAlert() {
+  alert("USBシリアルが未接続です。\n再接続してください。");
 }
 
 function helpButtonCommand() {
@@ -660,7 +766,10 @@ function ResetButtonCommand() {
   }
 
   if (window.pywebview && window.pywebview.api) {
-    // Python版：API経由でコマンド送信
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+      return;
+    }
     window.pywebview.api.send_command("reset");
     alert("システムをリセットしました");
     setTimeout(() => {    
@@ -669,10 +778,21 @@ function ResetButtonCommand() {
     }, 2000); // ESP32リセット時間待つ
     return;
   }
+  else if (USBPort) {
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+      return;
+    }
+    USBWrite("reset\n");
+    alert("システムをリセットしました");  
+    setTimeout(() => {    
+      location.reload(true);
+      USBWrite("usbserial on\n");
+    }, 2000); // ESP32リセット時間待つ
+    return;
+  } 
 
-  const id = generateUniqueId(); // 一意なIDをつける
-  const message = { command: "reset", id: id  };
-  sendSafe(message);
+  sendWebCommand("reset");
   console.log("リセットコマンド送信");
   // キャッシュを無視して強制的にリロード (サーバーから再取得)
   setTimeout(() => {    
@@ -796,40 +916,49 @@ function sendStartCommand() {
 	sortTable();
   applyOffsetsToTable(); // テーブルのオフセットを適用  
   if (window.pywebview && window.pywebview.api) {
-    // Python版：API経由でコマンド送信
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+    }
     window.pywebview.api.send_command("start");
     executeStartCommand();
     return;
   }
-  const id = generateUniqueId(); // 一意なIDをつける
-  const message = { command: "start", id: id  };
-  sendSafe(message);
+  else if (USBPort) {
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+    }
+    USBWrite("start\n");
+    executeStartCommand();
+    return;
+  }
+
+  const id = sendWebCommand("start");
   console.log("スタートコマンド送信");
+  executeStartCommand();
 
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      pendingResponses.delete(id);
-      alert("焙煎スタートがタイムアウトしました。\nWiFi接続を確認してください。");
-  		SetRoastingState(false);
-      reject(new Error("タイムアウト"));
-    }, 3000); 
+  // return new Promise((resolve, reject) => {
+  //   const timeout = setTimeout(() => {
+  //     pendingResponses.delete(id);
+  //     alert("焙煎スタートがタイムアウトしました。\nWiFi接続を確認してください。");
+  // 		SetRoastingState(false);
+  //     reject(new Error("タイムアウト"));
+  //   }, 3000); 
 
-    pendingResponses.set(id, (response) => {
-      clearTimeout(timeout);
-      if (response.status === "ok") {
-        console.log("焙煎スタートACK受信", response);
-        executeStartCommand();
-        resolve(response);
-      } 
-      else {
-        alert("焙煎スタートに失敗しました。\nWiFi接続を確認してください。\nスタート失敗:" + response.message);
-  		  SetRoastingState(false);
-        reject(new Error("スタート失敗: " + response.message));
-      }
-    });
-  });
+  //   pendingResponses.set(id, (response) => {
+  //     clearTimeout(timeout);
+  //     if (response.status === "ok") {
+  //       console.log("焙煎スタートACK受信", response);
+  //       executeStartCommand();
+  //       resolve(response);
+  //     } 
+  //     else {
+  //       alert("焙煎スタートに失敗しました。\nWiFi接続を確認してください。\nスタート失敗:" + response.message);
+  // 		  SetRoastingState(false);
+  //       reject(new Error("スタート失敗: " + response.message));
+  //     }
+  //   });
+  // });
 
-  ////////////////////////////////////////////////////////////////
   function executeStartCommand(){
     document.getElementById('roast_message').textContent = "焙煎中";
     roastChart.destroy();
@@ -842,40 +971,49 @@ function sendStartCommand() {
   }
 }
 
+////////////////////////////////////////////////////////////////
 function sendStopCommand() {
   SetRoastingState(false);
   HideChartIndicators();
-  
   if (window.pywebview && window.pywebview.api) {
-    // Python版：API経由でコマンド送信
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+    }
     window.pywebview.api.send_command("stop");
     executeStopCommand();
     return;
   }
+  else if( USBPort) {
+    if (isUSBConnected == false) {
+      USBConnectionAlert();
+    }
+    USBWrite("stop\n");
+    executeStopCommand();
+    return;
+  }
 
-  const id = generateUniqueId(); // 一意なIDをつける
-  const message = { command: "stop", id: id  };
-  sendSafe(message);
+  const id = sendWebCommand("stop");
   console.log("ストップコマンド送信");
+  executeStopCommand();
   
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      pendingResponses.delete(id);
-      alert("焙煎ストップがタイムアウトしました。\nWiFi接続を確認してください。");
-      reject(new Error("タイムアウト"));
-    }, 3000); // 3秒でタイムアウトする
+  // return new Promise((resolve, reject) => {
+  //   const timeout = setTimeout(() => {
+  //     pendingResponses.delete(id);
+  //     alert("焙煎ストップがタイムアウトしました。\nWiFi接続を確認してください。");
+  //     reject(new Error("タイムアウト"));
+  //   }, 3000); // 3秒でタイムアウトする
 
-    pendingResponses.set(id, (response) => {
-      clearTimeout(timeout);
-      if (response.status === "ok") {
-        executeStopCommand();  
-        resolve(response);
-      } else {
-        alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
-        reject(new Error("ストップ失敗: " + response.message));
-      }
-    });
-  });
+  //   pendingResponses.set(id, (response) => {
+  //     clearTimeout(timeout);
+  //     if (response.status === "ok") {
+  //       executeStopCommand();  
+  //       resolve(response);
+  //     } else {
+  //       alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
+  //       reject(new Error("ストップ失敗: " + response.message));
+  //     }
+  //   });
+  // });
 
   function executeStopCommand(){
     document.getElementById('roast_message').textContent = "焙煎を停止しました";
@@ -883,6 +1021,7 @@ function sendStopCommand() {
  
 }
 
+////////////////////////////////////////////////////////////////
 function HideChartIndicators() {
   const img = document.getElementById('chart-point');   
   if (img) {  
@@ -1274,19 +1413,30 @@ function createDeleteButton() {
   return button;
 }
 
+let isUSBConnected = false;
 /**
      * WebSocket接続状態の表示を更新
      */
 function updateConnectionStatus(isConnected) {
+  isUSBConnected = isConnected;
   const statusIndicator = document.getElementById('socket-status');
   const connectionLabel = document.getElementById('connection-label');
   
   if (isConnected) {
     statusIndicator.style.backgroundColor = '#1ecc32';
-    connectionLabel.textContent = '接続中';
-  } else {
+    if (USBPort) {
+      connectionLabel.innerHTML = '<span class="usb status_text">接続中[USB]</span>';
+    } 
+    else if (window.pywebview){
+      connectionLabel.innerHTML = '<span class="python status_text">接続中[USB]</span>';
+    } 
+    else {
+      connectionLabel.innerHTML = '<span class="wifi status_text">接続中[WiFi]</span>';
+    } 
+  }
+  else {
     statusIndicator.style.backgroundColor = '#cccccc';
-    connectionLabel.textContent = '未接続';
+    connectionLabel.innerHTML = '<span class="status_no_connection_text">未接続</span>';
   }
 }
     
@@ -1812,6 +1962,9 @@ function initChart() {
           smartAIIndicatorPlugin // 追加するスマートAIインジケータープラグイン
       ]
   });
+  
+  chartCanvas.style.backgroundColor = "#ffffff"; // 背景色を白に設定
+
   resizeOverlayCanvas();
 }
 
