@@ -302,6 +302,9 @@ function USBInitialize(){
           while (true) {
               const { value, done } = await reader.read();
               if (done) break;
+              let debmsg = document.getElementById('receivemessagearea').value + "USB:" + value;
+              debmsb = debmsg.slice(-5000); // テキストエリアの文字数制限
+              document.getElementById('receivemessagearea').value =  debmsg;
               buffer += value;
               // 改行コードが来たら1行分として処理
               if (buffer.includes('\n')) {
@@ -579,6 +582,15 @@ function OffsetIncrement(offset){
 function OffsetReset(){
   TemperatureOffset = 0;
 }
+function enableReceiveMessageTextBox(){
+  if (document.getElementById('receivemessagearea').style.display == "none") {
+    document.getElementById('receivemessagearea').style.display = "block";
+  }
+  else {
+    document.getElementById('receivemessagearea').style.display = "none";
+  }
+}
+
 function CloseOffsetDialogBox(){
   document.getElementById('debug_console').style.display = "none";
 }
@@ -645,6 +657,9 @@ function connectWebSocket() {
   
   socket.onmessage = (event) => {
     try {
+      let debmsg = document.getElementById('receivemessagearea').value + "WEB:" + event.data;
+      debmsb = debmsg.slice(-5000); // テキストエリアの文字数制限
+      document.getElementById('receivemessagearea').value =  debmsg;
       const data = JSON.parse(event.data);
       receiveWebMessage(data);
       if ("msg" in data) {
@@ -1572,6 +1587,7 @@ function openJSONSaveModal() {
       const modal = document.getElementById('jsonSaveModal');
       ret = downloadJSON();
       if (ret == false) {
+        return;
       }
       else {
         modal.classList.add('fx-open');

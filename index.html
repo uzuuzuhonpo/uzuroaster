@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="chart.js"></script>
   <title>UZU ROASTER</title>
-  <style>
+  <style> 
     /* ========================================
        カラー変数定義
        ======================================== */
@@ -51,10 +51,10 @@
       filter: hue-rotate(80deg) saturate(0.8);
     }
     .mode2 {
-      filter: sepia(0.5) hue-rotate(-10deg) saturate(1.2) brightness(0.93);
+      filter: sepia(0.5) hue-rotate(-10deg) saturate(0.8) brightness(0.92) contrast(1.05);
     }
     .mode3 {
-      filter: hue-rotate(180deg) brightness(0.9) saturate(1.5) contrast(1.1);
+      filter: hue-rotate(180deg) brightness(0.9) saturate(1.1) contrast(1.1);
     }
     .mode4 {
       filter: hue-rotate(60deg) saturate(0.5) brightness(1.0) contrast(1) sepia(0.2);
@@ -171,6 +171,15 @@
       width: 40px;
       height: 30px;
       font-size: 10px;
+      transition: filter 0.2s ease;  /* 変化をヌルッとさせる */
+      cursor: pointer;
+    }
+    .button-debug:hover {
+      filter: brightness(1.2); /* 1.2倍の明るさに！ */
+    }
+    .button-debug:active {
+      filter: brightness(0.8) saturate(1.2); /* 明るさを落として、彩度を少し上げる */
+      transform: scale(0.98); 
     }
 
     /* ========================================
@@ -1212,7 +1221,11 @@
     <div style="background:#000; border:1px solid #444; border-radius:4px; padding:5px; display:flex; align-items:center; gap:5px;">
       <span style="color:#ff4444; font-size:0.8em;">&gt;</span>
       <input type="text" id="cmdInput" placeholder="COMMAND..." style="width: 100%; background:transparent; border:none; color:#0f0; outline:none; font-size:0.85em; font-family:monospace;" onkeydown="if(event.key==='Enter') sendDebugCommand()">
-      <button onclick="sendDebugCommand()" style="background:#222; color:#aaa ; border:1px solid #444; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">EXEC</button>
+      <button onclick="sendDebugCommand()" class="button-debug" style="background:#222; color:#aaa ; border:1px solid #444; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">EXEC</button>
+    </div>
+    <div style="background:#000; border:1px solid #444; border-radius:4px; padding:5px; display:block; align-items:center; gap:5px;">
+      <button onclick="enableReceiveMessageTextBox()" class="button-debug" style="width: 100%; background:#222; color:#aaa ; border:1px solid #444; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">RECEIVE MESSAGES</button>
+      <textarea id="receivemessagearea" rows="20" onClick="" style="width: 100%; background:transparent; border:none; color:#0f0; outline:none; font-size:0.85em; font-family:monospace; display:none;"></textarea>
     </div>
     <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
       <button class="button-debug" onclick="changeColorMode(1)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M1</button>
@@ -1234,6 +1247,8 @@
         display: none !important;
     }
     </style>
+
+    <!-- Google翻訳バー(ネット環境ないと重いのでコメントアウト中)
     <script type="text/javascript">
       function googleTranslateElementInit() {
         new google.translate.TranslateElement({
@@ -1245,6 +1260,7 @@
       }    
     </script>
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    -->
   </div>
 </div>
 
