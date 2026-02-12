@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UZU ROASTER（うずロースター）取扱説明書</title>
+    <title>UZU ROASTER（うずロースター・UZ-01）取扱説明書</title>
     <style>
         body {
             font-family: 'SF Pro Display', 'Helvetica Neue', 'Segoe UI', 'Meiryo', sans-serif;
@@ -135,7 +135,7 @@
             color: #2f855a;
             word-break: break-all;      /* どこでもええから無理やり改行しろ！ */
             overflow-wrap: break-word; /* こっちも念のため（単語の切れ目を探す） */
-            white-space: pre-wrap;     /* 改行やスペースを維持しつつ、端っこで折り返す */
+            /*white-space: pre-wrap; */    /* 改行やスペースを維持しつつ、端っこで折り返す */
         }
         .warning {
             border-color: #ed8936;
@@ -232,7 +232,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>UZU ROASTER（うずロースター）取扱説明書</h1>
+        <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
 
         <div class="table-of-contents">
             <h2>目次</h2>
@@ -248,6 +248,10 @@
                 <li><a href="#section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>
                     <ul>
                         <li><a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a></li> </ul>
+                </li>
+                <li><a href="#section-controller-usbserial">🌐 うずロースターコントローラー（Webアプリ版）を使う（USB接続編）</a>
+                    <ul>
+                        <li><a href="#subsection-initial-setup-usbserial">🔧 初期設定と接続</a></li> </ul>
                 </li>
                 <li><a href="#section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</a>
                     <ul>
@@ -284,11 +288,14 @@
         </div>
 
         <h2 id="section-product-overview">📦 製品概要</h2>
-        <p>UZU ROASTER（うずロースター）は、小型のコーヒー焙煎機や手鍋に接続し、**温度センサーのデータをリアルタイムで取得**するIoTデバイスです。取得したデータは、PCソフトの「Artisan」や、UZU ROASTER内蔵のWebページ（うずロースターコントローラー）上で表示され、焙煎を強力にアシストします。Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
+        <p>UZU ROASTER（うずロースター）・UZU-01は、小型のコーヒー焙煎機や手鍋に接続し、温度センサーのデータをリアルタイムで取得するIoTデバイスです。
+            取得したデータは、PCソフトの「Artisan」や、UZU ROASTER内蔵のWebページ（うずロースターコントローラー）、または、うずロースターコントローラーWebサイト上で表示され、焙煎を強力にアシストします。
+            Wi-Fi接続に対応しており、PCやスマートフォンから焙煎状況の確認や各種設定変更が可能です。</p>
         <br>
         <br>
 
-<svg style="display: block; margin: 0 auto; width: 100%; max-width: 420px; height: auto;" viewBox="0 0 420 180">            <!-- グラデーション定義 -->
+        <svg style="display: block; margin: 0 auto; width: 100%; max-width: 420px; height: auto;" viewBox="0 0 420 180">            
+            <!-- グラデーション定義 -->
             <defs>
                 <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="70%" y2="100%">
                     <stop offset="0%" style="stop-color:#4a4a4a;stop-opacity:1" />
@@ -298,7 +305,18 @@
             
             <!-- 本体（グラデーション） -->
             <rect x="10" y="10" width="400" height="160" rx="12" fill="url(#bodyGradient)" stroke="#444" stroke-width="2" />
-        
+
+            <!-- 左下のオプションボタン -->
+            <g transform="translate(50, 140)">
+                <!-- ボタン本体（押せそうな感じ） -->
+                <circle cx="0" cy="0" r="10" fill="#1a1a1a" stroke="#333" stroke-width="1.5" />
+                <circle cx="0" cy="0" r="7" fill="#ee0000" stroke="#444" stroke-width="1" />
+                <!-- ボタンのハイライト -->
+                <circle cx="-2" cy="-2" r="3" fill="#ff0000" opacity="0.6" />
+                <!-- Option Button ラベル -->
+                <text x="0" y="-18" font-family="monospace" font-size="9" fill="#ccc" text-anchor="middle">OPTION BUTTON</text>
+            </g>
+
             <!-- USB-TypeC -->
             <g transform="translate(20, 100)">
                 <text x="22.5" y="-10" font-family="monospace" font-size="9" fill="#ccc" text-anchor="middle">USB-TypeC</text>
@@ -349,15 +367,36 @@
         <div style="text-align: center; margin: 10px auto; color: #000; font-size: 1.1em;">
         図1: UZU ROASTER本体と各部名称
         </div>
+<div style="background: #f2f2f2; padding: 15px 20px; border: solid 1px #444; border-radius: 5px; margin: 40px;">
+<p><strong>① USB-TypeC</strong><br>
+電源/USBシリアル通信端子です。<br>USB-TypeCで接続し、5V/500mA以上の電力を供給してください。</p>
 
+<p><strong>② OPTION BUTTON（オプションボタン）</strong><br>
+・短押し、長押し（3秒以上）でそれぞれ設定したコマンドを実行します。詳しくは<a href="#section-web-serial-commands">コマンド一覧</a>を参照してください。<br>
+</p>
+<p><strong>③ STATUS LED（ステータスLED）</strong><br>
+UZU ROASTERの現在の状態を点灯パターンで表示します。<br>
+<ul>
+    <li>・消灯：UZU ROASTERとうずロースターコントローラーが未接続です。</li>
+    <li>・遅い点滅：UZU ROASTERとうずロースターコントローラーがWi-Fi、またはUSBで接続されています。</li>
+    <li>・速い点滅：焙煎中です。</li>
+</ul>
+また、コマンドで温度表示モードに変更する事も可能です。</p>
+<p><strong>④ OP LED（オペレーションLED）</strong><br>
+電源が入ると点灯します。</p>
+<p><strong>⑤ THERMOCOUPLE（熱電対接続端子）</strong><br>
+「＋」、「ー」のそれぞれの端子にK型熱電対を接続してください。</p>
+</div>
+
+        
         <h2 id="section-preparation">🚀 準備と接続</h2>
         <ol>
             <li>
                 <h3>K型熱電対の接続:</h3>
-                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。**プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
+                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
                 <ul>
                     <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）</li>
-                    <li><strong>接続不能な端子形状の場合:</strong> お手数ですが追加工して形状を合わせてください。</li>
+                    <li><strong>U型の端子等、接続不能な端子形状の場合:</strong> お手数ですが追加工して形状を合わせてください。</li>
                     <li><strong>熱電対の設置:</strong> 熱電対は、焙煎対象となるロースターや鍋にしっかりと組み込んでください。</li>
                 </ul>
             </li>
@@ -366,10 +405,10 @@
         <h2 id="section-main-features">✨ UZU ROASTERの主な機能</h2>
         <p>UZU ROASTERはコーヒー焙煎をサポートする以下の3つの主要な機能を提供します。</p>
         <ol>
-            <li>**Artisan連携（USBシリアル）:** PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
-            <li>**うずロースターコントローラー（Webアプリ版）:** UZU ROASTER本体に内蔵されたWebサーバー機能によりWi-FiでAP接続して、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
-            <li>**うずロースターコントローラー（Python版）:** Wi-FiではなくUSBシリアルでPC（Windows）に接続して使用します。Web版とは異なり、プロファイルの保存、読み込みが可能です。</li>
-            <li>**カスタムWebサーバー機能:** ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
+            <li>Artisan連携（USBシリアル）: PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
+            <li>うずロースターコントローラー（Webアプリ版）: UZU ROASTER本体に内蔵されたWebサーバーにWi-FiでAP接続、またはUSB接続（USBシリアル）して、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
+            <li>うずロースターコントローラー（Python版）: Windowsアプリとなっており、USBシリアルでUZU ROASTERに接続して使用します。Web版とは異なり、プロファイルの保存、読み込みが可能です。</li>
+            <li>カスタムWebサーバー機能: ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
         </ol>
 
         <hr>
@@ -379,7 +418,7 @@
 
         <h3 id="subsection-artisan-requirements">🧰 必要なもの:</h3>
         <ul>
-            <li>UZU ROASTER本体（焙煎用温度センサーモジュール AX31855搭載）</li>
+            <li>UZU ROASTER本体（焙煎用温度センサーモジュール MAX31855K搭載）</li>
             <li>焙煎用温度センサー K型熱電対</li>
             <li>PC（Windows/macOS/Linux）</li>
             <li>Artisan（最新版推奨） 👉 <a href="https://artisan-scope.org/" target="_blank">Artisan公式サイト</a></li>
@@ -391,7 +430,7 @@
         <ul>
             <li>USBシリアル通信で温度を定期的に出力する機能。
                 <ul>
-                    <li>**データ形式:** <code>25.3\n</code> のように、1行に1つの温度値（小数点以下1桁、改行付き）を送信します。</li>
+                    <li>データ形式: <code>25.3\n</code> のように、1行に1つの温度値（小数点以下1桁、改行付き）を送信します。</li>
                 </ul>
             </li>
         </ul>
@@ -432,16 +471,11 @@
             <li><code>ストップビット</code>: <code>1</code></li>
             <li><code>タイムアウト</code>: <code>0.7</code></li>
         </ul>
-        <div class="tip">
-            <h4>上級者向けヒント:</h4>
+        <div class="tip"><h4>上級者向けヒント:</h4>
             <p>Artisanの設定画面で、<code>ET/BT</code> の設定を変更することで、異なる温度センサーのデータを扱うことも可能です。</p> 
-        
                 <h4>【スクリプト設定（Serial Protocol）】</h4>
-                <ol>
-                    <li>Artisanのメニューで「構成（Config） → デバイス（Device）」を開き、「Prog」でカスタムスクリプトを設定することで任意のフォーマットの温度データが受信できるようになります。
-                        <br>詳しくは公式ドキュメントをご参照ください。
-                    </li>
-
+                <ol><li>Artisanのメニューで「構成（Config） → デバイス（Device）」を開き、「Prog」でカスタムスクリプトを設定することで任意のフォーマットの温度データが受信できるようになります。
+                        <br>詳しくは公式ドキュメントをご参照ください。  </li>
         </div>
 
         <h3 id="subsection-artisan-test">✅ 接続テスト＆確認:</h3>
@@ -489,7 +523,7 @@
                 <ul>
                     <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。USB-TypeCで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
                     <li>お使いのPCまたはスマートフォンのWi-Fi設定を開き、Wi-Fi接続先（SSID）として <code>UZU-ROASTER</code> を選択します。</li>
-                    <li>デフォルトのパスワードは <code>00000000</code> です。</li>
+                    <li>デフォルトのパスワードは未設定です。（SSIDとパスワードはコマンドで変更可能です）</li>
                     （※）接続すると、Wi-Fiネットワークは『インターネット未接続』と表示されますが、そのままUZU ROASTERとの接続を維持してください。</span></li>
                 </ul>
             </li>
@@ -511,9 +545,38 @@
         </ol>
         <br><br>
         <hr>
+
+        <h2 id="section-controller-usbserial">🔌 うずロースターコントローラー（Webアプリ版）を使う（USB接続編）</h2>
+        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動しますが、USB接続するにはWi-Fiアクセスポイントに接続せずに使用します。</p>
+
+        <h3 id="subsection-initial-setup-usbserial">🔧 初期設定と接続:</h3>
+        <ol>
+            <li>
+                <h4>起動とUSB接続:</h4>
+                <ul>
+                    <li><a href="#subsection-pc-preparation">PC側の準備（USBシリアルドライバのインストール）</a>を参照してUSBドライバをインストールします。</li>
+                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。USB-TypeCで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
+                    <li>ブラウザでうずロースターコントローラーページを読み込み、<span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>
+                        ボタンを押してUSBシリアルのCOMポートを選択してUSB接続を開始します。</li>
+                    （※）他のアプリで既にCOMポートを使用している時は、うずロースターコントローラーからそのCOMポートでUZU ROASTERに接続する事ができません。<br>
+                    （※）UZU ROASTERにWi-Fiで接続して、Webサーバーに入っているうずロースターコントローラーを起動した場合、<span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>ボタンは表示されません。
+                        PC等のローカルディスク上のHTMLファイルを開いたり、<a href="https://uzuuzu.shop/uzuroastery/demo/">UZU ROASTERスペシャルサイトのURL</a>をアクセスしてうずロースターコントローラーを起動した場合に<span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>
+                    ボタンが表示されます。
+                </ul>
+            </li>
+        </ol>
+            <div class="tip"><h4>ヒント:</h4>
+            <p>Webアプリ版のうずロースターコントローラーを起動すると、優先的にWi-FiコネクションでUZU ROASTERに接続を試みます。</p> 
+            <p>USB接続を優先させたい場合は、PCやスマートフォンのWi-Fi設定で一時的にUZU ROASTERのWi-Fiアクセスポイントへの接続を解除し、<span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>ボタンを押してUSB接続を行ってください。</p>
+        </div>
+
+        <br><br>
+        <hr>
+
+        
         <h2 id="section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</h2>
         <p>うずロースターコントローラー（Python版）はWi-Fiを使用せずにUSB接続でPCとUZU ROASTERと接続します。Webアプリ版との違いは、焙煎プロファイルを直接ファイルに保存、読み込みが出来るようになっていることです。</p>
-
+        <p>uzuroaster.exeファイルを<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>のリリースページからダウンロードし、PC（Windows）で実行してください。</p>  
         <h3 id="subsection-initial-setup-usb">🔧 初期設定と接続:</h3>
         <ol>
             <li>
@@ -560,8 +623,9 @@
                 <ul>
                     <li><span style="display:inline-block; padding:2px 8px; background:#2e8b57; color:#fff; border:1px solid #1e5a38; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">▶ スタート</span>： チャートへの記録を開始します。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>： チャートへの記録を停止します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が切断される事があります）</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が解除される事があります）</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">⇄</span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>： Webアプリ使用時に、WiFiではなくUSB接続でUZU ROASTERに接続します。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">設定</span>： デバッグコンソールの表示/非表示を切り替えます。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">マニュアル</span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
                 </ul>
@@ -574,20 +638,29 @@
             <li><strong>値の編集:</strong> 各行の「時間」と「温度」欄に数値を直接入力してください。入力値は自動的に0～1799秒、0～260℃の範囲に制限されます。</li>
             <li><strong>行の削除:</strong> 各行の右端にある<span style="display:inline-block; padding:2px 8px; background:#fff; color:#444; border:1px solid #444; border-radius:12px; font-size:1em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">&nbsp;&nbsp;🗑&nbsp;&nbsp;</span>（ゴミ箱）ボタンで、不要な行を削除可能です。<span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">全削除</span>ボタンで全ての行が削除されます。</li>
             <li><strong>プロファイルの並び替え:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
-                📈</span>プロファイル整列</span>ボタンをクリックすると、入力した時間が降順になるようにプロファイルが自動で整列され、チャートに反映されます。
+                📈</span>整列</span>ボタンをクリックすると、入力した時間が降順になるようにプロファイルが自動で整列され、チャートに反映されます。
                 時間オフセット、温度オフセットが設定されている場合、プロファイルデータの経過時間、温度がそれぞれオフセット分加算されます。
                 <br>（※）マイナス値の設定も可能です。チャート範囲からはみ出したデータはその境界でクリップ、または消去されます。（時間範囲0～1799秒からはみ出したデータは消去、温度範囲0～260度からはみ出したデータはその境界でクリッピング）</li>
         </ul>
 
         <h3 id="subsection-web-app-profile-save-load">4. プロファイルの保存・読み込み:</h3>
         <ul>
-            <li><strong>プロファイルの読み込み:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📁</span>プロファイル読込</span>ボタンをクリックすると、プロファイルデータを貼り付けるウィンドウが表示されます。以前に保存したJSONテキストや、CSVテキスト（EXCEL等で編集可能）、alogテキスト（Artisan用プロファイル）を貼り付けて「プロファイル読み込み」ボタンをクリックしてください。<br>
+            <li><strong>プロファイルの読み込み:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
+                📁</span>読込</span>ボタンをクリックすると、プロファイルデータを貼り付けるウィンドウが表示されます。以前に保存したJSONテキストや、CSVテキスト（EXCEL等で編集可能）、alogテキスト（Artisan用プロファイル）を貼り付けて「プロファイル読み込み」ボタンをクリックしてください。<br>
+                また、ローカルストレージに保存されたプロファイルを選択して読み込むことも可能です。<br>
                 Python版の場合、以前に保存したJSONファイルや、CSVファイル（EXCEL等で編集可能）、alogファイル（Artisan用ファイル）を選択してプロファイルを読み込みます。</li>
-            <li><strong>プロファイルの保存:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">💾</span>プロファイル保存</span>ボタンをクリックすると、別ウィンドウにプロファイルデータが表示されます。コピーしてメモ帳などに貼り付けて保存してください。<br>
+            <li><strong>プロファイルの保存:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">
+                💾</span>保存</span>ボタンをクリックすると、別ウィンドウにプロファイルデータが表示されます。コピーしてメモ帳などに貼り付けて保存してください。<br>
+                また、ローカルストレージにも最大50個のプロファイルを保存することも可能です。<br>
                 Python版の場合、現在有効なプロファイルがJSONファイルとしてPCに保存できます。</li>
-            <li><strong>焙煎データからプロファイル作成:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📋</span>焙煎データ⇒プロファイル</span>ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
-            <li><strong>プロファイルの比較:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>比較プロファイル表示</span>ボタンをクリックすると、現在表示されているプロファイルのチャートを比較用のチャートとして表示します。新たにプロファイルを読み込むことで2種類のプロファイルを重ねて表示可能です。</li>
-            <li><strong>標準プロファイル機能:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>標準プロファイル</span>ボタンをクリックすると、焙煎度に応じたプロの推奨曲線（ターゲットライン）をプロファイルとして読み込みます。</li>
+            <div class="tip"><h4>ヒント: ローカルストレージ</h4><ul><li>永続的な保存: 保存されたデータは、Chromeなどのブラウザを通じて、お使いのデバイス（PC、スマートフォン等）のストレージ内に直接保存されます。ブラウザを閉じたり、スマートフォンの電源を切ったりしても、データが消えることはありません。</li><li>保存上限: 最大50個までのプロファイルを保存できます。上限に達した場合は、不要なプロファイルを削除することで新しい記録を保存できるようになります。</li></ul>
+⚠️ 注意事項
+ブラウザごとの管理: データの保存はブラウザとURLごとに行われます。例えば、AndroidのChromeで保存したデータは、同じデバイスの他のブラウザからは参照できません。
+キャッシュ削除: ブラウザの「すべての履歴・サイトデータを削除」を実行すると、保存されたプロファイルも一緒に消去される場合があります。大切なデータは、定期的にJSON形式でテキスト保存（コピー＆ペースト）しておくことを推奨します。
+            </div>
+        <li><strong>焙煎データからプロファイル作成:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📋</span>焙煎データ⇒</span>ボタンをクリックすると、直近の焙煎データをプロファイルとして取り込まれ、プロファイルのテーブル、チャートを更新します。</li>
+            <li><strong>プロファイルの比較:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>比較</span>ボタンをクリックすると、現在表示されているプロファイルのチャートを比較用のチャートとして表示します。新たにプロファイルを読み込むことで2種類のプロファイルを重ねて表示可能です。</li>
+            <li><strong>標準プロファイル機能:</strong> <span style="display:inline-block; padding:2px 6px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;"><span style="margin-right:4px;">📈</span>標準カーブ</span>ボタンをクリックすると、焙煎度に応じたプロの推奨曲線（ターゲットライン）をプロファイルとして読み込みます。</li>
         </ul>
         <section style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.01); border-radius: 8px; border: 1px solid #6f4e37;">
             <h4 style="color: #3d2b1f; border-bottom: 1px solid #444; padding-bottom: 10px;">■ 標準プロファイル機能 (Standard Guide)</h3>
@@ -768,6 +841,14 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                     <td>温度範囲</td>
                     <td>0～1200℃（K型熱電対の対応範囲に準拠）</td> </tr>
                 <tr>
+                <td>温度測定精度</td>
+                <td>±0.25℃ ＋ 熱電対精度</td>
+                </tr>
+                <tr>
+                <td>動作温度範囲</td>
+                <td>0～40℃ </td>
+                </tr>
+                <tr>
                     <td>温度測定周期</td>
                     <td>最速200[ms] （デフォルト1000[ms]）</td> </tr>
                 <tr>
@@ -780,7 +861,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>電源</td>
-                    <td>USB Type-C（5V/500mA）</td>
+                    <td>USB Type-C（5V/500mA以上）</td>
                 </tr>
                 <tr>
                     <td>推奨焙煎容量</td> <td>50～500g（豆の種類やロースターの特性により異なる）</td> </tr>
@@ -789,7 +870,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                     <td>W82mm × D37mm × H13mm</td> </tr>
                 <tr>
                     <td>重量</td>
-                    <td>約30g</td>
+                    <td>約29g</td>
                 </tr>
             </tbody>
         </table>
@@ -806,7 +887,8 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
   
         <h2 id="section-attachment">🎁付録</h2>
         <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド一覧（基本コマンド）</h3>
-        <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。<br></p>
+        <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。<br>
+        </p>
         <table>
             <thead>
                 <tr>
@@ -817,11 +899,11 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
             <tbody>
                 <tr>
                     <td><code>temp on</code></td>
-                    <td>温度表示をONにします。</td>
+                    <td>USBシリアルの温度データ出力をONにします。Artisan用データです。</td>
                 </tr>
                 <tr>
                     <td><code>temp off</code></td>
-                    <td>温度表示をOFFにします。</td>
+                    <td>USBシリアルの温度データ出力をOFFにします。</td>
                 </tr>
                 <tr>
                     <td><code>interval 1000</code></td>
@@ -901,7 +983,8 @@ C:\path_to_arduino\packages\esp32\tools\esptool_py\4.9.dev3/esptool.exe" --chip 
          <ul>
         <li> 環境によってパスは変動します。</li>
         <li> Arduino IDEがインストールされていればesptool.exeは既にインストールされています。</li>
-        <li> 各バイナリファイルは<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からダウンロードしてください。</li>
+        <li> 各バイナリファイルは<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>から"Artisan_sample.ino.bin"をダウンロードしてください。</li>
+        <li> また、<a href="https://adafruit.github.io/Adafruit_WebSerial_ESPTool/">Adafruit WebSerial ESPTool</a>を使用してブラウザからアップデートすることも可能です。（"Artisan_sample.ino.bin"を0x10000のアドレスから書き込んでください）</li>"
         </ul>
         <br>
 
