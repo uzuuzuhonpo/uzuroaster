@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UZU ROASTER コマンド一覧表 | 初心者向けガイド</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary: #dc2626;
+            --accent: #f59e0b;
+            --bg-main: #ffffff;
+            --bg-card: #f9fafb;
+            --bg-hover: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --border-dark: #d1d5db;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* ヘッダー */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 50px 20px 40px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.4rem, 5vw, 3rem);
+            letter-spacing: 3px;
+            color: var(--primary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* セクション */
+        section {
+            margin-bottom: 60px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--text-primary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-dark);
+        }
+
+        h2 .emoji {
+            font-size: 1.6rem;
+        }
+
+        /* イントロ */
+        .intro {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 50px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .intro p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .intro p:last-child {
+            margin-bottom: 0;
+        }
+
+        .intro strong {
+            color: var(--text-primary);
+        }
+
+        .note {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin-top: 15px;
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+
+        /* テーブル */
+        .table-wrapper {
+            background: var(--bg-main);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-card);
+        }
+
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-dark);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            padding: 16px 12px;
+            vertical-align: top;
+        }
+
+        .cmd-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--secondary);
+            background: #fee2e2;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .cmd-example {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--success);
+            background: #d1fae5;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 3px 0;
+        }
+
+        .cmd-desc {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* カテゴリー別の色分け */
+        .category-basic { border-left: 4px solid #10b981; }
+        .category-reset { border-left: 4px solid #f59e0b; }
+        .category-wifi { border-left: 4px solid #3b82f6; }
+        .category-temp { border-left: 4px solid #ef4444; }
+        .category-data { border-left: 4px solid #8b5cf6; }
+        .category-file { border-left: 4px solid #6b7280; }
+        .category-button { border-left: 4px solid #f97316; }
+
+        /* LED説明リスト */
+        .led-patterns {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .led-patterns h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .led-patterns ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .led-patterns li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .led-patterns li:last-child {
+            border-bottom: none;
+        }
+
+        .led-patterns li::before {
+            content: '💡';
+            font-size: 1.2rem;
+        }
+
+        .led-example {
+            background: #fef3c7;
+            border-left: 3px solid var(--accent);
+            padding: 15px 20px;
+            margin-top: 15px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+
+        /* 補足セクション */
+        .supplement {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .supplement h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            margin-top: 25px;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .supplement h3:first-child {
+            margin-top: 0;
+        }
+
+        .supplement ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .supplement li {
+            padding: 10px 0 10px 25px;
+            color: var(--text-secondary);
+            position: relative;
+            line-height: 1.7;
+        }
+
+        .supplement li::before {
+            content: '•';
+            position: absolute;
+            left: 10px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* フッター */
+        footer {
+            margin-top: 80px;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 2px solid var(--border);
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        footer a:hover {
+            border-bottom-color: var(--primary);
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 15px;
+            }
+
+            header {
+                padding: 40px 15px 30px;
+                margin-bottom: 40px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+
+            .cmd-name {
+                font-size: 0.9rem;
+            }
+
+            .intro, .supplement {
+                padding: 20px;
+            }
+        }
+
+        /* 印刷用スタイル */
+        @media print {
+            body {
+                background: white;
+            }
+
+            header {
+                border-bottom: 2px solid #000;
+            }
+
+            .table-wrapper, .intro, .supplement {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>UZU ROASTER コマンドリファレンスガイド</h1>
+            <p class="subtitle">コマンド一覧表</p>
+        </header>
+
+        <div class="intro">
+            <p><strong>📘 はじめに</strong></p>
+            <p>このコマンド一覧表は、UZU ROASTERを操作する際に使用できるコマンドをまとめたものです。コマンドは、USBシリアル通信またはWeb画面（WebSerial）から送信することができます。</p>
+            <div class="note">
+                ※ コマンドを入力する際は、半角英数字で正確に入力してください。大文字・小文字は区別されません。
+                ※ 今後のファームウェアアップデートでコマンドが追加・変更される可能性があります。最新のコマンドは "help" コマンドで確認してください。
+                ※ これらのコマンドはコーヒー焙煎・ミル挽き・抽出コントロールシステムであるUZCS 1.0.0（Universal Zeta Coffee System）プロトコルに一部準拠しています。
+            </div>
+        </div>
+
+        <!-- 基本操作コマンド -->
+        <section>
+            <h2><span class="emoji">🔧</span> 基本操作コマンド</h2>
+            <div class="table-wrapper category-basic">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">help</span></td>
+                            <td><code class="cmd-example">help</code></td>
+                            <td class="cmd-desc">使用可能なコマンドの一覧を表示します。困ったときはこのコマンドで確認できます。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">start</span></td>
+                            <td><code class="cmd-example">start</code></td>
+                            <td class="cmd-desc">温度測定を開始します。USBシリアル経由で経過時間と温度データ（JSON形式）の出力が始まります。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">stop</span></td>
+                            <td><code class="cmd-example">stop</code></td>
+                            <td class="cmd-desc">温度測定を停止します。USBシリアル経由で経過時間と温度データ（JSON形式）の出力が止まります。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- リセット・初期化コマンド -->
+        <section>
+            <h2><span class="emoji">🔄</span> リセット・初期化コマンド</h2>
+            <div class="table-wrapper category-reset">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">reset</span></td>
+                            <td><code class="cmd-example">reset</code></td>
+                            <td class="cmd-desc">UZU ROASTERを再起動します。設定は保持されます。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">reset all</span></td>
+                            <td><code class="cmd-example">reset all</code></td>
+                            <td class="cmd-desc">すべての設定を工場出荷時の状態に戻し、再起動します。Wi-Fi設定などもすべて消去されます。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Wi-Fi設定コマンド -->
+        <section>
+            <h2><span class="emoji">📡</span> Wi-Fi設定コマンド</h2>
+            <div class="table-wrapper category-wifi">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">wifi &lt;on/off&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">wifi on</code><br>
+                                <code class="cmd-example">wifi off</code>
+                            </td>
+                            <td class="cmd-desc">Wi-Fi機能のオン・オフを切り替えます。</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">ssid</span><br>
+                                <span class="cmd-name">ssid &lt;text&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">ssid</code><br>
+                                <code class="cmd-example">ssid MyCoffee</code>
+                            </td>
+                            <td class="cmd-desc">引数なしで実行すると、現在のSSIDを表示します。引数（大文字/小文字/記号/絵文字/各種言語可能）を付けると、Wi-FiのSSID（ネットワーク名）を変更して再起動します。</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">password</span><br>
+                                <span class="cmd-name">password &lt;text&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">password</code><br>
+                                <code class="cmd-example">password 12345678</code>
+                            </td>
+                            <td class="cmd-desc">引数なしで実行すると、パスワードを無効化して再起動します。引数（大文字/小文字/記号）を付けると、Wi-Fiのパスワードを変更して再起動します。パスワードは8文字以上必要です。（パスワードを8文字未満で登録した場合の動作は保証されません）</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">ip &lt;address&gt;</span></td>
+                            <td><code class="cmd-example">ip 192.168.0.100</code></td>
+                            <td class="cmd-desc">固定IPアドレスを設定します。デフォルトは192.168.4.1です。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 温度測定設定コマンド -->
+        <section>
+            <h2><span class="emoji">🌡️</span> 温度測定設定コマンド</h2>
+            <div class="table-wrapper category-temp">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">temp &lt;on/off&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">temp on</code><br>
+                                <code class="cmd-example">temp off</code>
+                            </td>
+                            <td class="cmd-desc">USBシリアル経由での温度データ出力のオン・オフを切り替えます。Artisan連携時に使用します。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">interval &lt;number&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">interval 1000</code><br>
+                                <code class="cmd-example">interval 500</code>
+                            </td>
+                            <td class="cmd-desc">温度データの更新間隔をミリ秒単位で設定します。1000=1秒です。最小200msまで設定可能です。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">digit &lt;number&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">digit 1</code><br>
+                                <code class="cmd-example">digit 2</code>
+                            </td>
+                            <td class="cmd-desc">温度表示の小数点以下の桁数を設定します。0～2の範囲で設定できます。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">prefix &lt;text&gt;</span></td>
+                            <td><code class="cmd-example">prefix TEMP:</code></td>
+                            <td class="cmd-desc">USBシリアル出力時の温度データの前に付ける文字列を設定します。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">suffix &lt;text&gt;</span></td>
+                            <td><code class="cmd-example">suffix °C</code></td>
+                            <td class="cmd-desc">USBシリアル出力時の温度データの後ろに付ける文字列を設定します。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- データ出力・シミュレーションコマンド -->
+        <section>
+            <h2><span class="emoji">📊</span> データ出力・シミュレーションコマンド</h2>
+            <div class="table-wrapper category-data">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">usbserial &lt;on/off&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">usbserial on</code><br>
+                                <code class="cmd-example">usbserial off</code>
+                            </td>
+                            <td class="cmd-desc">JSON形式（時刻と温度）でのUSBシリアル出力を開始・停止します。この設定は再起動後に保持されません。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">simulate &lt;on/off&gt;</span></td>
+                            <td>
+                                <code class="cmd-example">simulate on</code><br>
+                                <code class="cmd-example">simulate off</code>
+                            </td>
+                            <td class="cmd-desc">シミュレーションモードのオン・オフを切り替えます。オンにすると、ダミーの温度データが生成されます。テスト用です。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">echo &lt;message&gt;</span></td>
+                            <td><code class="cmd-example">echo Hello</code></td>
+                            <td class="cmd-desc">指定したメッセージをUSBシリアルに出力します。接続テスト用です。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">echon &lt;number&gt;</span></td>
+                            <td><code class="cmd-example">echon 123</code></td>
+                            <td class="cmd-desc">指定した数値をUSBシリアルに出力します。接続テスト用です。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ファイルシステム操作コマンド -->
+        <section>
+            <h2><span class="emoji">📁</span> ファイルシステム操作コマンド（上級者向け）</h2>
+            <div class="table-wrapper category-file">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">ls</span></td>
+                            <td><code class="cmd-example">ls</code></td>
+                            <td class="cmd-desc">LittleFSファイルシステム内のファイルとディレクトリの一覧を表示します。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">cat &lt;file&gt;</span></td>
+                            <td><code class="cmd-example">cat /index.html</code></td>
+                            <td class="cmd-desc">指定したファイルの内容を表示します。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">rm &lt;file&gt;</span></td>
+                            <td><code class="cmd-example">rm /oldfile.txt</code></td>
+                            <td class="cmd-desc">指定したファイルを削除します。削除したファイルは復元できませんのでご注意ください。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ボタン・LED設定コマンド -->
+        <section>
+            <h2><span class="emoji">🔘</span> ボタン・LED設定コマンド</h2>
+            <div class="table-wrapper category-button">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 50%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="cmd-name">bpress &lt;command&gt;</span></td>
+                            <td><code class="cmd-example">bpress start</code><br><code class="cmd-example">bpress templed on#templed off</code></td>
+                            <td class="cmd-desc">OPTIONボタンを短押ししたときに実行するコマンドを登録します。<br
+                                <strong>【ローテーション機能】</strong><br>
+                                コマンドを「#」で繋ぐことで、最大5個まで登録可能です。ボタンを押すごとに登録した順にコマンドが実行され、最後まで行くと最初に戻ります。<br>
+                                例：<code>bpress cmd1#cmd2#cmd3</code>（1回目でcmd1、2回目でcmd2...）
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">blpress &lt;command&gt;</span></td>
+                            <td><code class="cmd-example">blpress stop</code><br><code class="cmd-example">blpress start#stop#echo hello</code></td>
+                            <td class="cmd-desc">OPTIONボタンを長押し（3秒以上）したときに実行するコマンドを登録します。<br>
+                                短押し同様、「#」を使って最大5個までのコマンドを順番に実行するローテーション設定が可能です
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">templed &lt;on/off&gt;</span></td>
+                            <td><code class="cmd-example">templed on</code><br>
+                            <code class="cmd-example">templed off</code></td>
+                            <td class="cmd-desc">ステータスLEDを使って現在の温度を点滅パターンで表現するモードに移行します。100の位、10の位、1の位の順に点滅します。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="led-patterns">
+                <h3>💡 LED点滅パターン</h3>
+                <ul>
+                    <li><strong>短い点滅（120ms）</strong> = 1</li>
+                    <li><strong>中くらいの点滅（400ms）</strong> = 5</li>
+                    <li><strong>長い点滅（800ms）</strong> = 0</li>
+                </ul>
+                <div class="led-example">
+                    <strong>例：</strong> 128度の場合<br>
+                    → 短い点滅1回（1）→ 桁間インターバル（500ms）→ 短い点滅2回（2）→ 桁間インターバル（500ms）→ 中点滅1回＋短点滅3回（5+3=8）<br>
+                    → 温度間インターバル（1200ms）→ 繰り返し（次の温度の100の位へ）
+                </div>
+            </div>
+        </section>
+
+        <!-- 補足説明 -->
+        <section>
+            <h2><span class="emoji">💡</span> 補足説明</h2>
+            <div class="supplement">
+                <h3>📝 コマンドの入力方法</h3>
+                <ul>
+                    <li><strong>USBシリアル通信：</strong> PCとUZU ROASTERをUSBケーブルで接続し、シリアルモニター（Arduino IDEやTeraTermなど）からコマンドを送信します。</li>
+                    <li><strong>WebSerial：</strong> UZU ROASTERのWebページ（http://192.168.4.1/webserial/）にアクセスし、ブラウザからコマンドを送信します。</li>
+                    <li><strong>USBシリアル通信/WebSerial：</strong> うずロースターコントローラーの設定画面からコマンド送信します。</li>
+                </ul>
+
+                <h3>💾 設定の保存について</h3>
+                <ul>
+                    <li>ほとんどの設定は、UZU ROASTERの内部メモリに保存され、電源を切っても保持されます。</li>
+                    <li>ただし、<code class="cmd-example">usbserial</code>コマンドの設定だけは再起動後に保持されません。</li>
+                </ul>
+
+                <h3>🔧 トラブルシューティング</h3>
+                <ul>
+                    <li>コマンドが反応しない場合は、USBケーブルの接続を確認してください。</li>
+                    <li>Wi-Fi設定を変更した後は、UZU ROASTERが自動的に再起動します。</li>
+                    <li>すべての設定を初期化したい場合は「<code class="cmd-example">reset all</code>」コマンドを使用してください。</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 うずうず本舗 / うずうず珈琲焙煎工房</p>
+            <p>詳細なマニュアルは <a href="uzu_roaster_manual.html" target="_blank">こちら</a> をご覧ください</p>
+        </footer>
+    </div>
+</body>
+</html>

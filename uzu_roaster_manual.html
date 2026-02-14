@@ -233,7 +233,7 @@
 <body>
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
-
+        <div style="text-align: right;"><span>最終更新日: 2026年2月14日　Version 1.0.0</span></div><br>
         <div class="table-of-contents">
             <h2>目次</h2>
             <ul>
@@ -836,7 +836,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>温度センサー</td>
-                    <td>高精度デジタル温度センサー（MAX31855）</td> </tr>
+                    <td>高精度デジタル温度センサー（MAX31855K）</td> </tr>
                 <tr>
                     <td>温度範囲</td>
                     <td>0～1200℃（K型熱電対の対応範囲に準拠）</td> </tr>
@@ -888,6 +888,8 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <h2 id="section-attachment">🎁付録</h2>
         <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド一覧（基本コマンド）</h3>
         <p>WebSerialまたはUSBシリアル通信経由で、UZU ROASTERに対して以下のコマンドを送信し、設定変更や操作を行うことが可能です。<br>
+        </p>
+        <p>詳しくは<a href="uzuroaster_command_reference.html">コマンドリファレンス</a>をご参照ください。</p><br>
         </p>
         <table>
             <thead>
@@ -944,11 +946,12 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
             </tbody>
         </table>
         <p><span style="font-size: 0.9em">（※）これらのコマンドは予告なく変更・追加される可能性があります。最新のコマンドは "help" コマンドで確認してください。</span></p>
+        <p><span style="font-size: 0.9em">（※）これらのコマンドはコーヒー焙煎・ミル挽き・抽出コントロールシステムであるUZCS 1.0.0（Universal Zeta Coffee System）プロトコルに一部準拠しています。</span></p>
         <hr>
 
         <h3 id="section-sensor-specs">📈 温度センサーと表示の仕様</h3>
         <ul>
-            <li><strong>センサー:</strong> Adafruit MAX31855 使用（K型熱電対対応）</li>
+            <li><strong>センサー:</strong> Adafruit MAX31855K 使用（K型熱電対対応）</li>
             <li><strong>平均化処理:</strong> 移動平均（20点、最大最小4点ずつ除外）により、安定した温度値を提供します。</li>
             <li><strong>表示桁数:</strong> 小数第1位まで表示されます。（設定変更可能）</li>
             <li><strong>更新間隔:</strong> USBシリアルのデフォルトは500ms（0.5秒）更新です。Web/USBシリアルコマンドで変更可能です。（最小200ms）<br>

@@ -826,7 +826,7 @@ function configButtonCommand() {
 }
 
 function WebButtonCommand() {
-  window.open("https://uzuuzu.shop", "_blank"); 
+  window.open("https://uzuuzu.shop/uzuroastery/uzuroaster.html", "_blank"); 
 }
 
 function enlargeChart() {
