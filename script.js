@@ -7,7 +7,6 @@ const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
-const UzuRoasterVersionStr = "1.0.0";
 const UzuRoasterControllerVersionStr = "1.0.0";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
@@ -616,7 +615,7 @@ function connectWebSocket() {
   // 81番ポートを指定してWebSocket接続URLを作成
   const currentHost = window.location.hostname;
   if (currentHost == "") {  // ローカルからアクセス
-	  socket = new WebSocket("ws://192.168.4.1:81/"); 
+	  socket = new WebSocket("ws://192.168.4.1:81/");   // デフォルトでアクセスを試す
   }
   else if (currentHost == "uzuuzu.shop") {  
     const websocketUrl = `https://${currentHost}:81/`;
@@ -761,8 +760,7 @@ function USBConnectionAlert() {
 }
 
 function helpButtonCommand() {
-  alert(`UZU ROASTER　Version${UzuRoasterVersionStr}
-うずロースターコントローラー　Version${UzuRoasterControllerVersionStr}
+  alert(`うずロースターコントローラー　Version${UzuRoasterControllerVersionStr}
 
 Developed and Maintained
 うずうず本舗/うずうず珈琲焙煎工房
@@ -771,7 +769,21 @@ Developed and Maintained
 }
 
 function manualButtonCommand() {
-  window.open("uzu_roaster_manual.html", "_blank");
+  if (window.pywebview || USBPort) { 
+    window.open("https://uzuuzu.shop/uzuroastery/demo/uzu_roaster_manual.html", "_blank"); 
+  }
+  // 81番ポートを指定してWebSocket接続URLを作成
+  const currentHost = window.location.hostname;
+  if (currentHost == "") {  // ローカルからアクセス
+    window.open("https://uzuuzu.shop/uzuroastery/demo/uzu_roaster_manual.html", "_blank"); 
+  }
+  else if (currentHost == "uzuuzu.shop") {  
+    window.open("uzu_roaster_manual.html", "_blank");
+  }
+  else {  // ローカルネットワーク（インターネットに繋がってない）
+    window.open("uzu_roaster_manual.html", "_blank");
+  }
+
 }
 
 function ResetButtonCommand() {
@@ -2852,5 +2864,5 @@ function easeInOutQuad(t) {
 }
 
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-// Version.1.0.0
+// Version.1.0.0 2026-02-16
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
