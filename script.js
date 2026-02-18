@@ -7,7 +7,7 @@ const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
-const UzuRoasterControllerVersionStr = "1.0.0";
+const UzuRoasterControllerVersionStr = "1.0.1";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -15,8 +15,6 @@ let isMinutesSecondsFormat = false; // 初期値は秒表示
 let widthOffset = 0; // グラフの幅調整用オフセット
 let maxChartWidth = 1800; // グラフの最大幅
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
-const Version = "UZU ROASTER     Ver. 1.0.0\n\n OKを押すと新しいタブでマニュアルが開きます"
-      + "\n"; // バージョン情報
 window.addEventListener('resize', () => {
   if (roastChart) {
     updateScreen();
@@ -488,9 +486,6 @@ window.onfocus = function() {
 };
 
 function webReconnect() {
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-    return;
-  }
   setTimeout(() => {
     connectWebSocket();
   }, 200);
@@ -611,6 +606,9 @@ function sendDebugCommand() {
 }
 
 function connectWebSocket() {
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
   if (window.pywebview || USBPort) { return; }
   // 81番ポートを指定してWebSocket接続URLを作成
   const currentHost = window.location.hostname;
@@ -626,6 +624,14 @@ function connectWebSocket() {
     socket = new WebSocket(websocketUrl);
   }
 
+  // タブが閉じられる前にクリーンアップ 2026-2-18
+  window.addEventListener('beforeunload', () => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close(1000, "ページ閉鎖による意図的切断");
+  }
+  socket = null;
+
+});
   // イベントハンドラを設定
   socket.onopen = () => {
     updateConnectionStatus(true);
@@ -2862,7 +2868,3 @@ function easeInOutQuad(t) {
     if (t < 1) return 0.5 * t * t;
     return -0.5 * (--t * (t - 2) - 1);
 }
-
-//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-// Version.1.0.0 2026-02-16
-//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
