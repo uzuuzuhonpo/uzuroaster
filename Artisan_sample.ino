@@ -21,7 +21,7 @@
 
 #define MAX_ROAST_TIME  1800
 #define MAX_TEMPERATURE 260
-#define MAX_WIFI_CONNECTION   1 //10  //複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
+#define MAX_WIFI_CONNECTION   10  //複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
 
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -67,6 +67,7 @@ bool LEDTemperatureDisplay = false;
 
 const char StaSsid[] = "";  // デフォルト
 const char StaPass[] = "";  // デフォルト
+String CurrentStaSsid = "";  // 現在の有効なSTA用SSID
 
 // センサーオブジェクト作成
 Adafruit_MAX31855 thermocouple(ThermoCLK_pin, ThermoCS_pin, ThermoDO_pin);
@@ -321,7 +322,7 @@ void LowEnergySetUp(){
   //esp_wifi_set_max_tx_power(40); // 最大78 → 40あたりにすると通信可能距離は短くなるけど省エネ
   setCpuFrequencyMhz(240); // デフォルト240MHz
   // 電力管理（Power Management）を有効にして、アイドル時はLight Sleepに入るように設定
-  esp_pm_config_esp32_t pm_config = {
+  esp_pm_config_esp32_t pm_config = { // 2026.2.19　実際使ってない。　esp_pm_configure(&pm_config); が抜けてる
     .max_freq_mhz = 240,
     .min_freq_mhz = 80,
     .light_sleep_enable = true
@@ -403,10 +404,7 @@ unsigned long randomInterval = 0;
 //////////////////////////////////////////////////////////////////////////
 void handleWiFiReconnection() {
     unsigned long currentMillis = millis();
-    preferences.begin("WiFi", true);
-    String stassid = preferences.getString("stassid", StaSsid);
-    preferences.end();
-    if (stassid == "") return; // SSIDが定義されてなかったら接続しない
+    if (CurrentStaSsid == "") return; // SSIDが定義されてなかったら接続しない
     // 数秒＋ランダム時間に1回、STAモードの健康診断をするで！
     if (currentMillis - lastWifiCheckTime >= wifiCheckInterval + randomInterval) {
         lastWifiCheckTime = currentMillis;
@@ -414,7 +412,7 @@ void handleWiFiReconnection() {
         if (WiFi.status() != WL_CONNECTED) {
             // beginをもう一度呼ぶだけでOK（設定は保持されてる）
             // これでAPモードを維持したまま、裏でこっそり再接続しにいく
-            WiFi.begin(StaSsid, StaPass); 
+            WiFi.begin(CurrentStaSsid, StaPass); 
         } else {
         }
     }
@@ -652,10 +650,7 @@ void CommandProcess(String& command) {
     ESP.restart();
   }
   else if (command == "stassid") {
-    preferences.begin("wifi", true); // 読み取り専用
-    String stassid = preferences.getString("stassid", StaSsid);
-    preferences.end();
-    Serial.println(String("STA SSID: ") + stassid);
+    Serial.println(String("STA SSID: ") + CurrentStaSsid);  // 2026.2.19
   }
   else if (command == "stassidclear") {
     preferences.begin("wifi", false);
@@ -672,10 +667,10 @@ void CommandProcess(String& command) {
     ESP.restart();
   }
   else if (command.startsWith("stassid ")) {
-    String newSsid = command.substring(8);
-    Serial.println("STA SSID: " + newSsid);
+    CurrentStaSsid = command.substring(8);  // 2026.2.19
+    Serial.println("STA SSID: " + CurrentStaSsid);
     preferences.begin("wifi", false);
-    preferences.putString("stassid", newSsid);
+    preferences.putString("stassid", CurrentStaSsid); // 2026.2.19
     preferences.end();
     ESP.restart();
   }
@@ -1050,14 +1045,11 @@ void WiFiSetup() {
   preferences.begin("wifi", true); // 読み取り専用
   String ssid = preferences.getString("ssid", Ssid);
   String pass = preferences.getString("pass", Password);
-  String stassid = preferences.getString("stassid", StaSsid);
+  CurrentStaSsid = preferences.getString("stassid", StaSsid); // 2026.2.19
   String stapass = preferences.getString("stapass", StaPass);
   preferences.end();
-
   WiFi.softAP(ssid, pass, 1, 0, MAX_WIFI_CONNECTION); 
-
-  //WiFi.begin(stassid, stapass);
- 
+  //WiFi.begin(CurrentStaSsid, stapass); // 2026.2.19
   IPAddress my_ip = WiFi.softAPIP();
  
   Serial.print("IP address: ");
@@ -1481,17 +1473,22 @@ void WiFiSetup() {
 void onWiFiEvent(WiFiEvent_t event) {
     switch (event) {
         case ARDUINO_EVENT_WIFI_AP_START:
-        case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
             //Serial.println("AP Mode started.");
 
             webSocket.begin();
             webSocket.onEvent(onWebSocketEvent);
+            webSocket.enableHeartbeat(3000, 1000, 2); // 2026.2.19 added
             dnsServer.start(53, "*", IpAddress_);
 
             ServerObject.begin();
 
             //Serial.println("WebSocket server started.");
             break;
+
+        case ARDUINO_EVENT_WIFI_AP_STACONNECTED:  // 2026.2.19 Separated 
+            Serial.println("Client connected.");
+            break;
+
         case ARDUINO_EVENT_WIFI_AP_STOP:  // ここには来ない。。。
             //Serial.println("AP Mode stopped.");
             webSocket.disconnect(); // 全クライアントを切断
@@ -1500,7 +1497,7 @@ void onWiFiEvent(WiFiEvent_t event) {
             int num = webSocket.connectedClients();
             Serial.print("Station or Client disconnected. Remaining: ");
             Serial.println(num);
-            ESP.restart();  // 2026.2.18 modified 1つのWiFiしかつながないのでWiFi切れたら強制リスタート
+            //ESP.restart();  // 2026.2.18 modified 1つのWiFiしかつながないのでWiFi切れたら強制リスタート
               
               // webSocket.disconnect(); // 全クライアントを切断
               // webSocket.close();
