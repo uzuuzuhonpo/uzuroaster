@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -382,6 +383,7 @@
         <header>
             <h1>UZU ROASTER コマンドリファレンスガイド</h1>
             <p class="subtitle">コマンド一覧表</p>
+            <div width=100% style="text-align:right"><p>Version 1.1.0</p>
         </header>
 
         <div class="intro">
@@ -390,7 +392,7 @@
             <div class="note">
                 ※ コマンドを入力する際は、半角英数字で正確に入力してください。大文字・小文字は区別されません。
                 ※ 今後のファームウェアアップデートでコマンドが追加・変更される可能性があります。最新のコマンドは "help" コマンドで確認してください。
-                ※ これらのコマンドはコーヒー焙煎・ミル挽き・抽出コントロールシステムであるUZCS 1.0.0（Universal Zeta Coffee System）プロトコルに一部準拠しています。
+                ※ これらのコマンドはコーヒー焙煎・ミル挽き・抽出コントロールシステムであるUZCP 1.0.0（Universal Zeta Coffee Protocol）に一部準拠しています。
             </div>
         </div>
 
@@ -422,7 +424,19 @@
                             <td><code class="cmd-example">stop</code></td>
                             <td class="cmd-desc">温度測定を停止します。USBシリアル経由で経過時間と温度データ（JSON形式）の出力が止まります。</td>
                         </tr>
-                    </tbody>
+                       <tr>
+                            <td>
+                                <span class="cmd-name">status</span><br>
+                                <span class="cmd-name">status -h</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">status</code><br>
+                                <code class="cmd-example">status -h</code>
+                            </td>
+                            <td class="cmd-desc">UZU ROASTERの内部状態を表示します。WiFi・温度・LED・ボタンなど主要な設定と現在値を一覧表示します。<br>
+                                <code>status -h</code>ではCPU・メモリ・Flash・FreeRTOSタスクなどハードウェアの詳細情報を表示します。</td>
+                        </tr>                   
+                     </tbody>
                 </table>
             </div>
         </section>
@@ -483,9 +497,12 @@
                             </td>
                             <td>
                                 <code class="cmd-example">ssid</code><br>
-                                <code class="cmd-example">ssid MyCoffee</code>
+                                <code class="cmd-example">ssid MyCoffee</code><br>
+                                <code class="cmd-example">ssid MyCoffee -r</code>
                             </td>
-                            <td class="cmd-desc">引数なしで実行すると、現在のSSIDを表示します。引数（大文字/小文字/記号/絵文字/各種言語可能）を付けると、Wi-FiのSSID（ネットワーク名）を変更して再起動します。</td>
+                            <td class="cmd-desc">APモード時（アドホック接続時）、引数（大文字/小文字/記号/絵文字/各種言語可能）を付けると、Wi-FiのSSID（ネットワーク名）を変更します。引数なしで実行すると、現在のSSIDを表示します。
+                                 末尾に <code>-r</code> を付けると設定後に再起動します。
+                            </td>
                         </tr>
                         <tr>
                             <td>
@@ -494,14 +511,98 @@
                             </td>
                             <td>
                                 <code class="cmd-example">password</code><br>
-                                <code class="cmd-example">password 12345678</code>
+                                <code class="cmd-example">password 12345678</code><br>
+                                <code class="cmd-example">password 12345678 -r</code>
                             </td>
-                            <td class="cmd-desc">引数なしで実行すると、パスワードを無効化して再起動します。引数（大文字/小文字/記号）を付けると、Wi-Fiのパスワードを変更して再起動します。パスワードは8文字以上必要です。（パスワードを8文字未満で登録した場合の動作は保証されません）</td>
+                            <td class="cmd-desc">APモード時（アドホック接続時）、引数（大文字/小文字/記号）を付けると、Wi-Fiのパスワードを変更します。引数なしで実行すると、パスワードを無効化します。
+                                 末尾に <code>-r</code> を付けると設定後に再起動します。パスワードは8文字以上必要です。（パスワードを8文字未満で登録した場合の動作は保証されません）</td>
                         </tr>
                         <tr>
                             <td><span class="cmd-name">ip &lt;address&gt;</span></td>
                             <td><code class="cmd-example">ip 192.168.0.100</code></td>
-                            <td class="cmd-desc">固定IPアドレスを設定します。デフォルトは192.168.4.1です。</td>
+                            <td class="cmd-desc">APモード時（アドホック接続時）の固定IPアドレスを設定します。デフォルトは192.168.4.1です。引数なしで実行すると、現在のIPアドレスを表示します。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">staip</span></td>
+                            <td><code class="cmd-example">staip</code></td>
+                            <td class="cmd-desc">STAモード（ルーター接続）時のIPアドレスを表示します。ルーター経由でUZU ROASTERにアクセスしたい場合に確認してください。</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">stassid &lt;text&gt;</span><br>
+                                <span class="cmd-name">stassidclear</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">stassid MyRouter</code><br>
+                                <code class="cmd-example">stassid MyRouter -r</code><br>
+                                <code class="cmd-example">stassidclear</code>
+                            </td>
+                            <td class="cmd-desc">接続先のルーターSSIDを設定します。設定するとUZU ROASTERがルーターに接続されます（AP+STAモード）。 末尾に <code>-r</code> を付けると設定後に再起動します。
+                                <code>stassidclear</code>で設定をクリアします。</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">stapassword</span><br>
+                                <span class="cmd-name">stapassword &lt;text&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">stapassword</code><br>
+                                <code class="cmd-example">stapassword 12345678</code><br>
+                                <code class="cmd-example">stapassword 12345678 -r</code>
+                            </td>
+                            <td class="cmd-desc">接続先ルーターのパスワードを設定します。引数なしで実行すると、パスワードを無効化します。末尾に <code>-r</code> を付けると設定後に再起動します。</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">wifiscan</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">wifiscan</code>
+                            </td>
+                            <td class="cmd-desc">
+                                周辺のWiFiネットワークをスキャンします。<br>
+                                <code>wifiscan</code>でスキャンを開始し、SSIDと電波強度（dBm）が表示されます。数値が大きいほど電波が強くなります。<br>
+                                例：<code>0: MyRouter (-45dBm)</code> ← 電波強い / <code>1: Neighbor (-85dBm)</code> ← 電波弱い
+                            </td>
+                        </tr>
+                       <tr>
+                            <td>
+                                <span class="cmd-name">wifimode &lt;ap/sta&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">wifimode ap</code><br>
+                                <code class="cmd-example">wifimode sta</code>
+                            </td>
+                            <td class="cmd-desc">WiFiの動作モードを切り替えて再起動します。<br>
+                                <code>wifimode ap</code>：APモード（アドホック接続）に切り替えます。スマホやPCから直接UZU ROASTERのWiFiに接続する通常の使い方です。<br>
+                                <code>wifimode sta</code>：STAモード（ルーター接続）に切り替えます。家庭のルーター経由でUZU ROASTERにアクセスしたい場合に使用します。事前に<code>stassid</code>と<code>stapassword</code>の設定が必要です。<br>
+                                ⚠️ モード切り替え後は再起動が行われます。STAモード時のIPアドレスは<code>staip</code>コマンド、またはLED表示（<code>ipled</code>）で確認してください。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">maxwifi &lt;number&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">maxwifi 1</code><br>
+                                <code class="cmd-example">maxwifi 4</code>
+                            </td>
+                            <td class="cmd-desc">APモード時に同時接続できるWiFiクライアントの最大数を設定します。デフォルトは1です。<br>
+                                複数のデバイスから同時にアクセスしたい場合に増やしてください。設定後は再起動が必要です。<br>
+                                ⚠️ 接続数を増やすとESP32のメモリ消費が増加したり、安定性が低下する可能性があります。自己責任でご使用ください。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">wifilog &lt;on/off&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">wifilog on</code><br>
+                                <code class="cmd-example">wifilog off</code>
+                            </td>
+                            <td class="cmd-desc">ESP32内部のWiFiシステムログの表示を切り替えます。デフォルトはoffです。<br>
+                                WiFi接続のトラブルシューティング時にonにすると詳細なログが確認できます。通常使用時はoffを推奨します。
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -670,23 +771,51 @@
                             <td><span class="cmd-name">templed &lt;on/off&gt;</span></td>
                             <td><code class="cmd-example">templed on</code><br>
                             <code class="cmd-example">templed off</code></td>
-                            <td class="cmd-desc">ステータスLEDを使って現在の温度を点滅パターンで表現するモードに移行します。100の位、10の位、1の位の順に点滅します。</td>
+                            <td class="cmd-desc">ステータスLEDを使って現在の温度を点滅パターンで表現するモードに移行します。100の位、10の位、1の位の順に点滅します。
+                                <code>ipled</code>とは排他動作です。（ <code>ipled</code>はオフになります）</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="cmd-name">ipled</span><br>
+                                <span class="cmd-name">ipled &lt;on/off&gt;</span>
+                            </td>
+                            <td>
+                                <code class="cmd-example">ipled</code><br>
+                                <code class="cmd-example">ipled on</code><br>
+                                <code class="cmd-example">ipled off</code>
+                            </td>
+                            <td class="cmd-desc">
+                                ステータスLEDを使って、現在のIPアドレスを点滅パターンで表示します。<br>
+                                STAモード接続中はルーターから割り当てられたIPを、未接続時はAPのIP（192.168.4.1）を表示します。<br>
+                                4つのオクテット（xxx.xxx.xxx.xxx）を順番に点滅し、オクテット間は長い休止で区切られます。<br>
+                                <code>templed</code>とは排他動作です。（ <code>templed</code>はオフになります）
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="led-patterns">
-                <h3>💡 LED点滅パターン</h3>
+                <h3>💡 LED点滅パターン（共通）</h3>
                 <ul>
                     <li><strong>短い点滅（120ms）</strong> = 1</li>
                     <li><strong>中くらいの点滅（400ms）</strong> = 5</li>
                     <li><strong>長い点滅（800ms）</strong> = 0</li>
                 </ul>
                 <div class="led-example">
-                    <strong>例：</strong> 128度の場合<br>
+                    <strong>【templed】例：</strong> 128度の場合<br>
                     → 短い点滅1回（1）→ 桁間インターバル（500ms）→ 短い点滅2回（2）→ 桁間インターバル（500ms）→ 中点滅1回＋短点滅3回（5+3=8）<br>
-                    → 温度間インターバル（1200ms）→ 繰り返し（次の温度の100の位へ）
+                    → 温度間インターバル（1200ms）→ 繰り返し
+                    ※ 99以下でも100の位が0として点滅し、必ず3桁表示されます
+                    ※ 桁の輝度で位を識別：100の位=明るい / 10の位=中 / 1の位=暗い
+                </div>
+                <div class="led-example" style="margin-top:10px;">
+                    <strong>【ipled】例：</strong> IPアドレス 192.168.1.103 の場合<br>
+                    → 短い点滅1回 → 短い区切り → 中くらいの点滅1回＋短い点滅4回 → 短い区切り → 短い点滅2回（192） → 長い区切り<br>
+                    → 短い点滅1回 → 短い区切り → 中くらいの点滅1回＋短い点滅1回 → 短い区切り → 中くらいの点滅1回＋短い点滅3回（168） → 長い区切り<br>
+                    → 長い点滅1回 → 短い区切り → 長い点滅1回 → 短い区切り → 短い点滅1回（001）→ 長い区切り<br>
+                    → 短い点滅1回 → 短い区切り → 長い点滅1回 → 短い区切り → 短い点滅3回（103）<br>
+                    → 3秒休止 → 繰り返し<br>
                 </div>
             </div>
         </section>

@@ -1,32 +1,30 @@
-#include <iostream>
+#define WEBSOCKETS_SERVER_CLIENT_MAX 16  // デフォルト4　ゾンビ対策で保険として
+#define MAX_ROAST_TIME  1800
+#define MAX_TEMPERATURE 260
+#define MAX_WIFI_CONNECTION   1 //10  //デフォルト。複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
+#define ELEGANTOTA_USE_ASYNC_WEBSERVER 1 // OTAアップデート用(実際はElegantoTA.hのdefineを書き換える必要あり)
+
 #include <deque>
 #include <esp_wifi.h>
 #include <WiFi.h>
-#include <WiFiGeneric.h>
+#include <ElegantOTA.h>
 #include <ESP32Servo.h>  
-#include <FS.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <WebSocketsServer.h>
 #include <DNSServer.h>
-#include <SPI.h>
 #include "Adafruit_MAX31855.h"
 #include "esp_pm.h"
 #include <Preferences.h> 
 #include <WebSerial.h>
-#include <deque>
 #include <vector>
 #include <algorithm>
 #include <ArduinoJson.h>
 
-#define MAX_ROAST_TIME  1800
-#define MAX_TEMPERATURE 260
-#define MAX_WIFI_CONNECTION   10  //複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
-
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
 //////////////////////////////////////////////////////////////////////////
-const String version = "1.0.1";
+const String version = "1.1.0";
 TaskHandle_t taskHandle;
 AsyncWebServer ServerObject(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -43,14 +41,18 @@ const int SerialBaudRate = 115200;
 const int bootButtonPin = 0;  // BOOTボタンはGPIO0
 std::vector<std::pair<double, double>> roastProfile;
 
+double lastValidTemp = 20.0; // 前回の正常値を保存
+int tempErrorCount = 0;
+const double DEVIATION_TEMP = 10.0;
+
 int TemperatureInterval = 500; // [ms]
 int TemperatureDigit = 1; // 小数桁
 String Prefix = "";
 String Suffix = "";
 double SimulateCount = 0.0;
 bool TempDisplay = true;
-bool webSocketConnected = false;
-
+bool webSocketConnected = false;  // 2026.2.20
+bool wifiConnected = false;
 unsigned long lastSendTime = 0;
 bool roasting = false;
 int roastTime = 0;
@@ -58,16 +60,18 @@ int counterx = 0;
 double RoastData[MAX_ROAST_TIME];
 int IPAddressMemory[4] = { 192, 168, 4, 1 };  // デフォルトのUZU ROASTER IPアドレス
 // 🔑 Wi-Fi設定
-const char Ssid[] = "UZU-ROASTER";  // デフォルト
-const char Password[] = ""; // デフォルト
+const String Ssid = "UZU-ROASTER";  // デフォルト
+const String Password = ""; // デフォルト
 IPAddress IpAddress_; 	// 後で設定可能
 const IPAddress SubNet(255, 255, 255, 0); 	
 bool UsbSerial = false;
 bool LEDTemperatureDisplay = false;
+bool LEDIPDisplay = false;  // IPアドレスをLEDで表示するモード
 
-const char StaSsid[] = "";  // デフォルト
-const char StaPass[] = "";  // デフォルト
+const String StaSsid = "";  // デフォルト
+const String StaPass = "";  // デフォルト
 String CurrentStaSsid = "";  // 現在の有効なSTA用SSID
+String CurrentStaPassword = "";  // 現在の有効なSTA用Password
 
 // センサーオブジェクト作成
 Adafruit_MAX31855 thermocouple(ThermoCLK_pin, ThermoCS_pin, ThermoDO_pin);
@@ -179,9 +183,7 @@ public:
 #define T_G 120     // OFF期間
 #define T_D 500     // 桁と桁の休止期間
 #define T_C 1200    // 3桁のひとくくりの休止期間
-
-//【2. 共有変数】
-volatile int currentTempForLED = 0;
+#define T_STAIP 3000    // STA IPのひとくくりの休止期間
 
 //【3. ローマ数字テーブル】
 const int romanTable[10][6] = {
@@ -197,34 +199,56 @@ const int romanTable[10][6] = {
 {T_V, T_I, T_I, T_I, T_I, 0} // 9
 };
 
-//【4. タスク本体】
+// 3桁の数値をLEDでローマ数字点滅表示する共通関数
+// brightness: LEDの明るさ（桁ごとに変えると桁の区別がしやすい）
+void displayThreeDigitsOnLED(int value, int brightness = 255) {
+  int dgs[3] = { (value / 100) % 10, (value / 10) % 10, value % 10 };
+  for (int i = 0; i < 3; i++) {
+    int bright = 0;
+    switch (i) {
+      case 0: bright = 255; break;  // 桁によって明るさ変える
+      case 1: bright = 200; break;  
+      case 2: bright = 120;  break;  
+      case 3: bright = 90;  break;  
+    }
+    for (int p = 0; p < 6; p++) {
+      int d = romanTable[dgs[i]][p];
+      if (d == 0) break;
+      ledcWrite_(2, bright);
+      vTaskDelay(pdMS_TO_TICKS(d));
+      ledcWrite_(2, 0);
+      vTaskDelay(pdMS_TO_TICKS(T_G));
+    }
+    vTaskDelay(pdMS_TO_TICKS(T_D));  // 桁間の休止
+  }
+  vTaskDelay(pdMS_TO_TICKS(T_C));  // 3桁ひとくくりの休止
+}
+
+// IPアドレスの1オクテットをLEDで表示する
+// オクテットは最大3桁なのでdisplayThreeDigitsOnLEDをそのまま流用
+void displayIPOnLED(IPAddress ip) {
+  for (int octet = 0; octet < 4; octet++) {
+    displayThreeDigitsOnLED(ip[octet]);
+    if (LEDIPDisplay == false) break; // モードが変わったらキャンセルしてすぐに温度表示に変更
+  }
+  vTaskDelay(pdMS_TO_TICKS(T_STAIP));
+}
+
 void TemperatureDisplayTask(void *pvParameters) {
   while (true) {
-    int temp = AverageTemperature;
-    int dgs[3] = { (temp/100)%10, (temp/10)%10, temp%10 };
-    for (int i=0; i<3; i++) {
-      for (int p=0; p<6; p++) {
-        int d = romanTable[dgs[i]][p];
-        if (d == 0) break;
-        if (LEDTemperatureDisplay) { // LEDに温度情報を表示
-          int brightness = 0;
-          switch (i) {
-            case 0: brightness = 255; break;
-            case 1: brightness = 180; break;
-            case 2: brightness = 80; break;
-            default: brightness = 255; break;
-          }
-          ledcWrite_(2, brightness); // brightnessは0〜255
-          //ControlLED(true);
-          vTaskDelay(pdMS_TO_TICKS(d));
-          ledcWrite_(2, 0); // brightnessは0〜255
-          //ControlLED(false);
-          vTaskDelay(pdMS_TO_TICKS(T_G));
-        }
-      }
-      vTaskDelay(pdMS_TO_TICKS(T_D));
+    if (LEDIPDisplay) {
+      // IPアドレス表示モード
+      IPAddress ip = WiFi.localIP();  // STAのIP
+      displayIPOnLED(ip);
     }
-    vTaskDelay(pdMS_TO_TICKS(T_C));
+    else if (LEDTemperatureDisplay) {
+      // 温度表示モード（既存の動作）
+      displayThreeDigitsOnLED((int)AverageTemperature);
+    }
+    else {
+      // どちらもOFFの時はタスクをスリープ
+      vTaskDelay(pdMS_TO_TICKS(500));
+    }
   }
 }
 
@@ -375,8 +399,17 @@ void setup() {
   
   preferences.begin("function", true);
   LEDTemperatureDisplay = preferences.getBool("ledtemp", false);
+  LEDIPDisplay = preferences.getBool("ledip", false);
+  bool wifiLog = preferences.getBool("wifi_log", false);  // デフォルトでWiFiエラー出さない
   preferences.end();
-  Serial.println("Version: " + version);
+  if (wifiLog) {
+    esp_log_level_set("wifi", ESP_LOG_WARN);  // これ設定してもエラーが表示されない。wifilogコマンドでONにすると出る（ちょっと時間おかないといけない？）
+  }
+  else {
+    esp_log_level_set("wifi", ESP_LOG_NONE);
+  }
+
+ Serial.println("Version: " + version);
 
     // オプションボタンの登録
   preferences.begin("function", true);
@@ -398,37 +431,22 @@ void ControlLED(bool onoff){
   }
 }
 
-unsigned long lastWifiCheckTime = 0;
-const unsigned long wifiCheckInterval = 3000; // 3秒ごとに生存確認
-unsigned long randomInterval = 0;
-//////////////////////////////////////////////////////////////////////////
-void handleWiFiReconnection() {
-    unsigned long currentMillis = millis();
-    if (CurrentStaSsid == "") return; // SSIDが定義されてなかったら接続しない
-    // 数秒＋ランダム時間に1回、STAモードの健康診断をするで！
-    if (currentMillis - lastWifiCheckTime >= wifiCheckInterval + randomInterval) {
-        lastWifiCheckTime = currentMillis;
-        randomInterval = random(0, 1001);
-        if (WiFi.status() != WL_CONNECTED) {
-            // beginをもう一度呼ぶだけでOK（設定は保持されてる）
-            // これでAPモードを維持したまま、裏でこっそり再接続しにいく
-            WiFi.begin(CurrentStaSsid, StaPass); 
-        } else {
-        }
-    }
-}
-
 //////////////////////////////////////////////////////////////////////////
 void loop() {
   PollSerial();
-  //handleWiFiReconnection();
   webSocket.loop();
-
+  ElegantOTA.loop();  // 2026.2.23
   delay(10);
   counterx++;
 
+  wifiConnected = (WiFi.status() == WL_CONNECTED) || (WiFi.softAPgetStationNum() >= 1); // 2026.2.20 STAmode
+  //wifiConnected = (WiFi.softAPgetStationNum() >= 1); // 2026.2.20
   statusLEDProc();
   readBootButton();
+
+  if (!(wifiConnected || /* webSocketConnected || */ UsbSerial)) {  // 2026.2.20 WiFi接続が解除されたらroastingもオフ
+    roasting = false;
+  }
 
   if ((counterx % 300) == 0) {
     sendMessage("KEEP_ALIVE");  // 3秒毎にキープアライブを送信
@@ -493,19 +511,16 @@ void ledcWrite_(int pin, int brightness) {
 
 //////////////////////////////////////////////////////////////////////////
 void statusLEDProc() {
-  if (LEDTemperatureDisplay){
+  if (LEDTemperatureDisplay || LEDIPDisplay){
     //  TemperatureDisplayTaskでLEDを制御する
     return;
   }
 
   if (roasting == true) {
-    // 【高速点滅】 160ms周期でチカチカ（元のロジック維持）
+    // 【高速点滅】 160ms周期でチカチカ
     ledcWrite_(2, ((counterx % 16) < 8) ? 255 : 0);
   }
-  else if (webSocketConnected || UsbSerial) {
-    // 【ふんわり点滅】 1500ms（1.5秒）周期で呼吸
-    // 150カウントで1周期。sin関数を使うと計算が重いから、
-    // 「三角波（上がって下がるだけ）」で代用するのが軽量
+  else if (wifiConnected || /* webSocketConnected || */ UsbSerial) {  // 2026.2.20 WebSocket接続からWiFi接続でLED点灯に変更
     int phase = counterx % 200; 
     int brightness = 0;
     if (phase < 100) {
@@ -572,6 +587,8 @@ void CommandProcess(String& command) {
       preferences.putInt("address1", IPAddressMemory[1]);
       preferences.putInt("address2", IPAddressMemory[2]);
       preferences.putInt("address3", IPAddressMemory[3]);
+      preferences.putBool("wifi_log", false);
+      preferences.putInt("maxwifi", MAX_WIFI_CONNECTION);
       preferences.end();
       Serial.println(String("SSID: ") + Ssid);
       Serial.println(String("Password: ") + Password);
@@ -602,6 +619,7 @@ void CommandProcess(String& command) {
       preferences.putString("bpress", "templed on#templed off");
       preferences.putString("blpress", "reset");
       preferences.putBool("ledtemp", false);
+      preferences.putBool("ledip", false);
       preferences.end();
       delay(100);     
     }
@@ -621,84 +639,158 @@ void CommandProcess(String& command) {
     preferences.end();
     Serial.println(String("SSID: ") + ssid);
   }
-  else if (command == "password") {
-    String newPass = "";
-    Serial.println("Password: No Password");
-    preferences.begin("wifi", false);
-    preferences.putString("pass", newPass);
-    preferences.end();
-    ESP.restart();
-  }
   else if (command.startsWith("ssid ")) {
-    String newSsid = command.substring(5);
-    Serial.println("SSID: " + newSsid);
+    str = command.substring(5);
+    str.trim();
+    bool doRestart = false;
+    if (str.endsWith(" -r")) {
+        doRestart = true;
+        str = str.substring(0, str.length() - 3);
+        str.trim();
+    }
+    Serial.println("SSID: " + str);
     preferences.begin("wifi", false);
-    preferences.putString("ssid", newSsid);
+    preferences.putString("ssid", str);
     preferences.end();
-    ESP.restart();
+    if (doRestart) {
+        ESP.restart();
+    }
   }
-  else if (command.startsWith("password ")) {
-    String newPass = command.substring(9);
-    if (newPass.length() < 8 && newPass.length() > 0) {
+  else if (command == "password" || command.startsWith("password ")) {
+    str = (command.length() > 9) ? command.substring(9) : "";
+    str.trim();
+    
+    bool doRestart = false;
+    if (str == "-r") {
+        // password -r → クリアしてリスタート
+        doRestart = true;
+        str = "";
+    } else if (str.endsWith(" -r")) {
+        // password 12345678 -r
+        doRestart = true;
+        str = str.substring(0, str.length() - 3);
+        str.trim();
+    }
+    
+    if (str.length() < 8 && str.length() > 0) {
         Serial.println("Error: Password must be at least 8 characters!");
         return;
     }
-    Serial.println("Password: " + newPass);
+    
+    if (str == "") {
+        Serial.println("Password: No Password");
+    } else {
+        Serial.println("Password: " + str);
+    }
+    
     preferences.begin("wifi", false);
-    preferences.putString("pass", newPass);
+    preferences.putString("pass", str);
     preferences.end();
-    ESP.restart();
+    
+    if (doRestart) {
+        ESP.restart();
+    }
   }
   else if (command == "stassid") {
     Serial.println(String("STA SSID: ") + CurrentStaSsid);  // 2026.2.19
   }
-  else if (command == "stassidclear") {
+  else if (command.startsWith("stassidclear")) {
     preferences.begin("wifi", false);
     preferences.putString("stassid", StaSsid);  // デフォルトに設定
+    preferences.putString("stapass", StaPass);  // デフォルトに設定
     preferences.end();
-    Serial.println(String("STA SSID: ") + StaSsid);
-  }
-  else if (command == "stapassword") {
-    String newPass = "";
-    Serial.println("Password: No Password");
-    preferences.begin("wifi", false);
-    preferences.putString("stapass", newPass);
-    preferences.end();
-    ESP.restart();
+    Serial.println(String("STA SSID:"));
+    CurrentStaSsid = StaSsid; 
+    CurrentStaPassword = StaPass; 
+    str = command.substring(12);
+    if (str.endsWith(" -r")) {
+      ESP.restart();
+    }
   }
   else if (command.startsWith("stassid ")) {
-    CurrentStaSsid = command.substring(8);  // 2026.2.19
+    str = command.substring(8);
+    str.trim();
+    bool doRestart = false;
+    if (str.endsWith(" -r")) {
+        doRestart = true;
+        str = str.substring(0, str.length() - 3);
+        str.trim();
+    }
+    CurrentStaSsid = str;
     Serial.println("STA SSID: " + CurrentStaSsid);
     preferences.begin("wifi", false);
-    preferences.putString("stassid", CurrentStaSsid); // 2026.2.19
+    preferences.putString("stassid", CurrentStaSsid);
     preferences.end();
+    if (doRestart) {
+        ESP.restart();
+    }
+  }
+  else if (command == "stapassword" || command.startsWith("stapassword ")) {
+    str = (command.length() > 12) ? command.substring(12) : "";
+    str.trim();
+    bool doRestart = false;
+    if (str == "-r") {
+        doRestart = true;
+        str = "";
+    } else if (str.endsWith(" -r")) {
+        // stapassword mypass12 -r
+        doRestart = true;
+        str = str.substring(0, str.length() - 3);
+        str.trim();
+    }
+    if (str.length() < 8 && str.length() > 0) {
+      Serial.println("Error: Password must be at least 8 characters!");
+      return;
+    }
+    if (str == "") {
+      Serial.println("STA Password: No Password");
+    } else {
+      Serial.println("STA Password: " + str);
+    }
+    preferences.begin("wifi", false);
+    preferences.putString("stapass", str);
+    preferences.end();
+    CurrentStaPassword = str;
+    if (doRestart) {
+      ESP.restart();
+    }
+  }
+  else if (command == "wifimode") {
+    preferences.begin("wifi", true);
+    String str = preferences.getString("wifimode", "ap");  
+    preferences.end();
+    str.toUpperCase();
+    Serial.println((String)"WiFi: " + str + (String)" mode.");
+  }
+  else if (command == "wifimode sta") {
+    preferences.begin("wifi", false);
+    preferences.putString("wifimode", "sta");  // STAモードで起動するよう保存
+    preferences.end();
+    Serial.println("WiFi: STA mode after restart.");
+    delay(100);
     ESP.restart();
   }
-  else if (command.startsWith("stapassword ")) {
-    String newPass = command.substring(12);
-    if (newPass.length() < 8 && newPass.length() > 0) {
-        Serial.println("Error: Password must be at least 8 characters!");
-        return;
-    }
-    Serial.println("STA Password: " + newPass);
+  else if (command == "wifimode ap") {
     preferences.begin("wifi", false);
-    preferences.putString("stapass", newPass);
+    preferences.putString("wifimode", "ap");   // APモードで起動するよう保存
     preferences.end();
-    ESP.restart();
+    Serial.println("WiFi: AP mode after restart.");
+    delay(100);
+    ESP.restart(); 
   }
   else if (command == "temp on") {
-      Serial.println("Temperature display ON.");
-      TempDisplay = true;
-      preferences.begin("temperature", false);
-      preferences.putBool("temp_display", TempDisplay);
-      preferences.end();
+    Serial.println("Temperature display ON.");
+    TempDisplay = true;
+    preferences.begin("temperature", false);
+    preferences.putBool("temp_display", TempDisplay);
+    preferences.end();
   }
   else if (command == "temp off") {
-      Serial.println("Temperature display OFF.");
-      TempDisplay = false;
-      preferences.begin("temperature", false);
-      preferences.putBool("temp_display", TempDisplay);
-      preferences.end();
+    Serial.println("Temperature display OFF.");
+    TempDisplay = false;
+    preferences.begin("temperature", false);
+    preferences.putBool("temp_display", TempDisplay);
+    preferences.end();
   }
   else if (command.startsWith("interval ")) {
     str = command.substring(9);       // "temp "の後ろを取得
@@ -901,28 +993,211 @@ void CommandProcess(String& command) {
     str = command.substring(8);
     if (str == "on") {
       LEDTemperatureDisplay = true;
+      LEDIPDisplay = false;  // STA IP表示とは排他
+      Serial.println("LED Temperature Display: ON");
     }
     else if (str == "off") {
       LEDTemperatureDisplay = false;
+      Serial.println("LED Temperature Display: OFF");
     }
     preferences.begin("function", false);
     preferences.putBool("ledtemp", LEDTemperatureDisplay);
+    preferences.putBool("ledip", LEDIPDisplay);
     preferences.end();
-    Serial.println(String("LED Temperature Display: ") + str);
+  }
+  else if (command.startsWith("maxwifi ")) {
+    str = command.substring(8);
+    str.trim();                          // 前後の空白や改行を削除
+    value = str.toInt();                 // 数値に変換
+    preferences.begin("wifi", false);
+    preferences.putInt("maxwifi", value);
+    preferences.end();
+    Serial.println("Max WiFi: " + str);
+    delay(100);
+    ESP.restart();
+  }
+  else if (command.startsWith("ipled ")) {
+    str = command.substring(6);
+    if (str == "on") {
+      LEDIPDisplay = true;
+      LEDTemperatureDisplay = false;  // 温度表示とは排他
+      Serial.println("LED IP Display: ON");
+    }
+    else if (str == "off") {
+      LEDIPDisplay = false;
+      Serial.println("LED IP Display: OFF");
+    }
+    preferences.begin("function", false);
+    preferences.putBool("ledtemp", LEDTemperatureDisplay);
+    preferences.putBool("ledip", LEDIPDisplay);
+    preferences.end();
+  }
+  else if (command == "wifiscan") {
+    Serial.println("Scanning WiFi networks...");
+    int n = WiFi.scanNetworks(false, true);  // false=ブロッキング, true=隠しSSIDも表示
+    if (n == WIFI_SCAN_FAILED) {
+        Serial.println("Scan failed.");
+    } else if (n == 0) {
+        Serial.println("No networks found.");
+    } else {
+        Serial.println(String(n) + " networks found:");
+        for (int i = 0; i < n; i++) {
+            Serial.println(String(i) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + "dBm)");
+        }
+    }
+    WiFi.scanDelete();
   }
   else if (command == "status") {
-    Serial.println("Version: " + version);
+    preferences.begin("wifi", true);
+    String ssid      = preferences.getString("ssid", Ssid);
+    String stassid   = preferences.getString("stassid", "");
+    bool   wifiLog   = preferences.getBool("wifi_log", false);
+    int   max_wifi   = preferences.getInt("maxwifi", MAX_WIFI_CONNECTION);
+    preferences.end();
+
+    preferences.begin("temperature", true);
+    int  interval = preferences.getInt("interval", TemperatureInterval);
+    int  digit    = preferences.getInt("digit", TemperatureDigit);
+    String prefix = preferences.getString("prefix", "");
+    String suffix = preferences.getString("suffix", "");
+    bool tempDisp = preferences.getBool("temp_display", true);
+    preferences.end();
+
+    preferences.begin("function", true);
+    String bpress  = preferences.getString("bpress", "");
+    String blpress = preferences.getString("blpress", "");
+    preferences.end();
+
+    Serial.println("========== UZU ROASTER STATUS ==========");
+    // システム
+    Serial.println("[System]");
+    Serial.println("  Version       : " + version);
+    // WiFi
+    Serial.println("[WiFi]");
+    Serial.println("  AP SSID       : " + ssid);
+    Serial.println("  AP IP         : " + WiFi.softAPIP().toString());
+    Serial.println("  AP Clients    : " + String(WiFi.softAPgetStationNum()));
+    Serial.println("  STA SSID      : " + (stassid == "" ? "(none)" : stassid));
+    Serial.println("  STA IP        : " + (WiFi.localIP().toString() == "0.0.0.0" ? "(not connected)" : WiFi.localIP().toString()));
+    Serial.println("  STA Status    : " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected"));
+    Serial.println("  WiFi log      : " + String(wifiLog ? "on" : "off"));
+    Serial.println("  Max WiFis     : " + String(max_wifi));
+    // 温度
+    Serial.println("[Temperature]");
+    Serial.println("  Current temp  : " + String(AverageTemperature, TemperatureDigit) + " C");
+    Serial.println("  Temp display  : " + String(tempDisp ? "on" : "off"));
+    Serial.println("  Interval      : " + String(interval) + " ms");
+    Serial.println("  Digit         : " + String(digit));
+    Serial.println("  Prefix        : " + (prefix == "" ? "(none)" : prefix));
+    Serial.println("  Suffix        : " + (suffix == "" ? "(none)" : suffix));
+    // 焙煎
+    Serial.println("[Roasting]");
+    Serial.println("  Roasting      : " + String(roasting ? "yes" : "no"));
+    Serial.println("  Roast time    : " + String(roastTime) + " sec");
+    Serial.println("  Simulate      : " + String(SimulateCount > 0 ? "on" : "off"));
+    // LED
+    Serial.println("[LED]");
+    Serial.println("  Temp LED      : " + String(LEDTemperatureDisplay ? "on" : "off"));
+    Serial.println("  IP LED        : " + String(LEDIPDisplay ? "on" : "off"));
+    // ボタン
+    Serial.println("[Button]");
+    Serial.println("  Short press   : " + (bpress == "" ? "(none)" : bpress));
+    Serial.println("  Long press    : " + (blpress == "" ? "(none)" : blpress));
+    Serial.println("========================================");
+  }
+  else if (command.startsWith("wifilog ")) {  // 非公開コマンド
+    str = command.substring(8);
+    if (str == "off") {
+        esp_log_level_set("wifi", ESP_LOG_NONE);
+        preferences.begin("wifi", false);
+        preferences.putBool("wifi_log", false);
+        preferences.end();
+        Serial.println("WiFi log suppressed.");
+    }
+    else if (str == "on") {
+        esp_log_level_set("wifi", ESP_LOG_WARN);
+        preferences.begin("wifi", false);
+        preferences.putBool("wifi_log", true);
+        preferences.end();
+        Serial.println("WiFi log restored.");
+    }
+  }
+  else if (command == "status -h") {
+    Serial.println("========== HARDWARE STATUS ==========");
+    // CPU
+    Serial.println("[CPU]");
+    Serial.println("  CPU freq      : " + String(getCpuFrequencyMhz()) + " MHz");
+    Serial.println("  CPU0 (APP)    : " + String(xPortGetCoreID()) + " (current core)");
+    Serial.println("  XTAL freq     : " + String(getXtalFrequencyMhz()) + " MHz");
+    Serial.println("  APB freq      : " + String(getApbFrequency() / 1000000) + " MHz");
+    // メモリ
+    Serial.println("[Memory]");
+    Serial.println("  Free heap     : " + String(ESP.getFreeHeap()) + " bytes");
+    Serial.println("  Min free heap : " + String(ESP.getMinFreeHeap()) + " bytes");
+    Serial.println("  Max alloc     : " + String(ESP.getMaxAllocHeap()) + " bytes");
+    Serial.println("  PSRAM size    : " + String(ESP.getPsramSize()) + " bytes");
+    Serial.println("  Free PSRAM    : " + String(ESP.getFreePsram()) + " bytes");    
+    // Flash
+    Serial.println("[Flash]");
+    Serial.println("  Flash size    : " + String(ESP.getFlashChipSize()) + " bytes");
+    Serial.println("  Flash speed   : " + String(ESP.getFlashChipSpeed() / 1000000) + " MHz");
+    Serial.println("  Sketch size   : " + String(ESP.getSketchSize()) + " bytes");
+    Serial.println("  Free sketch   : " + String(ESP.getFreeSketchSpace()) + " bytes");
+    // LittleFS
+    Serial.println("[LittleFS]");
+    Serial.println("  Total         : " + String(LittleFS.totalBytes()) + " bytes");
+    Serial.println("  Used          : " + String(LittleFS.usedBytes()) + " bytes");
+    Serial.println("  Free          : " + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + " bytes");
+    // FreeRTOS
+    Serial.println("[FreeRTOS]");
+    Serial.println("  Tick count    : " + String(xTaskGetTickCount()));
+    Serial.println("  Task count    : " + String(uxTaskGetNumberOfTasks()));
+    Serial.println("  Stack(loop)   : " + String(uxTaskGetStackHighWaterMark(NULL)) + " bytes remaining");
+    Serial.println("  Stack(temp)   : " + String(uxTaskGetStackHighWaterMark(taskHandle)) + " bytes remaining");
+    // チップ情報
+    Serial.println("[Chip]");
+    Serial.println("  Chip model    : " + String(ESP.getChipModel()));
+    Serial.println("  Chip rev      : " + String(ESP.getChipRevision()));
+    Serial.println("  Chip cores    : " + String(ESP.getChipCores()));
+    Serial.println("  MAC address   : " + WiFi.macAddress());
+    Serial.println("  SDK version   : " + String(ESP.getSdkVersion()));
+    // リセット情報
+    Serial.println("[Reset]");
+    Serial.println("  Uptime        : " + String(millis() / 1000) + " sec");
+    Serial.println("[GPIO]");
+    Serial.println("  GPIO0  (BOOT)  : " + String(digitalRead(0)));
+    Serial.println("  GPIO2  (LED)   : " + String(digitalRead(2)));
+    Serial.println("  GPIO5  (CS)    : " + String(digitalRead(5)));
+    Serial.println("  GPIO14 (SERVO) : " + String(digitalRead(14)));
+    Serial.println("  GPIO18 (CLK)   : " + String(digitalRead(18)));
+    Serial.println("  GPIO19 (DO)    : " + String(digitalRead(19)));    Serial.println("[Sensor]");
+    Serial.println("[Temperature]");
+    Serial.println("  Raw temp      : " + String(thermocouple.readCelsius()));
+    Serial.println("  Internal temp : " + String(thermocouple.readInternal()));
+    Serial.println("  Sensor error  : " + String(thermocouple.readError()));
+    Serial.println("  Error count   : " + String(tempErrorCount));
+    Serial.println("  Last valid    : " + String(lastValidTemp));
+    Serial.println("[WebSocket]");
+    Serial.println("  Connected clients : " + String(webSocket.connectedClients()));
+    Serial.println("  WS connected  : " + String(webSocketConnected ? "yes" : "no"));
+    Serial.println("==========================================");
   }
   else if (command == "help") {
     Serial.println("Available commands:");
     Serial.println("reset             - Resets the system and reboots.");
     Serial.println("reset all         - Resets to factory settings.");
     Serial.println("wifi <on/off>     - Enables or disables WiFi.");
-    Serial.println("ssid <text>       - Sets SSID (or displays current SSID if <text> is empty).");
-    Serial.println("password <text>   - Sets WiFi password or clears it if <text> is empty.(Password must be 8 characters or more.)");
-    Serial.println("stassid <text>    - Sets STA SSID (or displays current STA SSID if <text> is empty).");
-    Serial.println("stassidclear      - Sets STA SSID default (empty).");
-    Serial.println("stapassword <text>- Sets STA password or clears it if <text> is empty.(Password must be 8 characters or more.)");
+    Serial.println("ssid <text>       - Sets SSID (or displays current SSID if <text> is empty). Add '-r' at the end to restart.");
+    Serial.println("                    e.g.) ssid MyRouter / ssid MyRouter -r");
+    Serial.println("password <text>   - Sets WiFi password or clears it if <text> is empty. Add '-r' at the end to restart.");
+    Serial.println("                    Password must be 8 characters or more.");
+    Serial.println("                    e.g.) password mypass12 / stapassword mypass12 -r");
+    Serial.println("stassid <text>    - Sets STA SSID. Add '-r' at the end to restart.");
+    Serial.println("                    e.g.) stassid MyRouter / stassid MyRouter -r");
+    Serial.println("stassidclear      - Clears STA SSID, STA password and restarts.");
+    Serial.println("stapassword <text>- Sets STA password or clears it if <text> is empty. Add '-r' at the end to restart.");
+    Serial.println("                    Password must be 8 characters or more.");
+    Serial.println("                    e.g.) stapassword mypass12 / stapassword mypass12 -r");
     Serial.println("temp <on/off>     - Enables or disables temperature output via USB-Serial.");
     Serial.println("interval <number> - Sets temperature display interval [ms].");
     Serial.println("digit <number>    - Sets temperature decimal places [0-2].");
@@ -931,7 +1206,8 @@ void CommandProcess(String& command) {
     Serial.println("echo <message>    - Prints <message> for testing via USB-Serial.");
     Serial.println("echon <number>    - Prints <number> for testing via USB-Serial.");
     Serial.println("simulate <on/off> - Enables or disables simulation mode (generates dummy data).");
-    Serial.println("ip <address>      - Sets a static IP Address (e.g.) ip 192.168.0.1) or displays IP Address if <address> is empty.");
+    Serial.println("ip <address>      - Sets a static IP Address or displays IP Address if <address> is empty.");
+    Serial.println("                  - e.g.) ip 192.168.0.1)");
     Serial.println("staip             - Displays STA IP Address.");
     Serial.println("ls                - Lists files and directories in LittleFS.");
     Serial.println("cat <file>        - Displays the contents of the specified file.");
@@ -950,7 +1226,18 @@ void CommandProcess(String& command) {
     Serial.println("                    [How to Read Example: 128 degrees]");
     Serial.println("                    1st: 120ms(1) -> 2nd: 120msx2(2) -> 3rd: 400ms(5)+120msx3(3)");
     Serial.println("                    (There is a short pause between each digit.)");
+    Serial.println("ipled <on/off>    - Displays STA IP Address using LED blinks.");
+    Serial.println("                    Each octet is shown in sequence (Roman numeral style):");
+    Serial.println("                    - 120ms (Short)  : Represents '1'");
+    Serial.println("                    - 400ms (Medium) : Represents '5'");
+    Serial.println("                    - 800ms (Long)   : Represents '0'");
+    Serial.println("                    Long pause between octets.");
+    Serial.println("wifiscan          - Scans for available WiFi networks.");
     Serial.println("status            - Displays UZU ROASTER status.");
+    Serial.println("status -h         - Displays hardware status.");
+    Serial.println("wifilog <on/off>  - Displays wifi system log.");
+    Serial.println("wifimode <ap/sta> - changes WiFi mode(AP or STA) and restarts.");
+    Serial.println("maxwifi <number>  - Sets maximum WiFi connection(AP mode).");
     Serial.println("help              - Displays this help menu.");
   }
   else {
@@ -1023,40 +1310,46 @@ void WiFiOff() {
 
 //////////////////////////////////////////////////////////////////////////
 void WiFiSetup() {
-  // Wi-Fiイベントハンドラの登録
   WiFi.onEvent(onWiFiEvent);
-  
-  //WiFi.mode(WIFI_AP_STA); 
-  WiFi.mode(WIFI_AP); 
   preferences.begin("wifi", true); // 読み取り専用
   IPAddressMemory[0] = preferences.getInt("address0", IPAddressMemory[0]);
   IPAddressMemory[1] = preferences.getInt("address1", IPAddressMemory[1]);
   IPAddressMemory[2] = preferences.getInt("address2", IPAddressMemory[2]);
   IPAddressMemory[3] = preferences.getInt("address3", IPAddressMemory[3]);
+  String ssid = preferences.getString("ssid", Ssid);
+  String pass = preferences.getString("pass", Password);
+  CurrentStaSsid = preferences.getString("stassid", StaSsid); 
+  CurrentStaPassword = preferences.getString("stapass", StaPass);
+  String wifimode = preferences.getString("wifimode", "ap");  // デフォルトはAP
+  int max_wifi = preferences.getInt("maxwifi", MAX_WIFI_CONNECTION);
   preferences.end();
 
-  IpAddress_ = IPAddress(IPAddressMemory[0], IPAddressMemory[1], IPAddressMemory[2], IPAddressMemory[3]);
-  WiFi.softAPConfig(IpAddress_, IpAddress_, SubNet);
-  delay(100);
+  ElegantOTA.begin(&ServerObject);  // 2026.2.23
+
+  if (wifimode == "sta") {  // STA mode
+    WiFi.mode(WIFI_STA);
+    if (CurrentStaSsid != "") {
+      WiFi.begin(CurrentStaSsid, CurrentStaPassword); 
+      ServerObject.begin();  // ← 追加！
+      webSocket.begin();     // ← 追加！
+      webSocket.onEvent(onWebSocketEvent);
+      webSocket.enableHeartbeat(10000, 3000, 3);
+    }
+  } else {  // AP mode
+    WiFi.mode(WIFI_AP);
+    IpAddress_ = IPAddress(IPAddressMemory[0], IPAddressMemory[1], IPAddressMemory[2], IPAddressMemory[3]);
+    WiFi.softAPConfig(IpAddress_, IpAddress_, SubNet);
+    WiFi.softAP(ssid, pass, 1, 0, max_wifi); 
+  }
 
   WebSerial.begin(&ServerObject);
   WebSerial.onMessage(WebReceiveMsg);
 
-  preferences.begin("wifi", true); // 読み取り専用
-  String ssid = preferences.getString("ssid", Ssid);
-  String pass = preferences.getString("pass", Password);
-  CurrentStaSsid = preferences.getString("stassid", StaSsid); // 2026.2.19
-  String stapass = preferences.getString("stapass", StaPass);
-  preferences.end();
-  WiFi.softAP(ssid, pass, 1, 0, MAX_WIFI_CONNECTION); 
-  //WiFi.begin(CurrentStaSsid, stapass); // 2026.2.19
   IPAddress my_ip = WiFi.softAPIP();
- 
   Serial.print("IP address: ");
   Serial.println(my_ip.toString());
   Serial.print("SSID(AP): ");
   Serial.println(ssid);
- 
    // エンドポイント登録（非同期の形式）
    String path = "/" + TemperaturePath;
   ServerObject.on(path.c_str(), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -1474,14 +1767,11 @@ void onWiFiEvent(WiFiEvent_t event) {
     switch (event) {
         case ARDUINO_EVENT_WIFI_AP_START:
             //Serial.println("AP Mode started.");
-
             webSocket.begin();
             webSocket.onEvent(onWebSocketEvent);
-            webSocket.enableHeartbeat(3000, 1000, 2); // 2026.2.19 added
+            webSocket.enableHeartbeat(10000, 3000, 3); // 2026.2.19 added 
             dnsServer.start(53, "*", IpAddress_);
-
             ServerObject.begin();
-
             //Serial.println("WebSocket server started.");
             break;
 
@@ -1537,9 +1827,6 @@ double ReadThermoCouple() {
   return temp;
 }
 
-double lastValidTemp = 20.0; // 前回の正常値を保存
-int tempErrorCount = 0;
-const double DEVIATION_TEMP = 10.0;
 //////////////////////////////////////////////////////////////////////////
 double ReadThermoCoupleWithGuard() {
     double raw = ReadThermoCouple();

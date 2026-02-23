@@ -7,7 +7,7 @@ const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 
-const UzuRoasterControllerVersionStr = "1.0.1";
+const UzuRoasterControllerVersionStr = "1.1.0";
 let roastChart = null;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
@@ -15,6 +15,7 @@ let isMinutesSecondsFormat = false; // 初期値は秒表示
 let widthOffset = 0; // グラフの幅調整用オフセット
 let maxChartWidth = 1800; // グラフの最大幅
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
+
 window.addEventListener('resize', () => {
   if (roastChart) {
     updateScreen();
@@ -299,7 +300,7 @@ function USBInitialize(){
           while (true) {
               const { value, done } = await reader.read();
               if (done) break;
-              let debmsg = document.getElementById('receivemessagearea').value + "USB:" + value;
+              let debmsg = document.getElementById('receivemessagearea').value + value;
               debmsb = debmsg.slice(-5000); // テキストエリアの文字数制限
               document.getElementById('receivemessagearea').value =  debmsg;
               buffer += value;
@@ -485,16 +486,55 @@ window.onfocus = function() {
   //webReconnect();
 };
 
+// 状態遷移管理（遅延メッセージ対策）
+const RoastState = {
+    IDLE: 'idle',
+    STARTING: 'starting',
+    ROASTING: 'roasting',
+    STOPPING: 'stopping'
+};
+let roastState = RoastState.IDLE;
+let stateTimer = null;
+const STATE_TIMEOUT = 3000;
+
+////////////////////////////////////////////////////////////////
+function setRoastState(newState) {
+    roastState = newState;
+    clearTimeout(stateTimer);
+    if (newState === RoastState.STARTING || newState === RoastState.STOPPING) {
+        stateTimer = setTimeout(() => {
+            console.warn("State timeout: " + newState);
+            roastState = (newState === RoastState.STARTING) 
+                ? RoastState.IDLE 
+                : RoastState.ROASTING;
+        }, STATE_TIMEOUT);
+    }
+}
+
+////////////////////////////////////////////////////////////////
 function webReconnect() {
   setTimeout(() => {
     connectWebSocket();
   }, 200);
 }
 
+////////////////////////////////////////////////////////////////
 function receiveWebMessage(data) {
   const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
   const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
+
   if ("time" in data && "temp" in data) {
+    if ((data.time > -1) && !isRoasting) { // 現在の焙煎時間が0秒以上なら他のクライアントが既にスタートしているのでスタート状態にしてグラフを更新する
+      if (roastState === RoastState.STOPPING) return; // 遅延メッセージ無視！
+      setRoastState(RoastState.ROASTING);
+      executeStartCommand();
+    }
+    else if (data.time < 0 && isRoasting) { // 現在の焙煎時間が-1秒なら焙煎が終了しているのでストップ状態にしてグラフを更新する
+      if (roastState === RoastState.STARTING) return; // 遅延メッセージ無視！
+      setRoastState(RoastState.IDLE);
+      executeStopCommand();
+    }
+
     if (data.time > -1 && isRoasting) {
       document.getElementById('roast_message').textContent = "焙煎中";
 
@@ -545,9 +585,10 @@ function receiveWebMessage(data) {
       sendStopCommand();
     }
     updateChartDsiaplayValue();  
-  }  
+  } 
 }
 
+////////////////////////////////////////////////////////////////
 function ResetKeepAliveTimer() {
   if (window.pywebview || USBPort) { return; }
   if (keepAliveTimeout) {     
@@ -662,7 +703,7 @@ function connectWebSocket() {
   
   socket.onmessage = (event) => {
     try {
-      let debmsg = document.getElementById('receivemessagearea').value + "WEB:" + event.data;
+      let debmsg = document.getElementById('receivemessagearea').value + event.data;
       debmsb = debmsg.slice(-5000); // テキストエリアの文字数制限
       document.getElementById('receivemessagearea').value =  debmsg;
       const data = JSON.parse(event.data);
@@ -690,9 +731,12 @@ function connectWebSocket() {
   };
 }
 
+////////////////////////////////////////////////////////////////
 function generateUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
+
+////////////////////////////////////////////////////////////////
 function SetRoastingState(flag) {
     isRoasting = flag;
 	  document.getElementById('stop-button').disabled = !flag;
@@ -722,10 +766,10 @@ document.addEventListener('keydown', function(event) {
           else {
             button = document.getElementById('stop-button');
           }
-            if (button) {
-                button.click(); // ボタンのクリックイベントをプログラム的に発火
-                event.preventDefault(); // スペースキーのデフォルト動作（スクロールなど）をキャンセル
-            }
+          if (button) {
+              button.click(); // ボタンのクリックイベントをプログラム的に発火
+              event.preventDefault(); // スペースキーのデフォルト動作（スクロールなど）をキャンセル
+          }
         }
     }
 });
@@ -948,6 +992,7 @@ function sendStartCommand() {
   LiveData = [];
 	sortTable();
   applyOffsetsToTable(); // テーブルのオフセットを適用  
+  setRoastState(RoastState.STARTING); 
   if (window.pywebview && window.pywebview.api) {
     if (isUSBConnected == false) {
       USBConnectionAlert();
@@ -968,90 +1013,49 @@ function sendStartCommand() {
   const id = sendWebCommand("start");
   console.log("スタートコマンド送信");
   executeStartCommand();
+}
 
-  // return new Promise((resolve, reject) => {
-  //   const timeout = setTimeout(() => {
-  //     pendingResponses.delete(id);
-  //     alert("焙煎スタートがタイムアウトしました。\nWiFi接続を確認してください。");
-  // 		SetRoastingState(false);
-  //     reject(new Error("タイムアウト"));
-  //   }, 3000); 
+////////////////////////////////////////////////////////////////
+function executeStartCommand(){
+  document.getElementById('roast_message').textContent = "焙煎中";
+  roastChart.destroy();
+  initChart();
+  updateChartWithProfile(getProfileDataFromTable());
+  SetRoastingState(true);
 
-  //   pendingResponses.set(id, (response) => {
-  //     clearTimeout(timeout);
-  //     if (response.status === "ok") {
-  //       console.log("焙煎スタートACK受信", response);
-  //       executeStartCommand();
-  //       resolve(response);
-  //     } 
-  //     else {
-  //       alert("焙煎スタートに失敗しました。\nWiFi接続を確認してください。\nスタート失敗:" + response.message);
-  // 		  SetRoastingState(false);
-  //       reject(new Error("スタート失敗: " + response.message));
-  //     }
-  //   });
-  // });
-
-  function executeStartCommand(){
-    document.getElementById('roast_message').textContent = "焙煎中";
-    roastChart.destroy();
-    initChart();
-    updateChartWithProfile(getProfileDataFromTable());
-    SetRoastingState(true);
-
-    isCompareProfileShown = false;
-    document.getElementById('button-copy-profile').textContent = "📈 比較プロファイル表示";
-  }
+  isCompareProfileShown = false;
+  document.getElementById('button-copy-profile').textContent = "📈 比較プロファイル表示";
 }
 
 ////////////////////////////////////////////////////////////////
 function sendStopCommand() {
-  SetRoastingState(false);
-  HideChartIndicators();
+  setRoastState(RoastState.STOPPING); 
   if (window.pywebview && window.pywebview.api) {
     if (isUSBConnected == false) {
       USBConnectionAlert();
     }
-    window.pywebview.api.send_command("stop");
     executeStopCommand();
+    window.pywebview.api.send_command("stop");
     return;
   }
   else if( USBPort) {
     if (isUSBConnected == false) {
       USBConnectionAlert();
     }
-    USBWrite("stop\n");
     executeStopCommand();
+    USBWrite("stop\n");
     return;
   }
-
+  executeStopCommand();
   const id = sendWebCommand("stop");
   console.log("ストップコマンド送信");
-  executeStopCommand();
-  
-  // return new Promise((resolve, reject) => {
-  //   const timeout = setTimeout(() => {
-  //     pendingResponses.delete(id);
-  //     alert("焙煎ストップがタイムアウトしました。\nWiFi接続を確認してください。");
-  //     reject(new Error("タイムアウト"));
-  //   }, 3000); // 3秒でタイムアウトする
+}
 
-  //   pendingResponses.set(id, (response) => {
-  //     clearTimeout(timeout);
-  //     if (response.status === "ok") {
-  //       executeStopCommand();  
-  //       resolve(response);
-  //     } else {
-  //       alert("焙煎ストップに失敗しました。\nWiFi接続、うずロースターの電源を確認してください。\nストップ失敗:" + response.message);
-  //       reject(new Error("ストップ失敗: " + response.message));
-  //     }
-  //   });
-  // });
-
-  function executeStopCommand(){
-    document.getElementById('roast_message').textContent = "焙煎を停止しました";
-  }
- 
+////////////////////////////////////////////////////////////////
+function executeStopCommand(){
+  SetRoastingState(false);
+  HideChartIndicators();
+  document.getElementById('roast_message').textContent = "焙煎を停止しました";
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1091,58 +1095,6 @@ function ShowChartIndicators() {
     dashLine.style.display = 'block'; 
   }   
 }
-
-/*
-function sendProfileInBatches(profileData) {
-  const BATCH_SIZE = 100;
-  const totalBatches = Math.ceil(profileData.length / BATCH_SIZE);
-  const id = generateUniqueId();
-
-  return new Promise(async (resolve, reject) => {
-    let batchIndex = 0;
-
-    const sendNextBatch = () => {
-      if (batchIndex >= totalBatches) return;
-
-      const start = batchIndex * BATCH_SIZE;
-      const batch = profileData.slice(start, start + BATCH_SIZE);
-
-      const message = {
-        command: "generic",
-        id: id,
-        type: "profile_upload_batch",
-        part: batchIndex,
-        isLast: batchIndex === totalBatches - 1,
-        profile: batch
-      };
-
-      sendSafe(message);
-
-      const timeout = setTimeout(() => {
-        pendingResponses.delete(`${id}_${batchIndex}`);
-        reject(new Error(`バッチ ${batchIndex} のACKが来てません`));
-      }, 3000);
-
-      pendingResponses.set(`${id}_${batchIndex}`, (response) => {
-        clearTimeout(timeout);
-        if (response.status === "ok") {
-          batchIndex++;
-          if (batchIndex === totalBatches) {
-            resolve(response); // 最後まで完了！
-            document.getElementById('roast_message').textContent = "プロファイルをアップロードしました";
-          } else {
-            sendNextBatch(); // 次へ
-          }
-        } else {
-          reject(new Error(`アップロード失敗: ${response.message}`));
-        }
-      });
-    };
-
-    sendNextBatch();
-  });
-}
-*/
 
 const UZU_PRESETS = {
   light: {
@@ -1472,7 +1424,8 @@ function updateConnectionStatus(isConnected) {
     connectionLabel.innerHTML = '<span class="status_no_connection_text">未接続</span>';
   }
 }
-    
+ 
+////////////////////////////////////////////////////////////////
 function downloadJSON() {
   const table = document.getElementById('profileTable');
   const rows = Array.from(table.rows).slice(1);
@@ -2012,10 +1965,7 @@ function chartAreaInitialize() {
     });
   }
   const displayMappings = {
-      // 'roast_temperature_area': 'currentTemp', 温度表示エリアはクリック無効
-      // 'roast_ror_area': 'currentRoR',
-      // 'profile_temperature_area': 'profileTemp',
-      // 'profile_ror_area': 'profileRoR',
+      // 温度表示エリアはクリック無効
       'currentTime': 'currentTime',
       'currentTemp': 'currentTemp',
       'currentRoR': 'currentRoR',
@@ -2130,16 +2080,9 @@ const smartAIIndicatorPlugin = {
     const currentTemp = latestLivePoint.y;
 
     const targetTemp = getInterpolatedProfileTemp(getProfileDataFromTable(), currentTime);
-    //const targetRoR = getInterpolatedProfileRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
     const targetRoR = calculateRoR(getProfileDataFromTable(), currentTime); // 目標RoRを取得
     const currentRoR = calculateRoR(liveTempDataset.data); 
     const acceleration = calculateAcceleration(liveTempDataset.data, 30, 60); // 加速度を取得
-
-    // if (targetTemp === null || targetRoR === null) {
-    //     ctx.restore();
-    //     return;
-    // }
-
     const tempDifference = currentTemp - targetTemp;
     const indicatorColor = getColorForTemperatureDifference(tempDifference); // ここで透明度を調整しない
     const indicatorRadius = getRadiusForTemperatureDifference(tempDifference);
