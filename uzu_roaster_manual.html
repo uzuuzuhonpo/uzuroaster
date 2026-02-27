@@ -228,12 +228,38 @@
                 padding: 0px;
             }
         }
+            .connection-box {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+            }
+            .connection-diagram {
+                font-family: monospace;
+                background: #2d3748;
+                color: #a0aec0;
+                padding: 15px;
+                border-radius: 6px;
+                text-align: center;
+                margin: 10px 0;
+            }
+            .diagram-highlight {
+                color: #63b3ed;
+                font-weight: bold;
+            }
+            .warning-text {
+                color: #e53e3e;
+                font-size: 0.9em;
+                font-weight: bold;
+            }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
-        <div style="text-align: right;"><span>最終更新日: 2026年2月14日　Version 1.１.0</span></div><br>
+        <div style="text-align: right;"><span>最終更新日: 2026年2月26日　Version 1.１.1</span></div><br>
         <div class="table-of-contents">
             <h2>目次</h2>
             <ul>
@@ -396,13 +422,46 @@
         <h2 id="section-preparation">🚀 準備と接続</h2>
         <ol>
             <li>
-                <h3>K型熱電対の接続:</h3>
+                <h3>K型熱電対の接続について</h3>
                 <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
                 <ul>
                     <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）</li>
                     <li><strong>U型の端子等、接続不能な端子形状の場合:</strong> お手数ですが追加工して形状を合わせてください。</li>
                     <li><strong>熱電対の設置:</strong> 熱電対は、焙煎対象となるロースターや鍋にしっかりと組み込んでください。</li>
                 </ul>
+            </li>
+            <li>
+                <h3>USB接続方法と電源について</h3>
+                <p>UZU ROASTERは、多様なデバイスとの接続に対応していますが、USB-Cの規格上、接続方法に一部制限があります。以下のガイドを確認し、正しく接続してください。</p>
+
+                <div class="connection-box">
+                    <h4>A. パソコン（USB-Aポート）と接続する場合 <span style="font-size: 0.7em; background: #48bb78; color: white; padding: 2px 8px; border-radius: 4px;">推奨</span></h4>
+                    <p>最も安定した接続方法です。データの読み取りおよびプログラムの書き込みが可能です。</p>
+                    <div class="connection-diagram">
+                        [PC USB-A] ── <span class="diagram-highlight">A to C ケーブル</span> ── [UZU ROASTER]
+                    </div>
+                </div>
+                <div class="connection-box">
+                    <h3>B. スマートフォン / USB-C搭載PC と接続する場合</h3>
+                    <p>スマートフォン、USB-C搭載PC等をUZU ROASTERと接続する場合は、<strong>「OTG変換アダプタ」</strong>、<strong>「USBハブ」</strong>を必ずご使用ください。（スターターキットに同梱されています）</p>
+                    <div class="connection-diagram">
+                        [スマホ] ── <span class="diagram-highlight">OTGアダプタ[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
+                    </div>
+                    <p class="warning-text">※変換アダプタは必ず「スマートフォン/PC」側に接続してください。UZU ROASTER本体側に接続すると給電されません。</p>
+                    <div class="connection-diagram">
+                        [USB-C搭載PC] ── <span class="diagram-highlight">USB-HUB[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
+                    </div>
+                    <p class="warning-text">※ホスト側がUSB-Cでデバイス側がUSB-AタイプのUSBハブをご使用ください。</p>
+                </div>
+
+                <div class="tip">
+                    <h4>❓ 電源（OP LED）が点灯しない場合</h4>
+                    <ul>
+                        <li><strong>ケーブルの相性：</strong>一般的な「両端がUSB-Cのケーブル（C to C）」では、安全回路が働き給電されない場合があります。その場合は上記 <b>A</b> または <b>B</b> の方法をお試しください。</li>
+                        <li><strong>逆挿しの確認：</strong>変換アダプタを使用している場合、挿入箇所を端末側と本体側で入れ替えてみてください。</li>
+                        <li><strong>充電専用ケーブル：</strong>一部の「充電専用（データ通信不可）」ケーブルでも動作しますが、ログ等の通信は行えません。</li>
+                    </ul>
+                </div>
             </li>
         </ol>
 
@@ -448,7 +507,10 @@
             <li><strong>Windowsの場合:</strong><br>
                 <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank">https://www.wch.cn/downloads/CH341SER_ZIP.html</a> から「CH340 USBシリアルドライバ」をダウンロードし、PCにインストールしてください。</li>
             <li><strong>Artisanが動作する他のOS（macOS/Linuxなど）の場合:</strong><br>
-                お使いのOSに対応するCH340 USBシリアルドライバを別途インストールしてください。</li>
+                お使いのOSに対応するCH340 USBシリアルドライバを別途インストールしてください。<br>
+                例えば、macOSの場合は以下からドライバがダウンロード可能です。<br>
+                <a href="https://www.acebott.com/ja/docs/download-ch340-driver-on-mac-system/" target="_blank">https://www.acebott.com/ja/docs/download-ch340-driver-on-mac-system/</a>
+            </li>
         </ul>
 
         <h3 id="subsection-artisan-settings">⚙️ 3. Artisanの設定手順:</h3>
@@ -467,7 +529,7 @@
         <h4>【シリアルポート構成】</h4>
         <ul>
             <li><code>ポート</code>: UZU ROASTERが接続されているCOMポートを指定します。<br>
-                （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code> など）</li>
+                （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code>、<code>/dev/cu.usbserial-XXXX</code> など）</li>
             <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER側と合わせてください）</li>
             <li><code>データ長</code>: <code>8</code></li>
             <li><code>パリティビット</code>: <code>N</code></li>
@@ -589,8 +651,21 @@
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold;">Linux PC</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome / Python</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">（各環境）</td>
-                        <td style="padding: 8px; border: 1px solid #cbd5e0;">Wi-Fi / USB</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">Wi-Fi / USBシリアル</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">-</td>
+                    </tr>
+                    <tr style="background: #fdf0f6;">
+                        <td rowspan="2" style="padding: 8px; border: 1px solid #e0a7c2; font-weight: bold;">macOS PC</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome/Safari</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZU ROASTER (192.168.4.1)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold; color: #dd6b20;">Wi-Fi</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
+                    </tr>
+                    <tr style="background: #fdf0f6;">
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome/Safari</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">ローカルファイル (file://)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight:bold; color: #dd6b20;">Wi-Fi</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
                     </tr>
                 </tbody>
             </table>
@@ -773,7 +848,7 @@
                     <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>： チャートへの記録を停止します。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が解除される事があります）</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">⇄</span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>： Webアプリ使用時に、WiFiではなくUSB接続でUZU ROASTERに接続します。</li>
+                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>： Webアプリ使用時に、Wi-FiではなくUSB接続でUZU ROASTERに接続します。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">設定</span>： デバッグコンソールの表示/非表示を切り替えます。</li>
                     <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">マニュアル</span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
                 </ul>

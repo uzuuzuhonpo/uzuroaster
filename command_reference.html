@@ -383,7 +383,7 @@
         <header>
             <h1>UZU ROASTER コマンドリファレンスガイド</h1>
             <p class="subtitle">コマンド一覧表</p>
-            <div width=100% style="text-align:right"><p>Version 1.1.0</p>
+            <div width=100% style="text-align:right"><p>Version 1.1.1</p>
         </header>
 
         <div class="intro">
@@ -443,7 +443,7 @@
 
         <!-- リセット・初期化コマンド -->
         <section>
-            <h2><span class="emoji">🔄</span> リセット・初期化コマンド</h2>
+            <h2><span class="emoji">🔄</span> リセット・初期化・システムコマンド</h2>
             <div class="table-wrapper category-reset">
                 <table>
                     <thead>
@@ -463,6 +463,14 @@
                             <td><span class="cmd-name">reset all</span></td>
                             <td><code class="cmd-example">reset all</code></td>
                             <td class="cmd-desc">すべての設定を工場出荷時の状態に戻し、再起動します。Wi-Fi設定などもすべて消去されます。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">lowenergy</span></td>
+                            <td><code class="cmd-example">lowenergy on</code><br>
+                                <code class="cmd-example">lowenergy off</code>
+                            </td>
+                            <td class="cmd-desc">低消費電力モードを有効にします。このモードでは、CPUの動作周波数を落としたりWi-Fiの出力を抑制して
+                                消費電力を抑えることができます。</td>
                         </tr>
                     </tbody>
                 </table>

@@ -1114,6 +1114,32 @@
       display: flex;
     }
   </style>
+  <!-- Firebase SDK (compat版) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script>
+    // ★ ここにFirebaseConfigを貼り付ける
+    const firebaseConfig = {
+      apiKey: "AIzaSyAL8pCMT-dGp5JmL-KbV_4B99Qk2V_H_lE",
+      authDomain: "uzu-roaster.firebaseapp.com",
+      projectId: "uzu-roaster",
+      storageBucket: "uzu-roaster.firebasestorage.app",
+      messagingSenderId: "847212224832",
+      appId: "1:847212224832:web:e77eb2881354935e7d1aa5",
+      measurementId: "G-XSNR62XRT3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    window._firebaseDb   = firebase.firestore();
+    window._firebaseAuth = firebase.auth();
+
+    // ログイン状態の監視
+    window._firebaseAuth.onAuthStateChanged(user => {
+      window._currentUser = user;
+      updateAuthUI(user);
+    });
+  </script>
 </head>
 <body>
 
@@ -1138,9 +1164,49 @@
     <textarea id="jsonInput" class="modal-textarea font-size-16" placeholder='{"roast_data": [...]}'></textarea>
     <div id="profileList" style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #444;">
     </div>
+    <div style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
+      <button class="modal-button" style="width:100%; background:#1a3a2a;" onclick="openCloudBrowser()">☁️ クラウドのプロファイルを見る</button>
+    </div>
     <div class="modal-actions">
       <button class="modal-button" onclick="closeJSONInputModal()">閉じる</button>
       <button class="modal-button modal-button-primary" onclick="applyJSONInputModal()">プロファイル読込</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     ☁️ クラウドプロファイルブラウザ
+     ======================================== -->
+<div id="cloudBrowserModal" class="modal-overlay">
+  <div class="modal-content" style="max-width:700px; width:95%; max-height:85vh; display:flex; flex-direction:column;">
+    <div class="modal-close" onclick="closeCloudBrowser()">&times;</div>
+    <h3 class="modal-title">☁️ クラウドプロファイル</h3>
+
+    <!-- 検索・ソートバー -->
+    <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+      <input type="text" id="cloudSearchInput" placeholder="🔍 タイトル・コメントで検索..."
+        style="flex:1; min-width:150px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:6px 10px; font-size:14px;"
+        oninput="filterCloudList()">
+      <select id="cloudSortSelect" onchange="sortCloudList()"
+        style="background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:6px 10px; font-size:14px;">
+        <option value="newest">🕐 新着順</option>
+        <option value="oldest">🕐 古い順</option>
+      </select>
+      <button class="modal-button" style="padding:6px 12px;" onclick="loadCloudProfileList()">🔄 更新</button>
+    </div>
+
+    <!-- リスト -->
+    <div id="cloudProfileList" style="flex:1; overflow-y:auto; border:1px solid #444; border-radius:4px; min-height:300px;">
+      <div style="color:#666; font-size:13px; padding:16px; text-align:center;">「更新」を押してクラウドのプロファイルを取得</div>
+    </div>
+
+    <!-- フッター -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+      <span id="cloudProfileCount" style="color:#666; font-size:12px;"></span>
+      <div style="display:flex; gap:8px;">
+        <button id="cloudLoadMoreBtn" class="modal-button" style="display:none;" onclick="loadMoreCloudProfiles()">もっと見る</button>
+        <button class="modal-button" onclick="closeCloudBrowser()">閉じる</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1157,6 +1223,10 @@
     <div class="modal-actions">
       <input type="text" id="profileTitleInput" style="border-radius:５px;" placeholder="プロファイル名を入力...">      
       <button class="modal-button  modal-button-primary" onclick="saveProfileToLocalStorage()">ストレージ保存</button>
+    </div>   
+    <div class="modal-actions" style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
+      <input type="text" id="cloudCommentInput" style="border-radius:5px; flex:1;" placeholder="共有コメント（例：エチオピア浅煎り、ベストバッチ！）">
+      <button class="modal-button" style="background:#1a6b3a;" onclick="shareProfileToCloud()">☁️ クラウドに共有</button>
     </div>   
     <div class="modal-actions">
       <button class="modal-button" onclick="closeJSONSaveModal()">閉じる</button>
@@ -1281,6 +1351,8 @@
     <button class="button" title="デバッグコンソール" onclick="configButtonCommand()">設定</button>
     <button class="button" title="うずうず珈琲焙煎工房公式Web" onclick="WebButtonCommand()">Web</button>
     <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
+    <!-- ☁️ ログインボタン -->
+    <button id="auth-btn" class="button" title="クラウドログイン" onclick="toggleAuth()" style="background:#1a3a2a;">☁️ ログイン</button>
   </div>
   <div class="profile-meta">
     <div class="meta-field">

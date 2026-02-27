@@ -3,6 +3,70 @@ const popup = document.getElementById('popupTextarea');
 const popupText = document.getElementById('popupText');
 const closeButton = document.getElementById('closePopup');
 
+////////////////////////////////////////////////////////////////
+// ☁️ Firebase Authentication
+////////////////////////////////////////////////////////////////
+
+// uzuuzu.shopかどうか判定
+function isCloudAvailable() {
+    const host = window.location.hostname;
+    return host === 'uzuuzu.shop' || host === 'www.uzuuzu.shop';
+}
+
+// ログイン状態に応じてUIを更新
+function updateAuthUI(user) {
+    const btn = document.getElementById('auth-btn');
+    if (!btn) return;
+
+    if (!isCloudAvailable()) {
+        // クラウド利用不可（AP接続・file://など）
+        btn.textContent = '☁️ ログイン';
+        btn.title = 'クラウド機能にはインターネット接続が必要です';
+        btn.style.background = '#444';
+        btn.style.color = '#888';
+        btn.style.cursor = 'not-allowed';
+        btn.disabled = true;
+        return;
+    }
+
+    btn.disabled = false;
+    btn.style.cursor = 'pointer';
+    btn.style.color = '';
+
+    if (user) {
+        const name = user.displayName || user.email || 'ユーザー';
+        btn.textContent = '☁️ ' + name.split(' ')[0];
+        btn.title = 'ログアウト：' + name;
+        btn.style.background = '#1a6b3a';
+    } else {
+        btn.textContent = '☁️ ログイン';
+        btn.title = 'クラウドログイン';
+        btn.style.background = '#1a3a2a';
+    }
+}
+
+// ログイン／ログアウト切り替え
+async function toggleAuth() {
+    if (!isCloudAvailable()) return;  // グレーアウト中は何もしない
+    if (!window._firebaseAuth) {
+        alert("Firebase未接続です。");
+        return;
+    }
+    if (window._currentUser) {
+        if (confirm(window._currentUser.displayName + ' をログアウトしますか？')) {
+            await window._firebaseAuth.signOut();
+        }
+    } else {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await window._firebaseAuth.signInWithPopup(provider);
+        } catch (e) {
+            console.error(e);
+            alert("ログインに失敗しました：" + e.message);
+        }
+    }
+}
+
 const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
 const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
@@ -15,6 +79,7 @@ let isMinutesSecondsFormat = false; // 初期値は秒表示
 let widthOffset = 0; // グラフの幅調整用オフセット
 let maxChartWidth = 1800; // グラフの最大幅
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
+let uzcpSupported = false;  // UZCP対応フラグ
 
 window.addEventListener('resize', () => {
   if (roastChart) {
@@ -707,6 +772,10 @@ function connectWebSocket() {
       debmsb = debmsg.slice(-5000); // テキストエリアの文字数制限
       document.getElementById('receivemessagearea').value =  debmsg;
       const data = JSON.parse(event.data);
+      // ★ UZCP対応判定：telemetryにuzcp:"1.0"があれば対応サーバーと判断
+      if (data.uzcp === "1.0" && data.type === "telemetry") {
+        uzcpSupported = true;
+      }
       receiveWebMessage(data);
       if ("msg" in data) {
         if (data.msg === "KEEP_ALIVE") {
@@ -784,8 +853,23 @@ function showRoastingIndicator(flag) {
 }
 
 function sendWebCommand(data) {
-    const id = generateUniqueId(); // 一意なIDをつける
-    const message = { command: data, id: id  };
+    const id = generateUniqueId();
+
+    // UZCP 1.0 command形式で送信
+    // 仕様: https://github.com/uzuuzuhonpo/uzcp
+    const isUzcpCommand = (data === "start" || data === "stop");
+    const message = (isUzcpCommand && uzcpSupported)
+        ? {
+            uzcp: "1.0",
+            type: "command",
+            id: id,
+            ts: Date.now() / 1000,
+            src: "web-controller",
+            dst: "uzu-roaster-01",
+            cmd: data
+          }
+        : { command: data, id: id };  // start/stop以外は従来形式
+
     sendSafe(message);
     return id;
 }
@@ -1017,6 +1101,7 @@ function sendStartCommand() {
 
 ////////////////////////////////////////////////////////////////
 function executeStartCommand(){
+  LiveData = [];
   document.getElementById('roast_message').textContent = "焙煎中";
   roastChart.destroy();
   initChart();
@@ -1698,8 +1783,8 @@ function getProfileDataFromTable() {
         if (cells.length < 2) continue;
 
         const time = parseInt(cells[0].querySelector('input')?.value);
-        const temp = cells[1].querySelector('input')?.value;
-
+        //const temp = cells[1].querySelector('input')?.value;
+        const temp = parseFloat(cells[1].querySelector('input')?.value);
         // 空白・NaNは無視
         if (isNaN(time) || isNaN(temp)) continue;
 
@@ -2322,7 +2407,7 @@ function calculateRoR(data, position = -1, periodSeconds = 20) {
 
     // 計算期間内のデータポイントをフィルタリング
     // 線形回帰には少なくとも2点必要
-    const relevantPoints = data.filter(p => p.x >= startTime && p.x < currentPointTime);
+    const relevantPoints = data.filter(p => p.x >= startTime && p.x <= currentPointTime);
 
     if (relevantPoints.length < 2) {
         return 0; // データが不足している場合は0を返す
@@ -2810,4 +2895,210 @@ function easeInOutQuad(t) {
     t *= 2;
     if (t < 1) return 0.5 * t * t;
     return -0.5 * (--t * (t - 2) - 1);
+}
+////////////////////////////////////////////////////////////////
+// ☁️ Firebase クラウド共有機能
+// 仕様：コメント付きで明示的に共有、クラウドブラウザで閲覧
+////////////////////////////////////////////////////////////////
+
+const CLOUD_PAGE_SIZE = 20;  // 1ページの件数
+let _cloudAllDocs = [];      // 取得した全件キャッシュ
+let _cloudDisplayed = 0;     // 現在表示中の件数
+
+// -----------------------------------------------
+// クラウドブラウザ 開く／閉じる
+// -----------------------------------------------
+function openCloudBrowser() {
+    const modal = document.getElementById('cloudBrowserModal');
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    if (_cloudAllDocs.length === 0) {
+        loadCloudProfileList();
+    }
+}
+
+function closeCloudBrowser() {
+    const modal = document.getElementById('cloudBrowserModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+}
+
+// -----------------------------------------------
+// クラウドからプロファイル一覧を取得
+// -----------------------------------------------
+async function loadCloudProfileList() {
+    if (!window._firebaseDb) {
+        alert("Firebase未接続です。firebaseConfigを設定してください。");
+        return;
+    }
+
+    const listEl = document.getElementById('cloudProfileList');
+    listEl.innerHTML = '<div style="color:#aaa; font-size:13px; padding:16px; text-align:center;">読み込み中...</div>';
+    document.getElementById('cloudProfileCount').textContent = '';
+    document.getElementById('cloudLoadMoreBtn').style.display = 'none';
+
+    try {
+        const snapshot = await window._firebaseDb
+            .collection("profiles")
+            .orderBy("createdAt", "desc")
+            .limit(100)  // 最大100件取得
+            .get();
+
+        _cloudAllDocs = [];
+        snapshot.forEach(doc => _cloudAllDocs.push(doc.data()));
+
+        if (_cloudAllDocs.length === 0) {
+            listEl.innerHTML = '<div style="color:#666; font-size:13px; padding:16px; text-align:center;">クラウドにプロファイルはありません</div>';
+            return;
+        }
+
+        _cloudDisplayed = 0;
+        renderCloudList(_cloudAllDocs);
+
+    } catch (e) {
+        console.error(e);
+        listEl.innerHTML = '<div style="color:#f66; font-size:13px; padding:16px; text-align:center;">読み込み失敗：' + e.message + '</div>';
+    }
+}
+
+// -----------------------------------------------
+// リストを描画
+// -----------------------------------------------
+function renderCloudList(docs) {
+    const listEl = document.getElementById('cloudProfileList');
+    const countEl = document.getElementById('cloudProfileCount');
+    const moreBtn = document.getElementById('cloudLoadMoreBtn');
+
+    if (docs.length === 0) {
+        listEl.innerHTML = '<div style="color:#666; font-size:13px; padding:16px; text-align:center;">該当するプロファイルがありません</div>';
+        countEl.textContent = '';
+        moreBtn.style.display = 'none';
+        return;
+    }
+
+    // 最初のページ分だけ表示
+    _cloudDisplayed = Math.min(CLOUD_PAGE_SIZE, docs.length);
+    listEl.innerHTML = '';
+    docs.slice(0, _cloudDisplayed).forEach(d => listEl.appendChild(createCloudItem(d)));
+
+    countEl.textContent = `${_cloudDisplayed} / ${docs.length} 件`;
+    moreBtn.style.display = docs.length > _cloudDisplayed ? 'inline-block' : 'none';
+    moreBtn.dataset.docs = JSON.stringify(docs);  // もっと見る用にキャッシュ
+}
+
+// -----------------------------------------------
+// もっと見る
+// -----------------------------------------------
+function loadMoreCloudProfiles() {
+    const listEl = document.getElementById('cloudProfileList');
+    const countEl = document.getElementById('cloudProfileCount');
+    const moreBtn = document.getElementById('cloudLoadMoreBtn');
+    const docs = JSON.parse(moreBtn.dataset.docs);
+
+    const next = Math.min(_cloudDisplayed + CLOUD_PAGE_SIZE, docs.length);
+    docs.slice(_cloudDisplayed, next).forEach(d => listEl.appendChild(createCloudItem(d)));
+    _cloudDisplayed = next;
+
+    countEl.textContent = `${_cloudDisplayed} / ${docs.length} 件`;
+    if (_cloudDisplayed >= docs.length) moreBtn.style.display = 'none';
+}
+
+// -----------------------------------------------
+// リストアイテムを生成
+// -----------------------------------------------
+function createCloudItem(d) {
+    const container = document.createElement('div');
+    container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1a2a1a; margin:4px; padding:8px; border-radius:4px; border:1px solid #2a3a2a;";
+
+    const info = document.createElement('div');
+    info.style.cssText = "flex:1; overflow:hidden; margin-right:8px;";
+    info.innerHTML = `
+        <div style="color:#fff; font-size:14px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.title || '無題'}</div>
+        <div style="color:#8b8; font-size:12px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 ${d.comment || ''}</div>
+        <div style="color:#555; font-size:11px; margin-top:2px;">${d.createdAt ? d.createdAt.substring(0, 10) : ''} · ${d.device || 'Unknown'} · 👤 ${d.userName || '匿名'}</div>
+    `;
+
+    const btn = document.createElement('button');
+    btn.innerText = "読込";
+    btn.style.cssText = "background:#1a6b3a; color:#fff; border:none; padding:8px 16px; cursor:pointer; border-radius:4px; font-size:13px; white-space:nowrap;";
+    btn.onclick = () => {
+        document.getElementById('jsonInput').value = JSON.stringify(d.data, null, 2);
+        closeCloudBrowser();
+        alert("「" + d.title + "」を読み込みました\nプロファイル読込ボタンで適用してください");
+    };
+
+    container.appendChild(info);
+    container.appendChild(btn);
+    return container;
+}
+
+// -----------------------------------------------
+// 検索フィルター（フロント側）
+// -----------------------------------------------
+function filterCloudList() {
+    const keyword = document.getElementById('cloudSearchInput').value.toLowerCase();
+    if (!keyword) {
+        renderCloudList(getSortedDocs());
+        return;
+    }
+    const filtered = getSortedDocs().filter(d =>
+        (d.title || '').toLowerCase().includes(keyword) ||
+        (d.comment || '').toLowerCase().includes(keyword)
+    );
+    renderCloudList(filtered);
+}
+
+// -----------------------------------------------
+// ソート
+// -----------------------------------------------
+function sortCloudList() {
+    filterCloudList();  // ソート変更後にフィルターも再適用
+}
+
+function getSortedDocs() {
+    const sort = document.getElementById('cloudSortSelect')?.value || 'newest';
+    return [..._cloudAllDocs].sort((a, b) => {
+        if (sort === 'newest') return (b.createdAt || '') > (a.createdAt || '') ? 1 : -1;
+        if (sort === 'oldest') return (a.createdAt || '') > (b.createdAt || '') ? 1 : -1;
+        return 0;
+    });
+}
+
+// -----------------------------------------------
+// クラウドにプロファイルを共有する
+// -----------------------------------------------
+async function shareProfileToCloud() {
+    const jsonStr = document.getElementById('jsonSave').value;
+    const title = document.getElementById('profileTitleInput').value.trim();
+    const comment = document.getElementById('cloudCommentInput').value.trim();
+
+    if (!title) { alert("プロファイル名を入力してください"); return; }
+    if (!comment) { alert("共有コメントを入力してください\n例：エチオピア浅煎り、ベストバッチ！"); return; }
+    if (!window._firebaseDb) { alert("Firebase未接続です。"); return; }
+    if (!window._currentUser) {
+        alert("クラウドに共有するにはログインが必要です。\n画面上部の「☁️ ログイン」ボタンからGoogleログインしてください。");
+        return;
+    }
+
+    try {
+        let data = JSON.parse(jsonStr);
+        await window._firebaseDb.collection("profiles").add({
+            title: title,
+            comment: comment,
+            data: data,
+            createdAt: new Date().toISOString(),
+            device: "UZU ROASTER",
+            uid: window._currentUser.uid,
+            userName: window._currentUser.displayName || window._currentUser.email
+        });
+
+        _cloudAllDocs = [];
+        document.getElementById('cloudCommentInput').value = "";
+        setTimeout(() => {
+            alert("☁️ クラウドに共有しました！\n「" + title + "」\n" + comment);
+        }, 300);
+    } catch (e) {
+        console.error(e);
+        setTimeout(() => { alert("クラウド共有に失敗しました：" + e.message); }, 300);
+    }
 }
