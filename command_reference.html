@@ -784,17 +784,16 @@
                         </tr>
                         <tr>
                             <td>
-                                <span class="cmd-name">ipled</span><br>
-                                <span class="cmd-name">ipled &lt;on/off&gt;</span>
+                                <span class="cmd-name">ipled &lt;sta/ap/off&gt;</span>
                             </td>
                             <td>
-                                <code class="cmd-example">ipled</code><br>
-                                <code class="cmd-example">ipled on</code><br>
+                                <code class="cmd-example">ipled sta</code><br>
+                                <code class="cmd-example">ipled ap</code><br>
                                 <code class="cmd-example">ipled off</code>
                             </td>
                             <td class="cmd-desc">
                                 ステータスLEDを使って、現在のIPアドレスを点滅パターンで表示します。<br>
-                                STAモード接続中はルーターから割り当てられたIPを、未接続時はAPのIP（192.168.4.1）を表示します。<br>
+                                staを指定するとSTAモードでルーターから割り当てられたIPを、apを指定するとAPモードのIP（デフォルト：192.168.4.1）を表示します。<br>
                                 4つのオクテット（xxx.xxx.xxx.xxx）を順番に点滅し、オクテット間は長い休止で区切られます。<br>
                                 <code>templed</code>とは排他動作です。（ <code>templed</code>はオフになります）
                             </td>
