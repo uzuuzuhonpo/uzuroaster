@@ -259,7 +259,7 @@
 <body>
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
-        <div style="text-align: right;"><span>最終更新日: 2026年2月26日　Version 1.１.1</span></div><br>
+        <div style="text-align: right;"><span>最終更新日: 2026年3月25日　Version 1.2.0</span></div><br>
         <div class="table-of-contents">
             <h2>目次</h2>
             <ul>
@@ -269,9 +269,16 @@
                 <li><a href="#section-artisan-usb">☕ Artisanと連携する（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-artisan-requirements">🧰 必要なもの</a></li>
-                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）</a></li>
+                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> 
+                        <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）</a></li>
                         <li><a href="#subsection-artisan-settings">⚙️ 3. Artisanの設定手順</a></li>
                         <li><a href="#subsection-artisan-test">✅ 接続テスト＆確認</a></li> <li><a href="#subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント</a></li> </ul>
+                </li>
+                <li><a href="#section-artisan-wifi">☕ Artisanと連携する（Wi-Fi接続編）</a>
+                    <ul>
+                        <li><a href="#subsection-artisan-wifi-settings">⚙️ 1. ArtisanのWebSocket設定手順</a></li>
+                        <li><a href="#subsection-artisan-wifi-nodes">🔗 2. Nodes & Commands（通信経路）の設定</a></li>
+                    </ul>
                 </li>
                 <li><a href="#connection-matrix">🚀 うずロースターコントローラー　端末・環境別接続マトリックス</a></li>
                 <li><a href="#section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>
@@ -520,17 +527,351 @@
             <li>Artisanのメニューから「設定」→「デバイス」を開きます。</li>
         </ol>
 
-        <h4>【デバイス設定（主要設定）】</h4>
+        <h4>【デバイス設定（ET/BTタブ）】</h4>
+
+
+        <div class="window">
+            <!-- タイトルバー -->
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    <span>＠</span> Device Assignment
+                </div>
+            </div>
+
+            <!-- タブ -->
+            <div class="tabs">
+                <button class="tab active">ET/BT</button>
+                <button class="tab">Extra Devices</button>
+                <button class="tab">Symb ET/BT</button>
+                <button class="tab">Phidgets</button>
+                <button class="tab">Yoctopuce</button>
+                <button class="tab">Ambient</button>
+                <button class="tab">Networks</button>
+            </div>
+
+            <!-- コンテンツ -->
+            <div class="content">
+                <!-- Meter セクション -->
+
+                <!-- Curves & LCDs セクション -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <div>
+                        <div class="form-grid">
+                            <div class="form-value">
+                                <span style="font-size: 12px; font-weight: 500;"><span class="setting-red">⦿</span>　Meter</span>
+                                <div class="grid-cell" style="min-width: 150px;"><div class="select"><span class="setting-red">Behmor BT/CT</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 6px; margin-left: 20px;">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="meterControl">
+                                <label for="meterControl">Control</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-box">
+                        <div class="section-label">Curves</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="curvesET">
+                                <label for="curvesET"><span style="font-weight:bold; color:#f00;">ET</span></label>
+                            </div>
+                            <div class="checkbox-item highlight">
+                                <input type="checkbox" id="curvesBT" checked>
+                                <label for="curvesBT"><span style="font-weight:bold; color:#f00;">BT</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="section-label">LCDs</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lcdsET">
+                                <label for="lcdsET"><span style="font-weight:bold; color:#f00;">ET</span></label>
+                            </div>
+                            <div class="checkbox-item highlight">
+                                <input type="checkbox" id="lcdsBT" checked>
+                                <label for="lcdsBT"><span style="font-weight:bold; color:#f00;">BT</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lcdsSwap">
+                                <label for="lcdsSwap">Swap</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PID セクション -->
+                <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                    <div class="section-label">〇　PID</div>
+                    <div style="margin-left: 12px;">
+                        PID
+                        <div class="section-box">
+                            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                                <span style="font-size: 11px; font-weight: 500;">Type</span>
+                                <div style="display: grid; grid-template-columns: auto auto; gap: 12px;">
+                                    <span style="font-size: 11px; font-weight: 500;">RS485 Unit ID</span>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 12px;">Control ET</span>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <select style="width: 100px;">
+                                        <option>Fuji PXG</option>
+                                        <option>Fuji PXR</option>
+                                    </select>
+                                    <select style="width: 50px;">
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                    </select>
+                                    <div class="checkbox-item" style="margin: 0;">
+                                        <input type="checkbox" id="pidDuty" checked>
+                                        <label for="pidDuty">PID Duty/Power LCDs</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                                <span style="font-size: 12px;">Read BT</span>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <select style="width: 100px;">
+                                        <option>Fuji PXR</option>
+                                        <option>Fuji PXG</option>
+                                    </select>
+                                    <select style="width: 50px;">
+                                        <option>2</option>
+                                        <option>1</option>
+                                        <option>3</option>
+                                    </select>
+                                    <div class="checkbox-item" style="margin: 0;">
+                                        <input type="checkbox" id="modbusPort">
+                                        <label for="modbusPort">Modbus Port</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arduino TC4 セクション -->
+                <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                    <div class="section-label">〇　TC4</div>
+                    <div style="margin-left: 12px;">
+                        Arduino TC4
+                        <div class="section-box">
+                            <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 12px;">ET Channel</span>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <select style="width: 50px;">
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                    </select>
+                                    <span style="font-size: 12px;">Filter</span>
+                                    <input type="number" value="70" class="percent-input">
+                                    <span style="font-size: 12px;">%</span>
+                                    <input type="number" value="70" class="percent-input">
+                                    <span style="font-size: 12px;">%</span>
+                                    <input type="number" value="70" class="percent-input">
+                                    <span style="font-size: 12px;">%</span>
+                                    <input type="number" value="30" class="percent-input">
+                                    <span style="font-size: 12px;">%</span>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: center;">
+                                <span style="font-size: 12px;">BT Channel</span>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <select style="width: 50px;">
+                                        <option>2</option>
+                                        <option>1</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                    </select>
+                                    <select style="width: 80px;">
+                                        <option>None</option>
+                                        <option>Low Pass</option>
+                                        <option>High Pass</option>
+                                    </select>
+                                    <span class="at-channel-label">AT Channel</span>
+                                    <div class="checkbox-item" style="margin: 0;">
+                                        <input type="checkbox" id="pidFirmware" checked>
+                                        <label for="pidFirmware">PID Firmware</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Program セクション -->
+                <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                    <div class="section-label">〇　Prog</div>
+                    <div style="margin-left: 12px;">
+                        External Program
+                        <div class="section-box">
+                            <div style="margin-bottom: 6px;">
+                                <div style="display: grid; grid-template-columns: 50px 1fr; gap: 6px; align-items:first baseline;">
+                                    <button class="btn-select">Help</button>
+                                    <div>
+                                        <button class="btn-select">Select</button>
+                                        <input type="text" placeholder="" style="flex: 1;" class="wide-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="outputChk">
+                                <label for="outputChk" style="font-size: 12px;">Output</label>
+                                <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 20px;">
+                                    <button class="btn-select">Select</button>
+                                    <input type="text" placeholder="" style="flex: 1;" class="wide-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logging チェックボックス -->
+                <div class="logging-row">
+                    <input type="checkbox" id="logging" checked>
+                    <label for="logging">Logging</label>
+                </div>
+            </div>
+
+            <!-- ボタングループ -->
+            <div class="button-group">
+                <button class="btn-cancel">Cancel</button>
+                <button class="btn-ok">OK</button>
+            </div>
+        </div>
+
+
         <ul>
             <li><code>ET/BT</code>: <strong>メーター</strong> を選択</li>
-            <li><code>メーター</code>: <strong>Behmor BT/CT</strong> を選択</li>
+            <li><code>メーター</code>: <strong>Behmor BT/CT</strong> を選択（UZ-01はBehmorのパケット形式を採用しています）</li>
+            <li><code>Curves</code> <code>LCDs</code>: <strong>BT</strong>にチェック、<strong>ET</strong>のチェックを外します。</li>
         </ul>
 
-        <h4>【シリアルポート構成】</h4>
+        <h4>【シリアルポート構成（ET/BTタブ）】</h4>
+   
+        <div class="window">
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    <span>＠</span> Ports Configuration
+                </div>
+            </div>
+            <div class="tabs">
+                <button class="tab active">ET/BT</button>
+                <button class="tab">Extra</button>
+                <button class="tab">Modbus</button>
+                <button class="tab">S7</button>
+                <button class="tab">Scale</button>
+                <button class="tab">Color</button>
+                <button class="tab">WebSocket</button>
+            </div>
+
+            <!-- コンテンツ -->
+            <div class="content">
+                <!-- Settings for non-Modbus devices セクション -->
+                <div class="section">
+                    <div class="section-title">Settings for non-Modbus devices</div>
+                </div>
+
+                <!-- Comm Port -->
+                <div class="form-group2">
+                    <div class="form-label">Comm Port</div>
+                    <div class="form-control">
+                        <select>
+                            <option selected>COM5</option>
+                            <option>COM1</option>
+                            <option>COM2</option>
+                            <option>COM3</option>
+                            <option>COM4</option>
+                            <option>COM6</option>
+                            <option>COM7</option>
+                            <option>COM8</option>
+                            <option>COM9</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Baud Rate -->
+                <div class="form-group2">
+                    <div class="form-label">Baud Rate</div>
+                    <div class="form-control">
+                        <select>
+                            <option>300</option>
+                            <option>600</option>
+                            <option>1200</option>
+                            <option>2400</option>
+                            <option>4800</option>
+                            <option>9600</option>
+                            <option>14400</option>
+                            <option>19200</option>
+                            <option>28800</option>
+                            <option>38400</option>
+                            <option>57600</option>
+                            <option selected>115200</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Byte Size -->
+                <div class="form-group2">
+                    <div class="form-label">Byte Size</div>
+                    <div class="form-control">
+                        <select>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option selected>8</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Parity -->
+                <div class="form-group2">
+                    <div class="form-label">Parity</div>
+                    <div class="form-control">
+                        <select>
+                            <option selected>N</option>
+                            <option>E</option>
+                            <option>O</option>
+                            <option>M</option>
+                            <option>S</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Stopbits -->
+                <div class="form-group2">
+                    <div class="form-label">Stopbits</div>
+                    <div class="form-control">
+                        <select>
+                            <option selected>1</option>
+                            <option>1.5</option>
+                            <option>2</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Timeout -->
+                <div class="form-group2">
+                    <div class="form-label">Timeout</div>
+                    <div class="form-control">
+                        <input type="text" value="0.7">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ボタングループ -->
+            <div class="button-group">
+                <button class="btn-help">Help</button>
+                <button class="btn-cancel">Cancel</button>
+                <button class="btn-ok">OK</button>
+            </div>
+        </div>
+   
         <ul>
             <li><code>ポート</code>: UZU ROASTERが接続されているCOMポートを指定します。<br>
                 （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code>、<code>/dev/cu.usbserial-XXXX</code> など）</li>
-            <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER側と合わせてください）</li>
+            <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER設定に合わせます）</li>
             <li><code>データ長</code>: <code>8</code></li>
             <li><code>パリティビット</code>: <code>N</code></li>
             <li><code>ストップビット</code>: <code>1</code></li>
@@ -540,7 +881,7 @@
             <p>Artisanの設定画面で、<code>ET/BT</code> の設定を変更することで、異なる温度センサーのデータを扱うことも可能です。</p> 
                 <h4>【スクリプト設定（Serial Protocol）】</h4>
                 <ol><li>Artisanのメニューで「構成（Config） → デバイス（Device）」を開き、「Prog」でカスタムスクリプトを設定することで任意のフォーマットの温度データが受信できるようになります。
-                        <br>詳しくは公式ドキュメントをご参照ください。  </li>
+                        <br>詳しくはArtisan公式ドキュメントをご参照ください。  </li>
         </div>
 
         <h3 id="subsection-artisan-test">✅ 接続テスト＆確認:</h3>
@@ -576,6 +917,958 @@
             </tbody>
         </table>
         <hr>
+
+
+<h2 id="section-artisan-wifi">☕ Artisanと連携する（Wi-Fi接続編）</h2>
+<p>UZU ROASTERは、USBケーブルを使わずにWi-Fi（WebSocket）経由でArtisanと通信することが可能です。配線の煩わしさから解放され、スマートな焙煎環境を構築できます。</p>
+
+<div class="note">
+    <strong>⚠️ 事前準備：</strong> PCをUZU ROASTERのWi-Fi（デフォルトSSID: <code>UZU-ROASTER</code>）に接続（APモード）しておくか、STAモードで同一ネットワーク内に配置しておいてください。
+    必要に応じて<a href="#section-controller-wifi">うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>の<a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a>セクションを参照してください。
+</div>
+
+<h3 id="subsection-artisan-wifi-settings">⚙️ 1. ArtisanのWebSocket設定手順</h3>
+<p>ArtisanでUZU ROASTERのWi-Fi接続を設定するには、以下の手順に従ってください。</p>
+<p>Artisanの設定画面でWebSocket通信を設定します。</p>
+<h4>【デバイス設定（ET/BTタブ】</h4>
+
+
+    <style>
+        /* コンテンツ */
+        .content {
+            padding: 8px;
+            background: #f5f5f5;
+            flex: 1;
+        }
+
+        /* ラジオボタングループセクション */
+        .radio-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        .radio-label input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* グループボックス風 */
+        .group-box {
+            border: 1px solid #a0a0a0;
+            border-radius: 3px;
+            background: var(--input-bg);
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+
+        .group-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 12px;
+            align-items: center;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: right;
+            padding-right: 4px;
+        }
+
+        .form-value {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 4px 4px;
+            border: 1px solid #aaa;
+            background: white;
+            color: var(--text-dark);
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* チェックボックス */
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            font-size: 12px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* 赤色ハイライト */
+        .checkbox-item.highlight {
+            background: var(--alert-red-bg);
+            border: 1px solid var(--alert-red);
+        }
+
+        .checkbox-item.highlight input[type="checkbox"] {
+            accent-color: var(--alert-red);
+        }
+
+        .checkbox-item.highlight label {
+            color: var(--alert-red);
+            font-weight: 600;
+        }
+
+        /* セクションの枠線 */
+        .section-box {
+            border: 1px solid #c0c0c0;
+            background: #fafafa;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        /* 大きなテキストボックス */
+        .wide-input {
+            width: 98%;
+            padding: 4px;
+            border: 1px solid var(--border-gray);
+            background: var(--input-bg);
+            font-size: 12px;
+            margin: 4px 0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+            align-items: center;
+        }
+
+        /* ボタン */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 8px;
+            border-top: 1px solid #c0c0c0;
+            background: #f0f0f0;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .btn-select, .btn-help {
+            min-width: auto;
+            padding: 4px 12px;
+        }
+
+        /* Logging チェックボックス */
+        .logging-row {
+            padding: 8px 0;
+            border-top: 1px solid #c0c0c0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logging-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .logging-row label {
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* フィルターパーセント */
+        .percent-input {
+            width: 50px;
+        }
+
+        .percent-label {
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        /* AT Channel テキスト */
+        .at-channel-label {
+            font-size: 12px;
+            margin-left: 12px;
+            margin-right: 4px;
+        }
+    </style>
+
+    <div class="window">
+        <!-- タイトルバー -->
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>＠</span> Device Assignment
+            </div>
+        </div>
+
+        <!-- タブ -->
+        <div class="tabs">
+            <button class="tab active">ET/BT</button>
+            <button class="tab">Extra Devices</button>
+            <button class="tab">Symb ET/BT</button>
+            <button class="tab">Phidgets</button>
+            <button class="tab">Yoctopuce</button>
+            <button class="tab">Ambient</button>
+            <button class="tab">Networks</button>
+        </div>
+
+        <!-- コンテンツ -->
+        <div class="content">
+            <!-- Meter セクション -->
+
+            <!-- Curves & LCDs セクション -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div>
+                    <div class="form-grid">
+                        <div class="form-value">
+                            <span style="font-size: 12px; font-weight: 500;"><span class="setting-red">⦿</span>　Meter</span>
+                            <div class="grid-cell" style="min-width: 150px;"><div class="select"><span class="setting-red">WebSocket</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 6px; margin-top: 6px; margin-left: 20px;">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="meterControl">
+                            <label for="meterControl">Control</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-box">
+                    <div class="section-label">Curves</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="curvesET">
+                            <label for="curvesET"  style="font-weight:bold; color:red">ET</label>
+                        </div>
+                        <div class="checkbox-item highlight" style="color:red">
+                            <input type="checkbox" id="curvesBT" checked>
+                            <label for="curvesBT"><span style="font-weight:bold">BT</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-label">LCDs</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="lcdsET">
+                            <label for="lcdsET"  style="font-weight:bold; color:red">ET</label>
+                        </div>
+                        <div class="checkbox-item highlight" style="color:red">
+                            <input type="checkbox" id="lcdsBT" checked>
+                            <label for="lcdsBT"><span style="font-weight:bold">BT</span></label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="lcdsSwap">
+                            <label for="lcdsSwap">Swap</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PID セクション -->
+            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                <div class="section-label">〇　PID</div>
+                <div style="margin-left: 12px;">
+                    PID
+                    <div class="section-box">
+                        <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                            <span style="font-size: 11px; font-weight: 500;">Type</span>
+                            <div style="display: grid; grid-template-columns: auto auto; gap: 12px;">
+                                <span style="font-size: 11px; font-weight: 500;">RS485 Unit ID</span>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px;">Control ET</span>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <select style="width: 100px;">
+                                    <option>Fuji PXG</option>
+                                    <option>Fuji PXR</option>
+                                </select>
+                                <select style="width: 50px;">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                </select>
+                                <div class="checkbox-item" style="margin: 0;">
+                                    <input type="checkbox" id="pidDuty" checked>
+                                    <label for="pidDuty">PID Duty/Power LCDs</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                            <span style="font-size: 12px;">Read BT</span>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <select style="width: 100px;">
+                                    <option>Fuji PXR</option>
+                                    <option>Fuji PXG</option>
+                                </select>
+                                <select style="width: 50px;">
+                                    <option>2</option>
+                                    <option>1</option>
+                                    <option>3</option>
+                                </select>
+                                <div class="checkbox-item" style="margin: 0;">
+                                    <input type="checkbox" id="modbusPort">
+                                    <label for="modbusPort">Modbus Port</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arduino TC4 セクション -->
+            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                <div class="section-label">〇　TC4</div>
+                <div style="margin-left: 12px;">
+                    Arduino TC4
+                    <div class="section-box">
+                        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px;">ET Channel</span>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <select style="width: 50px;">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                                <span style="font-size: 12px;">Filter</span>
+                                <input type="number" value="70" class="percent-input">
+                                <span style="font-size: 12px;">%</span>
+                                <input type="number" value="70" class="percent-input">
+                                <span style="font-size: 12px;">%</span>
+                                <input type="number" value="70" class="percent-input">
+                                <span style="font-size: 12px;">%</span>
+                                <input type="number" value="30" class="percent-input">
+                                <span style="font-size: 12px;">%</span>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: center;">
+                            <span style="font-size: 12px;">BT Channel</span>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <select style="width: 50px;">
+                                    <option>2</option>
+                                    <option>1</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                                <select style="width: 80px;">
+                                    <option>None</option>
+                                    <option>Low Pass</option>
+                                    <option>High Pass</option>
+                                </select>
+                                <span class="at-channel-label">AT Channel</span>
+                                <div class="checkbox-item" style="margin: 0;">
+                                    <input type="checkbox" id="pidFirmware" checked>
+                                    <label for="pidFirmware">PID Firmware</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- External Program セクション -->
+            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center;">
+                <div class="section-label">〇　Prog</div>
+                <div style="margin-left: 12px;">
+                    External Program
+                    <div class="section-box">
+                        <div style="margin-bottom: 6px;">
+                            <div style="display: grid; grid-template-columns: 50px 1fr; gap: 6px; align-items:first baseline;">
+                                <button class="btn-select">Help</button>
+                                <div>
+                                    <button class="btn-select">Select</button>
+                                    <input type="text" placeholder="" style="flex: 1;" class="wide-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="outputChk">
+                            <label for="outputChk" style="font-size: 12px;">Output</label>
+                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 20px;">
+                                <button class="btn-select">Select</button>
+                                <input type="text" placeholder="" style="flex: 1;" class="wide-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logging チェックボックス -->
+            <div class="logging-row">
+                <input type="checkbox" id="logging" checked>
+                <label for="logging">Logging</label>
+            </div>
+        </div>
+
+        <!-- ボタングループ -->
+        <div class="button-group">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-ok">OK</button>
+        </div>
+    </div>
+
+<ul>
+    <li>メニュー：<code>構成</code> ＞ <code>デバイス</code> を開きます。</li>
+    <li><strong>Meter（計測器）:</strong> <code>WebSocket</code> を選択。</li>
+    <li><code>Curves</code> <code>LCDs</code>: <strong>BT</strong>にチェック、<strong>ET</strong>のチェックを外します。</li>
+</ul>
+<h4>【ポート設定（WebSocketタブ）】</h4>
+
+<style>
+    .window {
+      background: white;
+      border: 1px solid #0078d4;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 1400px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .title-bar {
+      background: linear-gradient(to bottom, #0078d4 0%, #0066ba 100%);
+      color: white;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    .title-bar .icon {
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .tabs {
+      display: flex;
+      background: #f0f0f0;
+      border-bottom: 1px solid #ccc;
+      padding: 0;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: #e0e0e0;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      margin-right: 2px;
+      cursor: pointer;
+      font-size: 13px;
+      position: relative;
+      top: 1px;
+    }
+
+    .tab.active {
+      background: white;
+      border-bottom: 1px solid white;
+      z-index: 1;
+    }
+
+    .content {
+      padding: 16px;
+      background: white;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-group2 {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 8px 12px;
+            align-items: center;
+            margin-bottom: 18px;
+    }
+    label {
+      font-size: 12px;
+      color: #333;
+      min-width: fit-content;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      border: 1px solid #aaa;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    input.small {
+      width: 60px;
+    }
+
+    input.medium {
+      width: 120px;
+    }
+
+    input.large {
+      width: 200px;
+    }
+
+    input.xlarge {
+      width: 300px;
+    }
+
+    input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .grid-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .grid-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .grid-10 {
+      grid-template-columns: auto repeat(10, 1fr);
+    }
+
+    .grid-header {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px;
+      text-align: center;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+    }
+
+    .grid-label {
+      font-size: 11px;
+      padding: 4px 8px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+    }
+
+    .grid-cell {
+      padding: 2px;
+      border: 1px solid #ddd;
+      background: white;
+      overflow: hidden;
+    }
+
+    .grid-cell input {
+      width: 100%;
+      border: none;
+      padding: 3px;
+      font-size: 11px;
+    }
+
+    .select {
+      min-width: 30px;
+      background: white;
+      cursor: pointer;
+      border: 1px solid #aaa;
+      padding: 2px 20px 2px 4px;
+        display: flex;
+        justify-content: space-between; 
+        align-items: center;           
+        width: 100%;                   
+        padding: 0 4px;                
+        box-sizing: border-box;      
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    button {
+      padding: 6px 24px;
+      font-size: 11px;
+      border: 1px solid #aaa;
+      background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
+      cursor: pointer;
+      min-width: 80px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .border-section {
+      border: 1px solid #c4c4c4;
+      background: #ededed;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .setting-red {
+        color: red;
+        background-color: #fff0f0; 
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+  </style>
+  <div class="window">
+    <!-- Title Bar -->
+    <div class="title-bar">
+        <div class="title-bar-text">
+            <span>＠</span> Ports Configuration
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab">ET/BT</div>
+      <div class="tab">Extra</div>
+      <div class="tab">Modbus</div>
+      <div class="tab">S7</div>
+      <div class="tab">Scale</div>
+      <div class="tab">Color</div>
+      <div class="tab active">WebSocket</div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Machine Section -->
+      <div class="section border-section">
+        <div class="section-title">Machine</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Host</label>
+            <input type="text" class="medium setting-red" value="192.168.4.1" id="host">
+          </div>
+          <div class="form-group">
+            <label>Port</label>
+            <input type="number" class="small setting-red" value="81" id="port">
+          </div>
+          <div class="form-group">
+            <label>Path</label>
+            <input type="text" class="large" value=" " id="path">
+          </div>
+          <div class="form-group">
+            <label>ID</label>
+            <input type="number" class="small" value="0" id="id">
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeout Section -->
+      <div class="section border-section">
+        <div class="section-title">Timeout</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Connect</label>
+            <div class="spin-button">
+              <input type="text" value="4.0s" id="timeout-connect">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Reconnect</label>
+            <div class="spin-button">
+              <input type="text" value="2.0s" id="timeout-reconnect">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Request</label>
+            <div class="spin-button">
+              <input type="text" value="0.5s" id="timeout-request">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nodes Section -->
+      <div class="section border-section">
+        <div class="section-title">Nodes</div>
+        <div class="grid grid-5">
+          <div class="grid-header">Message ID</div>
+          <div class="grid-header">Machine ID</div>
+          <div class="grid-header">Command</div>
+          <div class="grid-header">Data</div>
+          <div class="grid-header">Message</div>
+          
+          <div class="grid-cell"><input type="text" class="setting-red" value="id" id="node-msg-id"></div>
+          <div class="grid-cell"><input type="text" id="node-machine-id"></div>
+          <div class="grid-cell"><input type="text" class="setting-red" value="command" id="node-command"></div>
+          <div class="grid-cell"><input type="text" class="setting-red" value="params" id="node-data"></div>
+          <div class="grid-cell"><input type="text" id="node-message"></div>
+        </div>
+      </div>
+
+      <!-- Commands and Messages -->
+      <div class="form-row">
+        <div style="flex: 1;" class ="border-section">
+          <div class="section-title">Commands</div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label style="min-width: 100px;">Data Request</label>
+            <input type="text" class="large setting-red" value="getData" id="cmd-data-request">
+          </div>
+        </div>
+
+        <div style="flex: 1;" class ="border-section">
+          <div class="section-title">Messages</div>
+          <div class="form-group" style="margin-bottom: 4px;">
+            <label style="min-width: 80px;">CHARGE</label>
+            <input type="text" class="medium" value="startRoasting" id="msg-charge">
+          </div>
+          <div class="form-group">
+            <label style="min-width: 80px;">DROP</label>
+            <input type="text" class="medium" value="endRoasting" id="msg-drop">
+          </div>
+        </div>
+
+        <div style="flex: 1;" class ="border-section">
+          <div class="section-title">Flags</div>
+          <div class="form-group" style="margin-bottom: 4px;">
+            <input type="checkbox" id="flag-start-on-charge">
+            <label>START on CHARGE</label>
+          </div>
+          <div class="form-group">
+            <input type="checkbox" id="flag-off-on-drop">
+            <label>OFF on DROP</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Section -->
+      <div class="section border-section">
+        <div class="section-title">Events</div>
+        <div class="grid grid-7" style="margin-bottom: 8px;">
+          <div class="grid-header">Event</div>
+          <div class="grid-header">Node</div>
+          <div class="grid-header">DRY</div>
+          <div class="grid-header">FCs</div>
+          <div class="grid-header">FCe</div>
+          <div class="grid-header">SCs</div>
+          <div class="grid-header">SCe</div>
+          
+          <div class="grid-cell"><input type="text" value="addEvent" id="event-event"></div>
+          <div class="grid-cell"><input type="text" value="event" id="event-node"></div>
+          <div class="grid-cell"><input type="text" value="colorChangeEvent" id="event-dry"></div>
+          <div class="grid-cell"><input type="text" value="firstCrackBeginningEvent" id="event-fcs"></div>
+          <div class="grid-cell"><input type="text" value="firstCrackEndEvent" id="event-fce"></div>
+          <div class="grid-cell"><input type="text" value="secondCrackBeginningEvent" id="event-scs"></div>
+          <div class="grid-cell"><input type="text" value="secondCrackEndEvent" id="event-sce"></div>
+        </div>
+      </div>
+
+      <!-- Input Section -->
+      <div class="section">
+        <div class="grid grid-10">
+          <div></div>
+          <div class="grid-header">Input 1</div>
+          <div class="grid-header">Input 2</div>
+          <div class="grid-header">Input 3</div>
+          <div class="grid-header">Input 4</div>
+          <div class="grid-header">Input 5</div>
+          <div class="grid-header">Input 6</div>
+          <div class="grid-header">Input 7</div>
+          <div class="grid-header">Input 8</div>
+          <div class="grid-header">Input 9</div>
+          <div class="grid-header">Input 10</div>
+          
+          <div class="grid-label">Request</div>
+          <div class="grid-cell"><input type="text" id="input1-request"></div>
+          <div class="grid-cell"><input type="text" id="input2-request"></div>
+          <div class="grid-cell"><input type="text" id="input3-request"></div>
+          <div class="grid-cell"><input type="text" id="input4-request"></div>
+          <div class="grid-cell"><input type="text" id="input5-request"></div>
+          <div class="grid-cell"><input type="text" id="input6-request"></div>
+          <div class="grid-cell"><input type="text" id="input7-request"></div>
+          <div class="grid-cell"><input type="text" id="input8-request"></div>
+          <div class="grid-cell"><input type="text" id="input9-request"></div>
+          <div class="grid-cell"><input type="text" id="input10-request"></div>
+          
+          <div class="grid-label">Node</div>
+          <div class="grid-cell"><input type="text" class="setting-red" value="bt" id="input1-node"></div>
+          <div class="grid-cell"><input type="text" id="input2-node"></div>
+          <div class="grid-cell"><input type="text" id="input3-node"></div>
+          <div class="grid-cell"><input type="text" id="input4-node"></div>
+          <div class="grid-cell"><input type="text" id="input5-node"></div>
+          <div class="grid-cell"><input type="text" id="input6-node"></div>
+          <div class="grid-cell"><input type="text" id="input7-node"></div>
+          <div class="grid-cell"><input type="text" id="input8-node"></div>
+          <div class="grid-cell"><input type="text" id="input9-node"></div>
+          <div class="grid-cell"><input type="text" id="input10-node"></div>
+          
+          <div class="grid-label">Mode</div>
+          <div class="grid-cell"><div class="select"><span class="setting-red">C</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+          <div class="grid-cell"><div class="select"><span  style="font-weight: bold; font-size: 12px;">　</span><span style="font-size:8px;color:#888;">▼</span></div></div>
+        </div>
+      </div>
+
+      <!-- Compression -->
+      <div class="section">
+        <div class="form-group">
+          <input type="checkbox" id="compression" checked>
+          <label>compression</label>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="buttons">
+        <button>OK</button>
+        <button>Cancel</button>
+        <button>Help</button>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <h4>【Machine（IPアドレス）の設定】</h4>
+  <p>メニュー：<code>構成</code> ＞ <code>ポート</code> を開き、<strong>「WebSocket」タブ</strong>で以下の通り入力します。</p>
+<table>
+    <thead>
+        <tr>
+            <th>項目</th>
+            <th>設定値</th>
+            <th>説明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Host</strong></td>
+            <td><code>192.168.4.1</code></td>
+            <td>本体のデフォルトのIPアドレス（IPを変更した場合やSTAモード時はそのIP）</td>
+        </tr>
+        <tr>
+            <td><strong>Port</strong></td>
+            <td><code>81</code></td>
+            <td>WebSocket通信用のポート番号</td>
+        </tr>
+        <tr>
+            <td><strong>Path</strong></td>
+            <td>（空欄）</td>
+            <td>設定不要です</td>
+        </tr>
+    </tbody>
+</table>
+
+    <h4>【Nodes & Commands（通信経路）の設定】</h4>
+    <p>UZU ROASTER独自のデータ構造をArtisanに教え込むための、最も重要な設定です。</p>
+
+    <div class="connection-box" style="background: #edf2f7;">
+        <h4>設定エリア：Nodes & Commands</h4>
+        <ul>
+            <li><strong>Message ID:</strong> <code>id</code></li>
+            <li><strong>Command:</strong> <code>command</code></li>
+            <li><strong>Data:</strong> <code>params</code></li>
+        </ul>
+        <h4 style="margin-top:15px;">設定エリア：Commands</h4>
+        <ul>
+            <li><strong>Data Request:</strong> <code>getData</code></li>
+        </ul>
+    </div>
+
+    <h4>【温度データの抽出設定】</h4>
+    <p>パケットの中から「BT（豆温度）」を取り出す設定です。</p>
+    <ul>
+        <li><strong>Input 1:</strong> Node欄に <code>bt</code> と入力。</li>
+        <li><strong>Mode:</strong> <code>C</code> (Celsius) を選択。</li>
+    </ul>
+
+    <div class="tip">
+        <p>
+            設定後、Artisanのメイン画面で「START」を押すと、WebSocket通信が始まります。<br>
+            画面にUZU ROASTERから送信された温度が表示されているか確認してください。
+        </p>
+    </div>
 
         <h2 id="uzuroaster-controller">
             🚀 うずロースターコントローラーを使用する
@@ -1316,7 +2609,7 @@ C:\path_to_arduino\packages\esp32\tools\esptool_py\4.9.dev3/esptool.exe" --chip 
         <ul>
             <li><strong>Version 1.0:</strong> Artisan、うずロースターコントローラー対応温度表示機能</li>
             <li><strong>Version 1.1:</strong> STA接続（ルーター接続）機能追加</li>
-            <li><strong>Version 1.2:</strong> クラウドへの焙煎プロファイルアップロード機能追加</li>
+            <li><strong>Version 1.2:</strong> ArtisanのWi-Fi接続機能追加、クラウドへの焙煎プロファイルアップロード機能追加（β版）</li>
             <hr> 
             <li><strong>Version 2.0:</strong> 3Dプリンターとの連携による焙煎コントロール機能</li>
             <li><strong>Version 3.0:</strong> 小型焙煎機への組み込みによる高度な温度コントロール機能</li>
