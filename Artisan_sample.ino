@@ -1,6 +1,6 @@
 #define WEBSOCKETS_SERVER_CLIENT_MAX 16  // デフォルト4　ゾンビ対策で保険として
 #define MAX_ROAST_TIME  1800
-#define MAX_TEMPERATURE 260
+#define MAX_TEMPERATURE 1000  // 260
 #define MAX_WIFI_CONNECTION   1 //10  //デフォルト。複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
 #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1 // OTAアップデート用(実際はElegantoTA.hのdefineを書き換える必要あり)
 
@@ -8,10 +8,8 @@
 #define IP_LED_AP  1
 #define IP_LED_STA 2
 
-#include <deque>
-#include <esp_wifi.h>
 #include <WiFi.h>
-#include <ElegantOTA.h>
+//#include <ElegantOTA.h>
 #include <ESP32Servo.h>  
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
@@ -20,24 +18,102 @@
 #include "Adafruit_MAX31855.h"
 #include "esp_pm.h"
 #include <Preferences.h> 
-#include <WebSerial.h>
-#include <vector>
-#include <algorithm>
+//#include <WebSerial.h>
 #include <ArduinoJson.h>
+//#include "Freenove_WS2812_Lib_for_ESP32.h"
+#include <Update.h>
 
 // Prototype
 void CommandProcess(String& command, const uint8_t* params = NULL);
+void BroadcastMessage(String &message);
 
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
 //////////////////////////////////////////////////////////////////////////
-const String version = "1.2.0";
+//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+const String version = "1.3.0";
+const String CodeName ="Antigua";
+//■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 TaskHandle_t taskHandle;
 AsyncWebServer ServerObject(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 Servo myservo;
 DNSServer dnsServer;   // キャプティブポータル用 DNS
 Preferences preferences;  
+
+const char* updateIndex = R"rawliteral(
+<!DOCTYPE html>
+<html lang='ja'>
+<head>
+  <meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>UZU SYSTEM LOADER</title>
+  <style>
+    body { background:#000; color:#fff; font-family:monospace; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .container { width:85%; max-width:400px; border:1px solid #333; padding:40px 20px; text-align:center; }
+    h2 { font-size:1rem; letter-spacing:0.2rem; margin-bottom:30px; color:#aaa; }
+    input[type=file] { color:#888; margin-bottom:30px; font-size:0.8rem; width:100%; }
+    #btn-submit { background:none; color:#fff; border:1px solid #fff; padding:10px 40px; cursor:pointer; font-family:monospace; transition:0.2s; }
+    #btn-submit:hover { background:#fff; color:#000; }
+    #prg-wrapper { display:none; }
+    .bar-frame { border:1px solid #444; height:10px; margin:20px 0; position:relative; }
+    .bar-fill { background:#fff; width:0%; height:100%; transition:width 0.1s; }
+    #status { font-size:0.8rem; color:#888; text-transform:uppercase; }
+    .success { color:#00ff00 !important; }
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <h2 id='title'>UZU_SYSTEM_UPDATE</h2>
+    <form id='upload-form' method='POST' action='/update' enctype='multipart/form-data'>
+      <input type='file' name='update' id='file-input' accept='.bin'>
+      <br>
+      <input type='submit' id='btn-submit' value='EXECUTE'>
+    </form>
+    <div id='prg-wrapper'>
+      <div class='bar-frame'><div id='bar' class='bar-fill'></div></div>
+      <div id='status'>LOADING: <span id='pct'>0</span>%</div>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('upload-form');
+    form.onsubmit = () => {
+      const file = document.getElementById('file-input').files[0];
+      if(!file) return false;
+      form.style.display = 'none';
+      document.getElementById('prg-wrapper').style.display = 'block';
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const p = Math.round((e.loaded / e.total) * 100);
+          document.getElementById('bar').style.width = p + '%';
+          document.getElementById('pct').innerHTML = p;
+          
+          // 100%になったら、返事を待たずに「完了」へ移行開始
+          if (p >= 100) {
+            document.getElementById('status').innerHTML = 'FLASHING... PLEASE WAIT';
+            // 5秒くらい待って強制的に成功表示にする（ESP32が再起動してるはずの時間）
+            setTimeout(() => {
+              document.getElementById('status').innerHTML = '<span class="success">UPDATE COMPLETED</span>';
+              document.getElementById('title').innerHTML = 'REBOOTING...';
+            }, 3000);
+          }
+        }
+      });
+      xhr.onreadystatechange = () => {
+        // ここではマジのエラー（404とか500）の時だけ反応させる
+        if (xhr.readyState === 4 && xhr.status !== 200 && xhr.status !== 0) {
+          document.getElementById('status').innerHTML = 'ERROR: UPDATE FAILED (' + xhr.status + ')';
+        }
+      };
+      xhr.open('POST', '/update', true);
+      xhr.send(new FormData(form));
+      return false;
+    };
+  </script>
+</body>
+</html>
+)rawliteral";
+
 
 // MAX31855とつなぐピン番号
 const int ThermoDO_pin = 19;   // SO
@@ -83,7 +159,10 @@ String CurrentStaPassword = "";  // 現在の有効なSTA用Password
 // センサーオブジェクト作成
 Adafruit_MAX31855 thermocouple(ThermoCLK_pin, ThermoCS_pin, ThermoDO_pin);
 double AverageTemperature = 0.0;
+double RawTemperature = 0.0;  // No calibration(offset)
 const String TemperaturePath = "temperature";
+double TempOffset = 0.0;
+double TempGain = 1.0;
 
 // オプションボタン登録関係
 int LongButtonTimerCount = 0;
@@ -91,52 +170,80 @@ String ButtonCommands[5], LongButtonCommands[5];
 int ButtonCommandCount = 0, ButtonIndex = 0;
 int LongButtonCommandCount = 0, LongButtonIndex = 0;
 
+// RGB LED(Freenove)
+#define LEDS_COUNT  1   // The number of led
+#define LEDS_PIN	  16  // define the pin connected to the led strip
+#define CHANNEL		  0   // RMT module channel
+//Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(LEDS_COUNT, LEDS_PIN, CHANNEL, TYPE_GRB);
+
 //////////////////////////////////////////////////////////////////////////
-#define FROM_WIFI 0
-#define FROM_USB  1
+#define CONSOLE_NONE 0
+#define CONSOLE_WEB 1
+#define CONSOLE_USB 2
+
 class SerialWrapper {
 private:
-  int whereFrom;
+  int whereTo;
   
 public:
-  SerialWrapper() : whereFrom(FROM_WIFI) {}
+  SerialWrapper() : whereTo(CONSOLE_USB) {}
     
   void setWhereFrom(int type) {
-    whereFrom = type;
+    whereTo = type;
   }
   
-  // テンプレートで全ての型に対応
-  template<typename T>
+template<typename T>
   void print(T value) {
-    if (true) {
+    if (whereTo == CONSOLE_USB) {
       Serial.print(value);
+    } else {
+      // どんな型が来ても String にキャストして送るのが安全や
+      String msg = String(value);
+      BroadcastMessage(msg);
     }
   }
-  
+
+  // 小数点桁数指定付きの print
   template<typename T>
-  void print(T value, int format) {
-    if (true) {
-      Serial.print(value, format);
+  void print(T value, int digits) {
+    if (whereTo == CONSOLE_USB) {
+      Serial.print(value, digits);
+    } else {
+      String msg = String(value, digits);
+      BroadcastMessage(msg);
     }
   }
-  
+
+  // --- println系 ---
+  // 引数なし（改行のみ）
+  void println() {
+    if (whereTo == CONSOLE_USB) {
+      Serial.println();
+    } else {
+      String nl = "\n";
+      BroadcastMessage(nl);
+    }
+  }
+
+  // 引数ありの println
   template<typename T>
   void println(T value) {
-    if (true) {
+    if (whereTo == CONSOLE_USB) {
       Serial.println(value);
+    } else {
+      String msg = String(value) + "\n";
+      BroadcastMessage(msg);
     }
   }
-  
+
+  // 小数点桁数指定付きの println
   template<typename T>
-  void println(T value, int format) {
-    if (true) {
-      Serial.println(value, format);
-    }
-  }
-  
-  void println() {
-    if (true) {
-      Serial.println();
+  void println(T value, int digits) {
+    if (whereTo == CONSOLE_USB) {
+      Serial.println(value, digits);
+    } else {
+      String msg = String(value, digits) + "\n";
+      BroadcastMessage(msg);
     }
   }
 };
@@ -309,13 +416,14 @@ void ReadTempTask(void *pvParameters) {
       SimulateCount += 0.1;
       if (SimulateCount > 240.0) SimulateCount = 1.0;
     }
-    AverageTemperature = avg; // 移動平均化処理された温度をグローバルに保存
+    RawTemperature = avg; // 移動平均化処理された温度をグローバルに保存
+    AverageTemperature = TempGain * RawTemperature + TempOffset; 
     if (AverageTemperature > MAX_TEMPERATURE) {AverageTemperature = MAX_TEMPERATURE;}
     else if (AverageTemperature < 0.0) {AverageTemperature = 0.0;}
 
     if (++count >= (TemperatureInterval / CYCLE_PERIOD)) {
       count = 0;
-      text = String(avg, TemperatureDigit);
+      text = String(AverageTemperature, TemperatureDigit);
 
       if (TempDisplay) {
         if (UsbSerial) {
@@ -323,7 +431,7 @@ void ReadTempTask(void *pvParameters) {
         }
         else {
           String result = Prefix + text + Suffix;
-          Serial.println(result);
+          MySerial.println(result);
         }
       }
     }
@@ -366,6 +474,20 @@ void WebReceiveMsg(uint8_t *data, size_t len) {
   CommandProcess(command);
 }
 
+#if 0
+//////////////////////////////////////////////////////////////////////////
+void RGB_LEDSetup() {
+	strip.begin();
+	strip.setBrightness(10);	
+}
+
+void RGB_LEDLoop() {
+  int m_color[5][3] = { {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 255}, {0, 0, 0} };
+  strip.setLedColorData(0, m_color[0][0], m_color[0][1], m_color[0][2]);// Set color data.
+  strip.show();   // Send color data to LED, and display.
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 void LowEnergySetUp(){
   btStop(); // Bluetoothを完全にOFF（WiFiと共存してると使ってる場合あり）
@@ -393,11 +515,10 @@ void IOSetup() {
 
 //////////////////////////////////////////////////////////////////////////
 void setup() {
-
   LowEnergySetUp();
   SerialSetup();
   if (!LittleFS.begin(true)) {  // true でFSがなかったら自己修復
-    Serial.println("LittleFSマウント失敗(自己修復済み)");
+    MySerial.println("LittleFSマウント失敗(自己修復済み)");
     return;
   }
     // LittleFSのファイルをWebサーバーとして提供
@@ -408,6 +529,7 @@ void setup() {
   ThermoCoupleSetup();
   TaskSetup();
   IOSetup();
+  //RGB_LEDSetup();
 
   preferences.begin("temperature", true); // 読み取り専用
   TemperatureInterval = preferences.getInt("interval", TemperatureInterval);
@@ -416,6 +538,8 @@ void setup() {
   Suffix = preferences.getString("suffix", Suffix);
   TempDisplay =  preferences.getBool("temp_display", TempDisplay);
   SimulateCount =  preferences.getDouble("simulate_count", SimulateCount);
+  TempOffset = preferences.getDouble("temp_offset", 0.0);
+  TempGain = preferences.getDouble("temp_gain", 1.0);
   preferences.end();
 
   //ControlServo();
@@ -425,7 +549,7 @@ void setup() {
   int count = preferences.getInt("powerup_count", 0);
   preferences.putInt("powerup_count", (count + 1));
   preferences.end();
-  Serial.println(String("Power On Count: ") + String(count));
+  MySerial.println(String("Power On Count: ") + String(count));
   
   preferences.begin("function", true);
   LEDTemperatureDisplay = preferences.getBool("ledtemp", false);
@@ -439,7 +563,7 @@ void setup() {
     esp_log_level_set("wifi", ESP_LOG_NONE);
   }
 
- Serial.println("Version: " + version);
+ MySerial.println("Version: " + version + " / CodeName: " + CodeName);
 
     // オプションボタンの登録
   preferences.begin("function", true);
@@ -465,13 +589,13 @@ void ControlLED(bool onoff){
 void loop() {
   PollSerial();
   webSocket.loop();
-  ElegantOTA.loop();  // 2026.2.23
+  //ElegantOTA.loop();  // 2026.2.23
   delay(10);
   counterx++;
-
   wifiConnected = (WiFi.status() == WL_CONNECTED) || (WiFi.softAPgetStationNum() >= 1); // 2026.2.20 STAmode
   statusLEDProc();
   readBootButton();
+  //RGB_LEDLoop();
 
   if (!(wifiConnected || /* webSocketConnected || */ UsbSerial)) {  // 2026.2.20 WiFi接続が解除されたらroastingもオフ
     roasting = false;
@@ -513,7 +637,7 @@ void readBootButton() {
         CommandProcess(exec);
         LongButtonIndex = (LongButtonIndex + 1) % LongButtonCommandCount;
         LongButtonTimerCount = 301; 
-        Serial.println(String("Button long press command: ") + exec);
+        MySerial.println(String("Button long press command: ") + exec);
       }
     }
   } 
@@ -524,7 +648,7 @@ void readBootButton() {
         String exec = ButtonCommands[ButtonIndex];
         CommandProcess(exec);
         ButtonIndex = (ButtonIndex + 1) % ButtonCommandCount;
-        Serial.println(String("Button press command: ") + exec);
+        MySerial.println(String("Button press command: ") + exec);
       }
     }
     // 離したらリセット
@@ -573,23 +697,23 @@ void statusLEDProc() {
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
   File root = fs.open(dirname);
   if (!root || !root.isDirectory()) {
-    Serial.println("Failed to open directory");
+    MySerial.println("Failed to open directory");
     return;
   }
 
   File file = root.openNextFile();
   while (file) {
     if (file.isDirectory()) {
-      Serial.print("DIR  : ");
-      Serial.println(file.name());
+      MySerial.print("DIR  : ");
+      MySerial.println(file.name());
       if (levels) {
         listDir(fs, file.name(), levels - 1);
       }
     } else {
-      Serial.print("FILE : ");
-      Serial.print(file.name());
-      Serial.print("\tSIZE: ");
-      Serial.println(file.size());
+      MySerial.print("FILE : ");
+      MySerial.print(file.name());
+      MySerial.print("\tSIZE: ");
+      MySerial.println(file.size());
     }
     file = root.openNextFile();
   }
@@ -621,9 +745,9 @@ void CommandProcess(String& command, const uint8_t* params) {
       preferences.putString("wifimode", "ap");   // APモードで起動するよう保存
 
       preferences.end();
-      Serial.println(String("SSID: ") + Ssid);
-      Serial.println(String("Password: ") + Password);
-      Serial.print("IP address: 192.168.4.1");
+      MySerial.println(String("SSID: ") + Ssid);
+      MySerial.println(String("Password: ") + Password);
+      MySerial.print("IP address: 192.168.4.1");
 
       int interval = 500;
       int digit = 1;
@@ -638,13 +762,15 @@ void CommandProcess(String& command, const uint8_t* params) {
       preferences.putString("suffix", suffix);
       preferences.putBool("temp_display", temp_display);
       preferences.putDouble("simulate_count", simulate_count);
+      preferences.putDouble("temp_offset", 0.0);
+      preferences.putDouble("temp_gain", 1.0);
       preferences.end();
 
-      Serial.println("Temperature interval: " + String(interval) + "[ms]");
-      Serial.println("Temperature fraction digit: " + String(digit) + "[ms]");
-      Serial.println("Removed prefix and suffix.");
-      Serial.println("Temperature Display: ON");
-      Serial.println("Resetting UZU ROASTER System...");
+      MySerial.println("Temperature interval: " + String(interval) + "[ms]");
+      MySerial.println("Temperature fraction digit: " + String(digit) + "[ms]");
+      MySerial.println("Removed prefix and suffix.");
+      MySerial.println("Temperature Display: ON");
+      MySerial.println("Resetting UZU ROASTER System...");
 
       preferences.begin("function", false);
       preferences.putString("bpress", "templed on#templed off");
@@ -656,7 +782,7 @@ void CommandProcess(String& command, const uint8_t* params) {
       delay(100);     
     }
     roasting = false;
-    Serial.println("Resetting UZU ROASTER System...");
+    MySerial.println("Resetting UZU ROASTER System...");
     ESP.restart();
   }
   else if (command == "wifi on") {
@@ -669,7 +795,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.begin("wifi", true); // 読み取り専用
     String ssid = preferences.getString("ssid", Ssid);
     preferences.end();
-    Serial.println(String("SSID: ") + ssid);
+    MySerial.println(String("SSID: ") + ssid);
   }
   else if (command.startsWith("ssid ")) {
     str = command.substring(5);
@@ -680,7 +806,7 @@ void CommandProcess(String& command, const uint8_t* params) {
         str = str.substring(0, str.length() - 3);
         str.trim();
     }
-    Serial.println("SSID: " + str);
+    MySerial.println("SSID: " + str);
     preferences.begin("wifi", false);
     preferences.putString("ssid", str);
     preferences.end();
@@ -705,14 +831,14 @@ void CommandProcess(String& command, const uint8_t* params) {
     }
     
     if (str.length() < 8 && str.length() > 0) {
-        Serial.println("Error: Password must be at least 8 characters!");
+        MySerial.println("Error: Password must be at least 8 characters!");
         return;
     }
     
     if (str == "") {
-        Serial.println("Password: No Password");
+        MySerial.println("Password: No Password");
     } else {
-        Serial.println("Password: " + str);
+        MySerial.println("Password: " + str);
     }
     
     preferences.begin("wifi", false);
@@ -724,14 +850,14 @@ void CommandProcess(String& command, const uint8_t* params) {
     }
   }
   else if (command == "stassid") {
-    Serial.println(String("STA SSID: ") + CurrentStaSsid);  // 2026.2.19
+    MySerial.println(String("STA SSID: ") + CurrentStaSsid);  // 2026.2.19
   }
   else if (command.startsWith("stassidclear")) {
     preferences.begin("wifi", false);
     preferences.putString("stassid", StaSsid);  // デフォルトに設定
     preferences.putString("stapass", StaPass);  // デフォルトに設定
     preferences.end();
-    Serial.println(String("STA SSID:"));
+    MySerial.println(String("STA SSID:"));
     CurrentStaSsid = StaSsid; 
     CurrentStaPassword = StaPass; 
     str = command.substring(12);
@@ -749,7 +875,7 @@ void CommandProcess(String& command, const uint8_t* params) {
         str.trim();
     }
     CurrentStaSsid = str;
-    Serial.println("STA SSID: " + CurrentStaSsid);
+    MySerial.println("STA SSID: " + CurrentStaSsid);
     preferences.begin("wifi", false);
     preferences.putString("stassid", CurrentStaSsid);
     preferences.end();
@@ -771,13 +897,13 @@ void CommandProcess(String& command, const uint8_t* params) {
         str.trim();
     }
     if (str.length() < 8 && str.length() > 0) {
-      Serial.println("Error: Password must be at least 8 characters!");
+      MySerial.println("Error: Password must be at least 8 characters!");
       return;
     }
     if (str == "") {
-      Serial.println("STA Password: No Password");
+      MySerial.println("STA Password: No Password");
     } else {
-      Serial.println("STA Password: " + str);
+      MySerial.println("STA Password: " + str);
     }
     preferences.begin("wifi", false);
     preferences.putString("stapass", str);
@@ -792,13 +918,13 @@ void CommandProcess(String& command, const uint8_t* params) {
     String str = preferences.getString("wifimode", "ap");  
     preferences.end();
     str.toUpperCase();
-    Serial.println((String)"WiFi: " + str + (String)" mode.");
+    MySerial.println((String)"WiFi: " + str + (String)" mode.");
   }
   else if (command == "wifimode sta") {
     preferences.begin("wifi", false);
     preferences.putString("wifimode", "sta");  // STAモードで起動するよう保存
     preferences.end();
-    Serial.println("WiFi: STA mode after restart.");
+    MySerial.println("WiFi: STA mode after restart.");
     delay(100);
     ESP.restart();
   }
@@ -806,39 +932,154 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.begin("wifi", false);
     preferences.putString("wifimode", "ap");   // APモードで起動するよう保存
     preferences.end();
-    Serial.println("WiFi: AP mode after restart.");
+    MySerial.println("WiFi: AP mode after restart.");
     delay(100);
     ESP.restart(); 
   }
   else if (command == "temp on") {
-    Serial.println("Temperature display ON.");
+    MySerial.println("Temperature display ON.");
     TempDisplay = true;
     preferences.begin("temperature", false);
     preferences.putBool("temp_display", TempDisplay);
     preferences.end();
   }
   else if (command == "temp off") {
-    Serial.println("Temperature display OFF.");
+    MySerial.println("Temperature display OFF.");
     TempDisplay = false;
     preferences.begin("temperature", false);
     preferences.putBool("temp_display", TempDisplay);
     preferences.end();
   }
   else if (command.startsWith("interval ")) {
-    str = command.substring(9);       // "temp "の後ろを取得
+    str = command.substring(9);       
     str.trim();                              // 前後の空白や改行を削除
     value = str.toInt();                 // 数値に変換
-
     if (value > 0) {
       TemperatureInterval = value;
       preferences.begin("temperature", false);
       preferences.putInt("interval", value);
       preferences.end();
-      Serial.println("Temperature interval: " + String(TemperatureInterval) + "[ms]");
+      MySerial.println("Temperature interval: " + String(TemperatureInterval) + "[ms]");
     } else {
-      Serial.println("Invalid interval value: " + str);
+      MySerial.println("Invalid interval value: " + str);
     }
   }      
+  if (command == "toffset") {
+    // 【UI: 確認モード】引数なしなら現在の値を表示
+    MySerial.print("Current Temperature Offset: ");
+    MySerial.print(TempOffset, 1);
+    MySerial.println(" [deg]");
+  } 
+  else if (command == "toffset reset") {
+    TempOffset = 0.0;
+    preferences.begin("temperature", false);
+    preferences.putDouble("temp_offset", 0.0);
+    preferences.end();
+    
+    MySerial.println("Offset Reset to 0.0 [deg]");
+  }
+  else if (command.startsWith("toffset ")) {
+    // 【UI: 設定モード】
+    str = command.substring(8);
+    str.trim();
+    double floatValue = str.toDouble();
+    // 入力バリデーション（数値かどうか）
+    if (floatValue != 0 || str == "0" || str == "0.0" || str == "-0.0") {
+      TempOffset = floatValue;    // - RawTemperature;
+      preferences.begin("temperature", false);
+      preferences.putDouble("temp_offset", floatValue);
+      preferences.end();
+      MySerial.print("Offset Updated: ");
+      MySerial.print(TempOffset, 1);
+      MySerial.println(" [deg]");
+    } else {
+      MySerial.println("Error: Invalid numeric value [" + str + "]");
+    }
+  }
+    if (command == "tgain") {
+    // 【UI: 確認モード】引数なしなら現在の値を表示
+    MySerial.print("Current Temperature Gain: ");
+    MySerial.println(TempGain, 4);
+  } 
+  else if (command == "tgain reset") {
+    TempGain = 1.0;
+    preferences.begin("temperature", false);
+    preferences.putDouble("temp_gain", 1.0);
+    preferences.end();
+    
+    MySerial.println("Gain Reset to 0.0 [deg]");
+  }
+  else if (command.startsWith("tgain ")) {
+    double valA = command.substring(6).toDouble();
+    if (valA >= 0.1 && valA <= 10.0) { // 暴走防止のガードレール
+      TempGain = valA;
+      preferences.begin("temperature", false);
+      preferences.putDouble("temp_gain", TempGain);
+      preferences.end();
+      MySerial.print("Gain calibrated: a = ");
+      MySerial.println(TempGain, 4);
+    } else {
+      MySerial.println("Error: Gain out of safe range (0.1 - 10.0)");
+    }
+  }
+  else if (command.startsWith("tcalc ")) {
+    String line = command;
+    line.trim(); // 前後の空白を削除
+    String parts[6]; // command + arg1..4 + 予備
+    int partCount = 0;
+    int from = 0;
+    int to = line.indexOf(' ');
+    while (to != -1 && partCount < 6) {
+      parts[partCount++] = line.substring(from, to);
+      from = to + 1;
+      to = line.indexOf(' ', from);
+    }
+    if (partCount < 6) {
+      parts[partCount++] = line.substring(from);
+    }
+    int argCount = partCount - 1; // 引数の数
+        // 【エラーチェック】引数が2つでも4つでもない場合は即却下
+    if (argCount != 2 && argCount != 4) {
+      MySerial.println("Error: tcalc requires exactly 2 or 4 arguments.");
+      return;
+    }
+    // 引数が2つの場合：Offset（切片）のみを再計算して保存
+    else if (argCount == 2) {
+      double ideal_L = parts[1].toDouble();
+      double raw_L   = parts[2].toDouble();
+      // 現在の gain (a) を維持したまま、新しい実測値に合わせて b を再計算
+      // b = y - ax
+      TempOffset = ideal_L - (TempGain * raw_L);
+      
+      MySerial.print("Mode: Offset Adjustment. New Offset: ");
+      MySerial.println(TempOffset, 4);
+      MySerial.println("Gain (a) remains unchanged.");
+    }
+    // 引数が4つの場合：Gain と Offset をフル校正
+    else if (argCount == 4) {
+      float ideal_L = parts[1].toFloat();
+      float raw_L   = parts[2].toFloat();
+      float ideal_H = parts[3].toFloat();
+      float raw_H   = parts[4].toFloat();
+
+      if (abs(raw_H - raw_L) < 0.0001) {
+        MySerial.println("Error: Raw delta is zero. Division by zero prevented.");
+        return;
+      }
+      else {
+        TempGain = (ideal_H - ideal_L) / (raw_H - raw_L);
+        TempOffset = ideal_L - (TempGain * raw_L);
+
+        MySerial.println("Mode: Full Calibration");
+        MySerial.print("New Gain  (a): "); Serial.println(TempGain, 4);
+        MySerial.print("New Offset(b): "); Serial.println(TempOffset, 4);
+      }
+    }
+    preferences.begin("temperature", false);
+    preferences.putDouble("temp_gain", TempGain);
+    preferences.putDouble("temp_offset", TempOffset);
+    preferences.end();
+  }
   else if (command.startsWith("digit ")) {
     str = command.substring(6);       // "temp "の後ろを取得
     str.trim();                              // 前後の空白や改行を削除
@@ -849,81 +1090,97 @@ void CommandProcess(String& command, const uint8_t* params) {
       preferences.begin("temperature", false);
       preferences.putInt("digit", value);
       preferences.end();
-      Serial.println("Temperature fraction digit: " + String(TemperatureDigit));
+      MySerial.println("Temperature fraction digit: " + String(TemperatureDigit));
     } else {
-      Serial.println("Invalid fraction digit value: " + str);
+      MySerial.println("Invalid fraction digit value: " + str);
     }
   }     
   else if (command.startsWith("prefix ")) {
-    str = command.substring(7);    
-    str = trimString(str);
+    int firstQuote = command.indexOf('"');
+    int lastQuote = command.lastIndexOf('"');
+
+    if (firstQuote != -1 && lastQuote != -1 && firstQuote < lastQuote) {
+      // " と " の間に挟まれた中身を抽出（スペースもそのまま！）
+      str = command.substring(firstQuote + 1, lastQuote);
+    } else {
+      // 囲みがない場合は、従来通り "prefix " の後から全部取る
+      str = command.substring(7);
+      str.trim();
+    }
     preferences.begin("temperature", false);
     preferences.putString("prefix", str);
     preferences.end();
     Prefix = str;
-    Serial.println("Temperature text prefix: " + str);
+    MySerial.println("Temperature text prefix: [" + str + "]");
   }
   else if (command == "prefix") {
+    Prefix = "";
     preferences.begin("temperature", false);
     preferences.putString("prefix", "");
     preferences.end();
-    Prefix = "";
-    Serial.println("Temperature text prefix: ");
+    MySerial.println("Temperature text prefix: (cleared)");
   }
   else if (command.startsWith("suffix ")) {
-    str = command.substring(7);       // "temp "の後ろを取得
-    str = trimString(str);
+    int firstQuote = command.indexOf('"');
+    int lastQuote = command.lastIndexOf('"');
+
+    if (firstQuote != -1 && lastQuote != -1 && firstQuote < lastQuote) {
+      str = command.substring(firstQuote + 1, lastQuote);
+    } else {
+      str = command.substring(7);
+      str.trim();
+    }
     preferences.begin("temperature", false);
     preferences.putString("suffix", str);
     preferences.end();
     Suffix = str;
-    Serial.println("Temperature text suffix: " + str);
+    MySerial.println("Temperature text suffix: [" + str + "]");
   }
   else if (command == "suffix") {
+    Suffix = "";
     preferences.begin("temperature", false);
     preferences.putString("suffix", "");
     preferences.end();
-    Suffix = "";
-    Serial.println("Temperature text suffix: ");
+    MySerial.println("Temperature text suffix: (cleared)");
   }
   else if (command.startsWith("echo ")) {
     str = command.substring(5);       // "echo "の後ろを取得
-    Serial.println(str);
+    MySerial.println(str);
   }
   else if (command.startsWith("echon ")) {  // 数字をエコー
     str = command.substring(6);
     double temp = str.toDouble();         // 数値として取り出す
-    Serial.println(temp);               // 数値だけ送る
+    MySerial.println(temp);               // 数値だけ送る
   }
   else if (command.startsWith("simulate ")) {
     str = command.substring(9);
     if (str == "on") {
       SimulateCount = 1.0;
-      Serial.println("Simulate set to ON.");
+      MySerial.println("Simulate set to ON.");
     }
     else if (str == "off") {
       SimulateCount = 0.0;
-      Serial.println("Simulate set to OFF.");
+      MySerial.println("Simulate set to OFF.");
     }
     preferences.begin("temperature", false);
     preferences.putDouble("simulate_count", SimulateCount);
     preferences.end();
   }
   else if (command == "ip") {
-    Serial.print("IP address: ");
-    Serial.print(IPAddressMemory[0]);
-    Serial.print(".");
-    Serial.print(IPAddressMemory[1]);
-    Serial.print(".");
-    Serial.print(IPAddressMemory[2]);
-    Serial.print(".");
-    Serial.println(IPAddressMemory[3]);
+    MySerial.print("IP address: ");
+    MySerial.print(IPAddressMemory[0]);
+    MySerial.print(".");
+    MySerial.print(IPAddressMemory[1]);
+    MySerial.print(".");
+    MySerial.print(IPAddressMemory[2]);
+    MySerial.print(".");
+    MySerial.println(IPAddressMemory[3]);
   }
   else if (command.startsWith("ip ")) {
     str = command.substring(3);
     int count = sscanf(str.c_str(), "%d.%d.%d.%d", &IPAddressMemory[0], &IPAddressMemory[1], &IPAddressMemory[2], &IPAddressMemory[3]);
     if (count != 4) {
-      Serial.println("IP Address is not correct!");
+      MySerial.println("IP Address is not correct!");
       return;
     }
     preferences.begin("wifi", false);
@@ -932,53 +1189,56 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.putInt("address2", IPAddressMemory[2]);
     preferences.putInt("address3", IPAddressMemory[3]);
     preferences.end();
-    Serial.println("IP Address is set to " + str);
+    MySerial.println("IP Address is set to " + str);
     ESP.restart();
   }
   else if (command == "staip") {
-    Serial.print("STA IP address: ");;
-    Serial.println(WiFi.localIP());
+    MySerial.print("STA IP address: ");;
+    MySerial.println(WiFi.localIP());
   }
   else if (command == "ls") {
     if (!LittleFS.begin()) {
-      Serial.println("LittleFS mount failed!");
+      MySerial.println("LittleFS mount failed!");
       return;
     }
-    Serial.println("LittleFS File List:");
+    MySerial.println("LittleFS File List:");
     listDir(LittleFS, "/", 1); // 再帰深さは1で十分
   }
   else if (command.startsWith("cat ")) {
     String filename = command.substring(4);
     File file = LittleFS.open("/" + filename, "r");
     if (!file) {
-      Serial.println("Error: File not found.");
+      MySerial.println("Error: File not found.");
     } else {
-      Serial.println("Contents of " + filename + ":");
+      if (!UsbSerial) {
+        MySerial.println("This command is not available for WebSocket.");
+        return;
+      }
       while (file.available()) {
-        Serial.write(file.read());
+        MySerial.print((char)file.read());
       }
       file.close();
-      Serial.println(); // 最後に改行
+      MySerial.println(); // 最後に改行
     }
   }
   else if (command.startsWith("rm ")) {
     String filename = command.substring(3);
     if (LittleFS.exists("/" + filename)) {
       LittleFS.remove("/" + filename);
-      Serial.println("Deleted: " + filename);
+      MySerial.println("Deleted: " + filename);
     } else {
-      Serial.println("Error: File not found.");
+      MySerial.println("Error: File not found.");
     }
   }
   else if (command.startsWith("usbserial ")) {
     str = command.substring(10);
     if (str == "on") {
       UsbSerial = true;
-      Serial.println("USB Serial set to ON.");
+      MySerial.println("USB Serial set to ON.");
     }
     else if (str == "off") {
       UsbSerial = false;
-      Serial.println("USB Serial set to OFF.");
+      MySerial.println("USB Serial set to OFF.");
     }
   }
   else if (command == "start") {  // USBから焙煎スタート受信
@@ -993,7 +1253,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.begin("function", false);
     preferences.putString("bpress", "");
     preferences.end();
-    Serial.println(String("Button press command reset."));
+    MySerial.println(String("Button press command reset."));
     ButtonCommandCount = 0;
     ButtonIndex = 0;
   }
@@ -1001,7 +1261,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.begin("function", false);
     preferences.putString("blpress", "");
     preferences.end();
-    Serial.println(String("Button long press command reset."));
+    MySerial.println(String("Button long press command reset."));
     LongButtonCommandCount = 0;
     LongButtonIndex = 0;
   }
@@ -1011,7 +1271,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.putString("bpress", str);
     preferences.end();
     parseCommands(str, ButtonCommands, ButtonCommandCount, ButtonIndex);
-    Serial.println("Button press registered: " + str + " (Count: " + String(ButtonCommandCount) + ")");
+    MySerial.println("Button press registered: " + str + " (Count: " + String(ButtonCommandCount) + ")");
   }
   else if (command.startsWith("blpress ")) {
   str = command.substring(8);
@@ -1019,18 +1279,18 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.putString("blpress", str);
     preferences.end();
     parseCommands(str, LongButtonCommands, LongButtonCommandCount, LongButtonIndex);
-    Serial.println("Button long press registered: " + str + " (Count: " + String(LongButtonCommandCount) + ")");
+    MySerial.println("Button long press registered: " + str + " (Count: " + String(LongButtonCommandCount) + ")");
   }
   else if (command.startsWith("templed ")) {
     str = command.substring(8);
     if (str == "on") {
       LEDTemperatureDisplay = true;
       LEDIPDisplay = IP_LED_OFF;  // STA IP表示とは排他
-      Serial.println("LED Temperature Display: ON");
+      MySerial.println("LED Temperature Display: ON");
     }
     else if (str == "off") {
       LEDTemperatureDisplay = false;
-      Serial.println("LED Temperature Display: OFF");
+      MySerial.println("LED Temperature Display: OFF");
     }
     preferences.begin("function", false);
     preferences.putBool("ledtemp", LEDTemperatureDisplay);
@@ -1044,7 +1304,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.begin("wifi", false);
     preferences.putInt("maxwifi", value);
     preferences.end();
-    Serial.println("Max WiFi: " + str);
+    MySerial.println("Max WiFi: " + str);
     delay(100);
     ESP.restart();
   }
@@ -1053,16 +1313,16 @@ void CommandProcess(String& command, const uint8_t* params) {
     if (str == "ap") {
       LEDIPDisplay = IP_LED_AP;
       LEDTemperatureDisplay = false;  // 温度表示とは排他
-      Serial.println("LED IP Display: ON");
+      MySerial.println("LED IP Display: ON");
     }
     else if (str == "sta") {
       LEDIPDisplay = IP_LED_STA;
       LEDTemperatureDisplay = false;  // 温度表示とは排他
-      Serial.println("LED IP Display: ON");
+      MySerial.println("LED IP Display: ON");
     }
     else if (str == "off") {
       LEDIPDisplay = IP_LED_OFF;
-      Serial.println("LED IP Display: OFF");
+      MySerial.println("LED IP Display: OFF");
     }
     preferences.begin("function", false);
     preferences.putBool("ledtemp", LEDTemperatureDisplay);
@@ -1074,11 +1334,11 @@ void CommandProcess(String& command, const uint8_t* params) {
     bool lpm;
     if (str == "on") {
       lpm = true;
-      Serial.println("Low Energy Mode: ON");
+      MySerial.println("Low Energy Mode: ON");
     }
     else if (str == "off") {
       lpm = false;
-      Serial.println("Low Energy Mode: OFF");
+      MySerial.println("Low Energy Mode: OFF");
     }
     preferences.begin("function", false);
     preferences.putInt("lowpowermode", lpm);
@@ -1087,16 +1347,16 @@ void CommandProcess(String& command, const uint8_t* params) {
     ESP.restart();
   }
   else if (command == "wifiscan") {
-    Serial.println("Scanning WiFi networks...");
+    MySerial.println("Scanning WiFi networks...");
     int n = WiFi.scanNetworks(false, true);  // false=ブロッキング, true=隠しSSIDも表示
     if (n == WIFI_SCAN_FAILED) {
-        Serial.println("Scan failed.");
+        MySerial.println("Scan failed.");
     } else if (n == 0) {
-        Serial.println("No networks found.");
+        MySerial.println("No networks found.");
     } else {
-        Serial.println(String(n) + " networks found:");
+        MySerial.println(String(n) + " networks found:");
         for (int i = 0; i < n; i++) {
-            Serial.println(String(i) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + "dBm)");
+            MySerial.println(String(i) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + "dBm)");
         }
     }
     WiFi.scanDelete();
@@ -1126,44 +1386,46 @@ void CommandProcess(String& command, const uint8_t* params) {
     bool lpm =preferences.getInt("lowpowermode", false);
     preferences.end();
 
-    Serial.println("========== UZU ROASTER STATUS ==========");
+    MySerial.println("========== UZU ROASTER STATUS ==========");
     // システム
-    Serial.println("[System]");
-    Serial.println("  Version       : " + version);
+    MySerial.println("[System]");
+    MySerial.println("  Version       : " + version + " / CodeName: " + CodeName);
     // WiFi
-    Serial.println("[WiFi]");
-    Serial.println("  AP SSID       : " + ssid);
-    Serial.println("  AP IP         : " + WiFi.softAPIP().toString());
-    Serial.println("  AP Clients    : " + String(WiFi.softAPgetStationNum()));
-    Serial.println("  STA SSID      : " + (stassid == "" ? "(none)" : stassid));
-    Serial.println("  STA IP        : " + (WiFi.localIP().toString() == "0.0.0.0" ? "(not connected)" : WiFi.localIP().toString()));
-    Serial.println("  STA Status    : " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected"));
-    Serial.println("  WiFi log      : " + String(wifiLog ? "on" : "off"));
-    Serial.println("  Max WiFis     : " + String(max_wifi));
-    Serial.println("  Low Energy    : " + String(lpm ? "on" : "off"));
-    Serial.println("  WiFi          : " + wifimode + (String)" mode.");
+    MySerial.println("[WiFi]");
+    MySerial.println("  AP SSID       : " + ssid);
+    MySerial.println("  AP IP         : " + WiFi.softAPIP().toString());
+    MySerial.println("  AP Clients    : " + String(WiFi.softAPgetStationNum()));
+    MySerial.println("  STA SSID      : " + (stassid == "" ? "(none)" : stassid));
+    MySerial.println("  STA IP        : " + (WiFi.localIP().toString() == "0.0.0.0" ? "(not connected)" : WiFi.localIP().toString()));
+    MySerial.println("  STA Status    : " + String(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected"));
+    MySerial.println("  WiFi log      : " + String(wifiLog ? "on" : "off"));
+    MySerial.println("  Max WiFis     : " + String(max_wifi));
+    MySerial.println("  Low Energy    : " + String(lpm ? "on" : "off"));
+    MySerial.println("  WiFi          : " + wifimode + (String)" mode.");
     // 温度
-    Serial.println("[Temperature]");
-    Serial.println("  Current temp  : " + String(AverageTemperature, TemperatureDigit) + " deg");
-    Serial.println("  Temp display  : " + String(tempDisp ? "on" : "off"));
-    Serial.println("  Interval      : " + String(interval) + " ms");
-    Serial.println("  Digit         : " + String(digit));
-    Serial.println("  Prefix        : " + (prefix == "" ? "(none)" : prefix));
-    Serial.println("  Suffix        : " + (suffix == "" ? "(none)" : suffix));
+    MySerial.println("[Temperature]");
+    MySerial.println("  Current temp  : " + String(AverageTemperature, TemperatureDigit) + " deg");
+    MySerial.println("  Temp display  : " + String(tempDisp ? "on" : "off"));
+    MySerial.println("  Interval      : " + String(interval) + " ms");
+    MySerial.println("  Digit         : " + String(digit));
+    MySerial.println("  Prefix        : " + (prefix == "" ? "(none)" : prefix));
+    MySerial.println("  Suffix        : " + (suffix == "" ? "(none)" : suffix));
+    MySerial.print("  Correction    : y = ");
+    MySerial.print(TempGain, 4); MySerial.print("x + (");  MySerial.print(TempOffset, 1); MySerial.println(")");
     // 焙煎
-    Serial.println("[Roasting]");
-    Serial.println("  Roasting      : " + String(roasting ? "yes" : "no"));
-    Serial.println("  Roast time    : " + String(roastTime) + " sec");
-    Serial.println("  Simulate      : " + String(SimulateCount > 0 ? "on" : "off"));
+    MySerial.println("[Roasting]");
+    MySerial.println("  Roasting      : " + String(roasting ? "yes" : "no"));
+    MySerial.println("  Roast time    : " + String(roastTime) + " sec");
+    MySerial.println("  Simulate      : " + String(SimulateCount > 0 ? "on" : "off"));
     // LED
-    Serial.println("[LED]");
-    Serial.println("  Temp LED      : " + String(LEDTemperatureDisplay ? "on" : "off"));
-    Serial.println("  IP LED        : " + led_disp);
+    MySerial.println("[LED]");
+    MySerial.println("  Temp LED      : " + String(LEDTemperatureDisplay ? "on" : "off"));
+    MySerial.println("  IP LED        : " + led_disp);
     // ボタン
-    Serial.println("[Button]");
-    Serial.println("  Short press   : " + (bpress == "" ? "(none)" : bpress));
-    Serial.println("  Long press    : " + (blpress == "" ? "(none)" : blpress));
-    Serial.println("========================================");
+    MySerial.println("[Button]");
+    MySerial.println("  Short press   : " + (bpress == "" ? "(none)" : bpress));
+    MySerial.println("  Long press    : " + (blpress == "" ? "(none)" : blpress));
+    MySerial.println("========================================");
   }
   else if (command.startsWith("wifilog ")) {  // 非公開コマンド
     str = command.substring(8);
@@ -1172,151 +1434,174 @@ void CommandProcess(String& command, const uint8_t* params) {
         preferences.begin("wifi", false);
         preferences.putBool("wifi_log", false);
         preferences.end();
-        Serial.println("WiFi log suppressed.");
+        MySerial.println("WiFi log suppressed.");
     }
     else if (str == "on") {
         esp_log_level_set("wifi", ESP_LOG_WARN);
         preferences.begin("wifi", false);
         preferences.putBool("wifi_log", true);
         preferences.end();
-        Serial.println("WiFi log restored.");
+        MySerial.println("WiFi log restored.");
     }
   }
   else if (command == "status -h") {
-    Serial.println("========== HARDWARE STATUS ==========");
+    MySerial.println("========== HARDWARE STATUS ==========");
     // CPU
-    Serial.println("[CPU]");
-    Serial.println("  CPU freq      : " + String(getCpuFrequencyMhz()) + " MHz");
-    Serial.println("  CPU0 (APP)    : " + String(xPortGetCoreID()) + " (current core)");
-    Serial.println("  XTAL freq     : " + String(getXtalFrequencyMhz()) + " MHz");
-    Serial.println("  APB freq      : " + String(getApbFrequency() / 1000000) + " MHz");
+    MySerial.println("[CPU]");
+    MySerial.println("  CPU freq      : " + String(getCpuFrequencyMhz()) + " MHz");
+    MySerial.println("  CPU0 (APP)    : " + String(xPortGetCoreID()) + " (current core)");
+    MySerial.println("  XTAL freq     : " + String(getXtalFrequencyMhz()) + " MHz");
+    MySerial.println("  APB freq      : " + String(getApbFrequency() / 1000000) + " MHz");
     // メモリ
-    Serial.println("[Memory]");
-    Serial.println("  Free heap     : " + String(ESP.getFreeHeap()) + " bytes");
-    Serial.println("  Min free heap : " + String(ESP.getMinFreeHeap()) + " bytes");
-    Serial.println("  Max alloc     : " + String(ESP.getMaxAllocHeap()) + " bytes");
-    Serial.println("  PSRAM size    : " + String(ESP.getPsramSize()) + " bytes");
-    Serial.println("  Free PSRAM    : " + String(ESP.getFreePsram()) + " bytes");    
+    MySerial.println("[Memory]");
+    MySerial.println("  Free heap     : " + String(ESP.getFreeHeap()) + " bytes");
+    MySerial.println("  Min free heap : " + String(ESP.getMinFreeHeap()) + " bytes");
+    MySerial.println("  Max alloc     : " + String(ESP.getMaxAllocHeap()) + " bytes");
+    MySerial.println("  PSRAM size    : " + String(ESP.getPsramSize()) + " bytes");
+    MySerial.println("  Free PSRAM    : " + String(ESP.getFreePsram()) + " bytes");    
     // Flash
-    Serial.println("[Flash]");
-    Serial.println("  Flash size    : " + String(ESP.getFlashChipSize()) + " bytes");
-    Serial.println("  Flash speed   : " + String(ESP.getFlashChipSpeed() / 1000000) + " MHz");
-    Serial.println("  Sketch size   : " + String(ESP.getSketchSize()) + " bytes");
-    Serial.println("  Free sketch   : " + String(ESP.getFreeSketchSpace()) + " bytes");
+    MySerial.println("[Flash]");
+    MySerial.println("  Flash size    : " + String(ESP.getFlashChipSize()) + " bytes");
+    MySerial.println("  Flash speed   : " + String(ESP.getFlashChipSpeed() / 1000000) + " MHz");
+    MySerial.println("  Sketch size   : " + String(ESP.getSketchSize()) + " bytes");
+    MySerial.println("  Free sketch   : " + String(ESP.getFreeSketchSpace()) + " bytes");
     // LittleFS
-    Serial.println("[LittleFS]");
-    Serial.println("  Total         : " + String(LittleFS.totalBytes()) + " bytes");
-    Serial.println("  Used          : " + String(LittleFS.usedBytes()) + " bytes");
-    Serial.println("  Free          : " + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + " bytes");
+    MySerial.println("[LittleFS]");
+    MySerial.println("  Total         : " + String(LittleFS.totalBytes()) + " bytes");
+    MySerial.println("  Used          : " + String(LittleFS.usedBytes()) + " bytes");
+    MySerial.println("  Free          : " + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + " bytes");
     // FreeRTOS
-    Serial.println("[FreeRTOS]");
-    Serial.println("  Tick count    : " + String(xTaskGetTickCount()));
-    Serial.println("  Task count    : " + String(uxTaskGetNumberOfTasks()));
-    Serial.println("  Stack(loop)   : " + String(uxTaskGetStackHighWaterMark(NULL)) + " bytes remaining");
-    Serial.println("  Stack(temp)   : " + String(uxTaskGetStackHighWaterMark(taskHandle)) + " bytes remaining");
+    MySerial.println("[FreeRTOS]");
+    MySerial.println("  Tick count    : " + String(xTaskGetTickCount()));
+    MySerial.println("  Task count    : " + String(uxTaskGetNumberOfTasks()));
+    MySerial.println("  Stack(loop)   : " + String(uxTaskGetStackHighWaterMark(NULL)) + " bytes remaining");
+    MySerial.println("  Stack(temp)   : " + String(uxTaskGetStackHighWaterMark(taskHandle)) + " bytes remaining");
     // チップ情報
-    Serial.println("[Chip]");
-    Serial.println("  Chip model    : " + String(ESP.getChipModel()));
-    Serial.println("  Chip rev      : " + String(ESP.getChipRevision()));
-    Serial.println("  Chip cores    : " + String(ESP.getChipCores()));
-    Serial.println("  MAC address   : " + WiFi.macAddress());
-    Serial.println("  SDK version   : " + String(ESP.getSdkVersion()));
+    MySerial.println("[Chip]");
+    MySerial.println("  Chip model    : " + String(ESP.getChipModel()));
+    MySerial.println("  Chip rev      : " + String(ESP.getChipRevision()));
+    MySerial.println("  Chip cores    : " + String(ESP.getChipCores()));
+    MySerial.println("  MAC address   : " + WiFi.macAddress());
+    MySerial.println("  SDK version   : " + String(ESP.getSdkVersion()));
     // リセット情報
-    Serial.println("[Reset]");
-    Serial.println("  Uptime        : " + String(millis() / 1000) + " sec");
-    Serial.println("[GPIO]");
-    Serial.println("  GPIO0  (BOOT)  : " + String(digitalRead(0)));
-    Serial.println("  GPIO2  (LED)   : " + String(digitalRead(2)));
-    Serial.println("  GPIO5  (CS)    : " + String(digitalRead(5)));
-    Serial.println("  GPIO14 (SERVO) : " + String(digitalRead(14)));
-    Serial.println("  GPIO18 (CLK)   : " + String(digitalRead(18)));
-    Serial.println("  GPIO19 (DO)    : " + String(digitalRead(19)));    Serial.println("[Sensor]");
-    Serial.println("[Temperature]");
-    Serial.println("  Raw temp      : " + String(thermocouple.readCelsius()));
-    Serial.println("  Internal temp : " + String(thermocouple.readInternal()));
-    Serial.println("  Sensor error  : " + String(thermocouple.readError()));
-    Serial.println("  Error count   : " + String(tempErrorCount));
-    Serial.println("  Last valid    : " + String(lastValidTemp));
-    Serial.println("[WebSocket]");
-    Serial.println("  Connected clients : " + String(webSocket.connectedClients()));
-    Serial.println("  WS connected  : " + String(webSocketConnected ? "yes" : "no"));
-    Serial.println("==========================================");
+    MySerial.println("[Reset]");
+    MySerial.println("  Uptime        : " + String(millis() / 1000) + " sec");
+    MySerial.println("[GPIO]");
+    MySerial.println("  GPIO0  (BOOT)  : " + String(digitalRead(0)));
+    MySerial.println("  GPIO2  (LED)   : " + String(digitalRead(2)));
+    MySerial.println("  GPIO5  (CS)    : " + String(digitalRead(5)));
+    MySerial.println("  GPIO14 (SERVO) : " + String(digitalRead(14)));
+    MySerial.println("  GPIO18 (CLK)   : " + String(digitalRead(18)));
+    MySerial.println("  GPIO19 (DO)    : " + String(digitalRead(19)));    MySerial.println("[Sensor]");
+    MySerial.println("[Temperature]");
+    MySerial.println("  Raw temp      : " + String(thermocouple.readCelsius()));
+    MySerial.println("  Internal temp : " + String(thermocouple.readInternal()));
+    MySerial.println("  Sensor error  : " + String(thermocouple.readError()));
+    MySerial.println("  Error count   : " + String(tempErrorCount));
+    MySerial.println("  Last valid    : " + String(lastValidTemp));
+    MySerial.println("[WebSocket]");
+    MySerial.println("  Connected clients : " + String(webSocket.connectedClients()));
+    MySerial.println("  WS connected  : " + String(webSocketConnected ? "yes" : "no"));
+    MySerial.println("==========================================");
   }
   else if (command == "help") {
-    Serial.println("Available commands:");
-    Serial.println("reset             - Resets the system and reboots.");
-    Serial.println("reset all         - Resets to factory settings.");
-    Serial.println("wifi <on/off>     - Enables or disables WiFi.");
-    Serial.println("ssid <text>       - Sets SSID (or displays current SSID if <text> is empty). Add '-r' at the end to restart.");
-    Serial.println("                    e.g.) ssid MyRouter / ssid MyRouter -r");
-    Serial.println("password <text>   - Sets WiFi password or clears it if <text> is empty. Add '-r' at the end to restart.");
-    Serial.println("                    Password must be 8 characters or more.");
-    Serial.println("                    e.g.) password mypass12 / stapassword mypass12 -r");
-    Serial.println("stassid <text>    - Sets STA SSID. Add '-r' at the end to restart.");
-    Serial.println("                    e.g.) stassid MyRouter / stassid MyRouter -r");
-    Serial.println("stassidclear      - Clears STA SSID, STA password and restarts.");
-    Serial.println("stapassword <text>- Sets STA password or clears it if <text> is empty. Add '-r' at the end to restart.");
-    Serial.println("                    Password must be 8 characters or more.");
-    Serial.println("                    e.g.) stapassword mypass12 / stapassword mypass12 -r");
-    Serial.println("temp <on/off>     - Enables or disables temperature output via USB-Serial.");
-    Serial.println("interval <number> - Sets temperature display interval [ms].");
-    Serial.println("digit <number>    - Sets temperature decimal places [0-2].");
-    Serial.println("prefix <text>     - Sets temperature text prefix via USB-Serial.");
-    Serial.println("suffix <text>     - Sets temperature text suffix via USB-Serial.");
-    Serial.println("echo <message>    - Prints <message> for testing via USB-Serial.");
-    Serial.println("echon <number>    - Prints <number> for testing via USB-Serial.");
-    Serial.println("simulate <on/off> - Enables or disables simulation mode (generates dummy data).");
-    Serial.println("ip <address>      - Sets a AP IP Address or displays IP Address if <address> is empty.");
-    Serial.println("                  - e.g.) ip 192.168.0.1)");
-    Serial.println("staip             - Displays STA IP Address.");
-    Serial.println("ls                - Lists files and directories in LittleFS.");
-    Serial.println("cat <file>        - Displays the contents of the specified file.");
-    Serial.println("rm <file>         - Deletes the specified file.");
-    Serial.println("usbserial <on/off>- Starts or stops JSON output {time, temp} via USB-Serial (Non-persistent) via USB-Serial.");
-    Serial.println("start             - Starts measurement via USB-Serial.");
-    Serial.println("stop              - Stops measurement via USB-Serial.");
-    Serial.println("bpress <command>  - Registers <command> for button press.");
-    Serial.println("blpress <command> - Registers <command> for button long press.");
-    Serial.println("templed <on/off>  - Displays temperature using 3 sets of LED blinks.");
-    Serial.println("                    Each digit (100s, 10s, 1s) is shown in sequence:");
-    Serial.println("                    [Blink Lengths]");
-    Serial.println("                    - 120ms (Short)  : Represents '1'");
-    Serial.println("                    - 400ms (Medium) : Represents '5'");
-    Serial.println("                    - 800ms (Long)   : Represents '0'");
-    Serial.println("                    [How to Read Example: 128 degrees]");
-    Serial.println("                    1st: 120ms(1) -> 2nd: 120msx2(2) -> 3rd: 400ms(5)+120msx3(3)");
-    Serial.println("                    (There is a short pause between each digit.)");
-    Serial.println("ipled <ap/sta/off>- Displays AP/STA IP Address using LED blinks.");
-    Serial.println("                    Each octet is shown in sequence (Roman numeral style):");
-    Serial.println("                    - 120ms (Short)  : Represents '1'");
-    Serial.println("                    - 400ms (Medium) : Represents '5'");
-    Serial.println("                    - 800ms (Long)   : Represents '0'");
-    Serial.println("                    Long pause between octets.");
-    Serial.println("wifiscan          - Scans for available WiFi networks.");
-    Serial.println("status            - Displays UZU ROASTER status.");
-    Serial.println("status -h         - Displays hardware status.");
-    Serial.println("wifilog <on/off>  - Displays wifi system log.");
-    Serial.println("wifimode <ap/sta> - changes WiFi mode(AP or STA) and restarts.");
-    Serial.println("maxwifi <number>  - Sets maximum WiFi connection(AP mode).");
-    Serial.println("lowenergy <on/off>- Sets low energy mode.");
-    Serial.println("help              - Displays this help menu.");
+    MySerial.println("Available commands:");
+    MySerial.println("reset             - Resets the system and reboots.");
+    MySerial.println("reset all         - Resets to factory settings.");
+    MySerial.println("wifi <on/off>     - Enables or disables WiFi.");
+    MySerial.println("ssid <text>       - Sets SSID (or displays current SSID if <text> is empty). Add '-r' at the end to restart.");
+    MySerial.println("                    e.g.) ssid MyRouter / ssid MyRouter -r");
+    MySerial.println("password <text>   - Sets WiFi password or clears it if <text> is empty. Add '-r' at the end to restart.");
+    MySerial.println("                    Password must be 8 characters or more.");
+    MySerial.println("                    e.g.) password mypass12 / stapassword mypass12 -r");
+    MySerial.println("stassid <text>    - Sets STA SSID. Add '-r' at the end to restart.");
+    MySerial.println("                    e.g.) stassid MyRouter / stassid MyRouter -r");
+    MySerial.println("stassidclear      - Clears STA SSID, STA password and restarts.");
+    MySerial.println("stapassword <text>- Sets STA password or clears it if <text> is empty. Add '-r' at the end to restart.");
+    MySerial.println("                    Password must be 8 characters or more.");
+    MySerial.println("                    e.g.) stapassword mypass12 / stapassword mypass12 -r");
+    MySerial.println("temp <on/off>     - Enables or disables temperature output via USB-Serial.");
+    MySerial.println("interval <number> - Sets temperature display interval [ms].");
+    MySerial.println("digit <number>    - Sets temperature decimal places [0-2].");
+    MySerial.println("prefix <text>     - Sets temperature text prefix via USB-Serial.");
+    MySerial.println("suffix <text>     - Sets temperature text suffix via USB-Serial.");
+    MySerial.println("echo <message>    - Prints <message> for testing via USB-Serial.");
+    MySerial.println("echon <number>    - Prints <number> for testing via USB-Serial.");
+    MySerial.println("simulate <on/off> - Enables or disables simulation mode (generates dummy data).");
+    MySerial.println("ip <address>      - Sets a AP IP Address or displays IP Address if <address> is empty.");
+    MySerial.println("                  - e.g.) ip 192.168.0.1)");
+    MySerial.println("staip             - Displays STA IP Address.");
+    MySerial.println("ls                - Lists files and directories in LittleFS.");
+    MySerial.println("cat <file>        - Displays the contents of the specified file.");
+    MySerial.println("rm <file>         - Deletes the specified file.");
+    MySerial.println("usbserial <on/off>- Starts or stops JSON output {time, temp} via USB-Serial (Non-persistent) via USB-Serial.");
+    MySerial.println("start             - Starts measurement via USB-Serial.");
+    MySerial.println("stop              - Stops measurement via USB-Serial.");
+    MySerial.println("bpress <command>  - Registers <command> for button press.");
+    MySerial.println("blpress <command> - Registers <command> for button long press.");
+    MySerial.println("templed <on/off>  - Displays temperature using 3 sets of LED blinks.");
+    MySerial.println("                    Each digit (100s, 10s, 1s) is shown in sequence:");
+    MySerial.println("                    [Blink Lengths]");
+    MySerial.println("                    - 120ms (Short)  : Represents '1'");
+    MySerial.println("                    - 400ms (Medium) : Represents '5'");
+    MySerial.println("                    - 800ms (Long)   : Represents '0'");
+    MySerial.println("                    [How to Read Example: 128 degrees]");
+    MySerial.println("                    1st: 120ms(1) -> 2nd: 120msx2(2) -> 3rd: 400ms(5)+120msx3(3)");
+    MySerial.println("                    (There is a short pause between each digit.)");
+    MySerial.println("ipled <ap/sta/off>- Displays AP/STA IP Address using LED blinks.");
+    MySerial.println("                    Each octet is shown in sequence (Roman numeral style):");
+    MySerial.println("                    - 120ms (Short)  : Represents '1'");
+    MySerial.println("                    - 400ms (Medium) : Represents '5'");
+    MySerial.println("                    - 800ms (Long)   : Represents '0'");
+    MySerial.println("                    Long pause between octets.");
+    MySerial.println("wifiscan          - Scans for available WiFi networks.");
+    MySerial.println("status            - Displays UZU ROASTER status.");
+    MySerial.println("status -h         - Displays hardware status.");
+    MySerial.println("wifilog <on/off>  - Displays wifi system log.");
+    MySerial.println("wifimode <ap/sta> - changes WiFi mode(AP or STA) and restarts.");
+    MySerial.println("maxwifi <number>  - Sets maximum WiFi connection(AP mode).");
+    MySerial.println("lowenergy <on/off>- Sets low energy mode.");
+    MySerial.println("tgain <number>    - Calculates and sets temperture gain - a as [y = ax + b] or displays a if <number> is empty.");
+    MySerial.println("tgain reset       - Resets temperture gain to 1.");
+    MySerial.println("toffset <number>  - Calculates and sets temperture offset - b as [y = ax + b] or displays b if <number> is empty.");
+    MySerial.println("toffset reset     - Resets temperture offset to 0.");
+    MySerial.println("tcalc <t1> <T1>   - Caluculates and sets temperture Offset by using t1(ideal temp) and T1(display temp).");
+    MySerial.println("tcalc <t1> <T1> <t2> <T2> - Caluculates and sets temperture offset and gain by using t1,t2(ideal temp) and T1,T2(display temp).");
+    MySerial.println("help              - Displays this help menu.");
   }
-  else if (command == "getData") {  // Artisan command {"command":"getData","id":82225} ⇒response {"id":82225,"params":{"bt":20.3}}
-    StaticJsonDocument<128> requestDoc;
+  else if (command == "getData" || command == "get_data") {  // Artisan command {"command":"getData","id":82225} ⇒response {"id":82225,"data":{"bt":20.3}}
+    StaticJsonDocument<256> requestDoc;
     deserializeJson(requestDoc, params);
     long idx = requestDoc["id"]; 
-    StaticJsonDocument<128> responseDoc;
+    StaticJsonDocument<256> responseDoc;
     responseDoc["id"] = idx;
-    // "params" という名前の新しい箱を作る
-    JsonObject params_ = responseDoc.createNestedObject("params");
+    responseDoc["uzcp"] = "1.0";
+    responseDoc["type"] = "response";
+    responseDoc["ts"] = 1700001020.0;     // 本来は現在のUNIXタイムスタンプを入れる場所
+    responseDoc["src"] = "roaster-01";    // 自分の名前
+    responseDoc["dst"] = "*"; // 送り先の名前
+    responseDoc["ref_id"] = "cmd" + String(idx); // リクエストIDを参照
+    responseDoc["status"] = "ok";
+    // "data" という名前の新しい箱を作る
+    JsonObject data_ = responseDoc.createNestedObject("data");
     // その箱の中に "bt" を入れる
-    params_["bt"] = roundf(AverageTemperature * 10) / 10.0;
+    data_["bt"] = roundf(AverageTemperature * 10) / 10.0;
     String response;
     serializeJson(responseDoc, response);
+    response += "\n";
     BroadcastMessage(response);
   }
+  else if (command == "READ") { // Artisan TC4用
+    // フォーマット: "0.00,BT,ET,0.00"
+    String temptxt = String(AverageTemperature, TemperatureDigit);
+    Serial.print("0.00,");
+    Serial.print(temptxt); 
+    Serial.print(",");
+    Serial.print(temptxt); // 2つ目のセンサー、なければbt_temp
+    Serial.println(",0.00");
+  }
   else {
-      //Serial.println("Unknown command."); // "8t,gs" とかいうコマンドがArtisan（Behmor）から送られてきて反応するためコメントアウト
+      //MySerial.println("Unknown command."); // "8t,gs" とかいうコマンドがArtisan（Behmor）から送られてきて反応するためコメントアウト
   }
 }
 
@@ -1380,7 +1665,7 @@ void SerialSetup()
 void WiFiOff() {
   WiFi.disconnect(true);  // WiFi設定クリア
   WiFi.mode(WIFI_OFF); 
-  Serial.print("WiFi disconnected.\n");
+  MySerial.print("WiFi disconnected.\n");
   delay(100);
 }
 
@@ -1400,7 +1685,7 @@ void WiFiSetup() {
   int max_wifi = preferences.getInt("maxwifi", MAX_WIFI_CONNECTION);
   preferences.end();
 
-  ElegantOTA.begin(&ServerObject);  // 2026.2.23
+  //ElegantOTA.begin(&ServerObject);  // 2026.2.23
 
   if (wifimode == "sta") {  // STA mode
     WiFi.mode(WIFI_STA);
@@ -1418,14 +1703,14 @@ void WiFiSetup() {
     WiFi.softAP(ssid, pass, 1, 0, max_wifi); 
   }
 
-  WebSerial.begin(&ServerObject);
-  WebSerial.onMessage(WebReceiveMsg);
+  // WebSerial.begin(&ServerObject);
+  // WebSerial.onMessage(WebReceiveMsg);
 
   IPAddress my_ip = WiFi.softAPIP();
-  Serial.print("IP address: ");
-  Serial.println(my_ip.toString());
-  Serial.print("SSID(AP): ");
-  Serial.println(ssid);
+  MySerial.print("IP address: ");
+  MySerial.println(my_ip.toString());
+  MySerial.print("SSID(AP): ");
+  MySerial.println(ssid);
    // エンドポイント登録（非同期の形式）
    String path = "/" + TemperaturePath;
   ServerObject.on(path.c_str(), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -1439,7 +1724,46 @@ void WiFiSetup() {
     request->redirect(ip);
   });
 
-  // ★ 追加：ファイルアップロード用管理画面
+// ファームウェアアップロード画面の表示
+  ServerObject.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/html", updateIndex);
+  });
+
+  // 3. アップロード処理本体
+  ServerObject.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
+    // アップロード完了後のレスポンス
+    bool shouldReboot = !Update.hasError();
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot ? "OK. Rebooting..." : "FAIL");
+    response->addHeader("Connection", "close");
+    request->send(response);
+    if (shouldReboot) {
+      delay(1000);
+      ESP.restart();
+    }
+  }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+    // 実際のバイナリ書き込み処理
+    if (!index) {
+      Serial.printf("Update Start: %s\n", filename.c_str());
+      // OTAのミラー領域を確保（U_FLASH or U_SPIFFS）
+      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { 
+        Update.printError(Serial);
+      }
+    }
+    if (!Update.hasError()) {
+      if (Update.write(data, len) != len) {
+        Update.printError(Serial);
+      }
+    }
+    if (final) {
+      if (Update.end(true)) {
+        Serial.printf("Update Success: %u B\nRebooting...\n", index + len);
+      } else {
+        Update.printError(Serial);
+      }
+    }
+  });
+
+  // ★ 追加：LittleFSファイルアップロード用管理画面
   ServerObject.on("/admin", HTTP_GET, [](AsyncWebServerRequest *request){
     String html = R"(
       <!DOCTYPE html>
@@ -1562,21 +1886,19 @@ void WiFiSetup() {
                   <script>
                     const passcodeField = document.getElementById('passcode');
                     const optionFileField = document.getElementById('option');
-                    const correctPasscode = '0277'; // ここに正しい暗証番号を設定してください
+                    const correctPasscode = '0277'; // 暗証番号（オープン）
 
                     passcodeField.addEventListener('input', () => {
                       if (passcodeField.value === correctPasscode) {
                         optionFileField.disabled = false;
-                        optionFileField.style.backgroundColor = ''; // 有効時の背景色をリセット
-                        optionFileField.style.cursor = 'pointer'; // カーソルを通常に戻す
+                        optionFileField.style.backgroundColor = ''; 
+                        optionFileField.style.cursor = 'pointer'; 
                       } else {
                         optionFileField.disabled = true;
-                        optionFileField.style.backgroundColor = '#e9e9e9'; // 無効時の背景色
-                        optionFileField.style.cursor = 'not-allowed'; // カーソルを無効に
+                        optionFileField.style.backgroundColor = '#e9e9e9'; 
+                        optionFileField.style.cursor = 'not-allowed'; 
                       }
                     });
-
-                    // ページ読み込み時にファイル選択フィールドを無効化
                     document.addEventListener('DOMContentLoaded', () => {
                       optionFileField.disabled = true;
                       optionFileField.style.backgroundColor = '#e9e9e9';
@@ -1602,7 +1924,7 @@ void WiFiSetup() {
                   <div class="info">
                       <strong>📥 ファイルの入手方法:</strong><br>
                       1. <a href='https://github.com/uzuuzuhonpo/uzuroaster' target='_blank'>GitHub</a>から最新版をダウンロード<br>
-                      ※index.htmlとscript.jsがバージョンアップ対象ファイルです。オプションでそれ以外の任意のファイルをアップロード可能です<br>
+                      ※オプションでindex.htmlとscript.js以外の任意のファイルをアップロード可能です<br>
                       2. PCの任意のフォルダに保存<br>
                       3. 上記のフォームでファイルを選択してアップロード<br>
                       <strong>※選択していないファイルはバージョンアップされません</strong>
@@ -1772,35 +2094,35 @@ void WiFiSetup() {
       
       // アップロード開始
       if (index == 0) {
-        Serial.println("=== アップロード開始 ===");
-        Serial.println("ファイル名: " + filename);
+        MySerial.println("=== アップロード開始 ===");
+        MySerial.println("ファイル名: " + filename);
         currentFilePath = "/" + filename; // 現状はすべてのファイルがアップロード可能(フロントエンドで既に妥当性判断済み)
         
        
-        Serial.println("保存先: " + currentFilePath);
+        MySerial.println("保存先: " + currentFilePath);
         
         // 既存ファイルを削除してから新規作成
         if (LittleFS.exists(currentFilePath)) {
           LittleFS.remove(currentFilePath);
-          Serial.println("既存ファイルを削除: " + currentFilePath);
+          MySerial.println("既存ファイルを削除: " + currentFilePath);
         }
         
         uploadFile = LittleFS.open(currentFilePath, "w");
         if (!uploadFile) {
-          Serial.println("ファイル作成に失敗: " + currentFilePath);
+          MySerial.println("ファイル作成に失敗: " + currentFilePath);
           return;
         }
         
-        Serial.println("ファイル作成成功: " + currentFilePath);
+        MySerial.println("ファイル作成成功: " + currentFilePath);
       }
       
       // データ書き込み
       if (len && uploadFile) {
         size_t written = uploadFile.write(data, len);
         if (written != len) {
-          Serial.println("書き込みエラー: " + String(written) + "/" + String(len));
+          MySerial.println("書き込みエラー: " + String(written) + "/" + String(len));
         } else {
-          Serial.println("書き込み中: " + String(len) + " bytes");
+          MySerial.println("書き込み中: " + String(len) + " bytes");
         }
       }
       
@@ -1808,20 +2130,20 @@ void WiFiSetup() {
       if (final) {
         if (uploadFile) {
           uploadFile.close();
-          Serial.println("=== アップロード完了 ===");
-          Serial.println("ファイル: " + filename);
-          Serial.println("保存先: " + currentFilePath);
-          Serial.println("総サイズ: " + String(index + len) + " bytes");
+          MySerial.println("=== アップロード完了 ===");
+          MySerial.println("ファイル: " + filename);
+          MySerial.println("保存先: " + currentFilePath);
+          MySerial.println("総サイズ: " + String(index + len) + " bytes");
           
           // ファイルが正しく保存されたか確認
           if (LittleFS.exists(currentFilePath)) {
             File checkFile = LittleFS.open(currentFilePath, "r");
             if (checkFile) {
-              Serial.println("保存確認OK: " + String(checkFile.size()) + " bytes");
+              MySerial.println("保存確認OK: " + String(checkFile.size()) + " bytes");
               checkFile.close();
             }
           } else {
-            Serial.println("保存確認NG: ファイルが見つからない");
+            MySerial.println("保存確認NG: ファイルが見つからない");
           }
         }
         currentFilePath = "";
@@ -1842,27 +2164,27 @@ void WiFiSetup() {
 void onWiFiEvent(WiFiEvent_t event) {
     switch (event) {
         case ARDUINO_EVENT_WIFI_AP_START:
-            //Serial.println("AP Mode started.");
+            //MySerial.println("AP Mode started.");
             webSocket.begin();
             webSocket.onEvent(onWebSocketEvent);
             webSocket.enableHeartbeat(10000, 3000, 3); // 2026.2.19 added 
             dnsServer.start(53, "*", IpAddress_);
             ServerObject.begin();
-            //Serial.println("WebSocket server started.");
+            //MySerial.println("WebSocket server started.");
             break;
 
         case ARDUINO_EVENT_WIFI_AP_STACONNECTED:  // 2026.2.19 Separated 
-            Serial.println("Client connected.");
+            MySerial.println("Client connected.");
             break;
 
         case ARDUINO_EVENT_WIFI_AP_STOP:  // ここには来ない。。。
-            //Serial.println("AP Mode stopped.");
+            //MySerial.println("AP Mode stopped.");
             webSocket.disconnect(); // 全クライアントを切断
             break;
         case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
             int num = webSocket.connectedClients();
-            Serial.print("Station or Client disconnected. Remaining: ");
-            Serial.println(num);
+            MySerial.print("Station or Client disconnected. Remaining: ");
+            MySerial.println(num);
             //ESP.restart();  // 2026.2.18 modified 1つのWiFiしかつながないのでWiFi切れたら強制リスタート
               
               // webSocket.disconnect(); // 全クライアントを切断
@@ -1884,20 +2206,20 @@ void ServoSetup() {
 //////////////////////////////////////////////////////////////////////////
 void ThermoCoupleSetup() {
   if (!thermocouple.begin()) {
-    Serial.println("Couldn't detect sensor.");
+    MySerial.println("Couldn't detect sensor.");
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
 double ReadThermoCouple() {
    if (thermocouple.readError()) {
-    //Serial.println("Thermocouple error!");
+    //MySerial.println("Thermocouple error!");
     return 0.0;
   }
 
   double temp = thermocouple.readCelsius();
   if (isnan(temp)) {
-    //Serial.println("Fail to read sensor.");
+    //MySerial.println("Fail to read sensor.");
   }
   
   return temp;
@@ -1921,7 +2243,7 @@ double ReadThermoCoupleWithGuard() {
 //////////////////////////////////////////////////////////////////////////
 void SendTemperatureData(int time) {
     if (isnan(AverageTemperature) || isinf(AverageTemperature)) {
-        Serial.println("異常な温度値のため送信中止");
+        MySerial.println("異常な温度値のため送信中止");
         return;
     }
     else if (AverageTemperature > 1200) AverageTemperature = 1200;  // 2026.02.18
@@ -1941,7 +2263,7 @@ void SendTemperatureData(int time) {
 //////////////////////////////////////////////////////////////////////////
 void BroadcastMessage(String &message) {
   if (UsbSerial) {
-    Serial.println(message);
+    MySerial.println(message);
   }
   else {
     if (wifiConnected) {  
@@ -1954,7 +2276,7 @@ void BroadcastMessage(String &message) {
 }
   
 //////////////////////////////////////////////////////////////////////////
-// UZCP 1.0 Lite — telemetry送信
+// UZCP 1.0 telemetry送信
 // 仕様: https://github.com/uzuuzuhonpo/uzcp
 //////////////////////////////////////////////////////////////////////////
 void SendUZCPTelemetry(int time) {
@@ -1973,6 +2295,7 @@ void SendUZCPTelemetry(int time) {
     String payload;
     payload.reserve(128);
     serializeJson(doc, payload);
+    payload += "\n";
     BroadcastMessage(payload);
 }
 
@@ -1988,11 +2311,11 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
     StaticJsonDocument<256> json;
     DeserializationError err = deserializeJson(json, payload);
     if (err) {
-      Serial.println("JSON受信エラー");
+      MySerial.println("JSON受信エラー");
       return;
     }
    
-    //Serial.printf("（（WS RX））%s\n", payload);
+    //MySerial.printf("（（WS RX））%s\n", payload);
 
     // -----------------------------------------------
     // UZCP 1.0 command受信
@@ -2006,7 +2329,7 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
 
       if (type_str != nullptr && String(type_str) == "command" && cmd != nullptr) {
         String cmdStr = String(cmd);
-        Serial.println("[UZCP] command: " + cmdStr);
+        MySerial.println("[UZCP] command: " + cmdStr);
 
         // UZCP ack送信
         StaticJsonDocument<128> ack;
@@ -2022,13 +2345,13 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
           roastTime = 0;
           ack["status"] = "ok";
           CommandProcess(cmdStr); 
-          Serial.println("[UZCP] Roasting started.");
+          MySerial.println("[UZCP] Roasting started.");
         }
         else if (cmdStr == "stop") {
           roasting = false;
           ack["status"] = "ok";
           CommandProcess(cmdStr); 
-          Serial.println("[UZCP] Roasting stopped.");
+          MySerial.println("[UZCP] Roasting stopped.");
         }
         else {
           ack["status"]     = "unsupported";
@@ -2048,7 +2371,7 @@ void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t leng
     const char* cmd = json["command"];
     const char* id  = json["id"];
 
-    Serial.println(cmd); 
+    MySerial.println(cmd); 
     if (cmd != nullptr) {
       String cmdStr = String(cmd); 
       CommandProcess(cmdStr, payload); 
