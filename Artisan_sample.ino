@@ -1,6 +1,7 @@
 #define WEBSOCKETS_SERVER_CLIENT_MAX 16  // デフォルト4　ゾンビ対策で保険として
 #define MAX_ROAST_TIME  1800
 #define MAX_TEMPERATURE 1000  // 260
+#define MIN_TEMPERATURE -20
 #define MAX_WIFI_CONNECTION   1 //10  //デフォルト。複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
 #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1 // OTAアップデート用(実際はElegantoTA.hのdefineを書き換える必要あり)
 
@@ -419,7 +420,7 @@ void ReadTempTask(void *pvParameters) {
     RawTemperature = avg; // 移動平均化処理された温度をグローバルに保存
     AverageTemperature = TempGain * RawTemperature + TempOffset; 
     if (AverageTemperature > MAX_TEMPERATURE) {AverageTemperature = MAX_TEMPERATURE;}
-    else if (AverageTemperature < 0.0) {AverageTemperature = 0.0;}
+    else if (AverageTemperature < MIN_TEMPERATURE) {AverageTemperature = MIN_TEMPERATURE;}  // 2026.4.17 -20 minimum
 
     if (++count >= (TemperatureInterval / CYCLE_PERIOD)) {
       count = 0;
