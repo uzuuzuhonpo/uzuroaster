@@ -23,6 +23,7 @@
 #include <ArduinoJson.h>
 //#include "Freenove_WS2812_Lib_for_ESP32.h"
 #include <Update.h>
+#include "esp_ota_ops.h"
 
 // Prototype
 void CommandProcess(String& command, const uint8_t* params = NULL);
@@ -49,59 +50,103 @@ const char* updateIndex = R"rawliteral(
   <meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
   <title>UZU SYSTEM LOADER</title>
   <style>
-    body { background:#000; color:#fff; font-family:monospace; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-    .container { width:85%; max-width:400px; border:1px solid #333; padding:40px 20px; text-align:center; }
-    h2 { font-size:1rem; letter-spacing:0.2rem; margin-bottom:30px; color:#aaa; }
-    input[type=file] { color:#888; margin-bottom:30px; font-size:0.8rem; width:100%; }
-    #btn-submit { background:none; color:#fff; border:1px solid #fff; padding:10px 40px; cursor:pointer; font-family:monospace; transition:0.2s; }
-    #btn-submit:hover { background:#fff; color:#000; }
-    #prg-wrapper { display:none; }
-    .bar-frame { border:1px solid #444; height:10px; margin:20px 0; position:relative; }
-    .bar-fill { background:#fff; width:0%; height:100%; transition:width 0.1s; }
-    #status { font-size:0.8rem; color:#888; text-transform:uppercase; }
-    .success { color:#00ff00 !important; }
+    body {background:#000;color:#fff;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}
+    .container{width:85%; max-width:400px; border:1px solid #333; padding:20px 20px; text-align:center;}
+	.interpret{width:90%; text-align:left;line-height:1.4rem;margin:2rem auto;}
+    h2{font-size:1rem; letter-spacing:0.2rem; margin-bottom:10px;color:#aaa;}
+a:link{color:#3182ce;}
+a:visited{color:#805ad5;}
+a:hover{color:#2b6cb0;}
+a:active{color:#e53e3e;}
+    #mode-label{font-size:0.75rem; color:#555; margin-bottom:20px; letter-spacing:0.15rem; min-height:1rem;}
+    #mode-firmware{color:#ff6b35;}
+    #mode-fs{color:#00aaff;}
+    input[type=file]{color:#888; margin-bottom:30px; font-size:0.8rem;width:100%;}
+    #btn-submit{background:none;color:#fff;border:1px solid #fff;padding:10px 40px;cursor:pointer;font-family:monospace;transition:0.2s;}
+    #btn-submit:hover{background:#fff;color:#000;}
+    #prg-wrapper{display:none;}
+    .bar-frame{border:1px solid #444; height:10px;margin:20px 0;position:relative;}
+    .bar-fill{background:#fff; width:0%; height:100%;transition:width 0.1s;}
+    #status{font-size:0.8rem; color:#888; text-transform:uppercase;}
+    .success{color:#00ff00!important;}
   </style>
 </head>
 <body>
   <div class='container'>
     <h2 id='title'>UZU_SYSTEM_UPDATE</h2>
+  <div class="interpret">
+      <strong><u>注意事項</u></strong><br>
+      • この機能はPCブラウザでのみご利用ください<br>
+      • ファイルアップロード後、UZU ROASTERを再起動し、再接続してください<br>
+      • アップロード中は電源を切らないでください
+  </div>
+  <div class="interpret">
+      <strong><u>ファイルの入手方法:</u></strong><br>
+      1. <a href='https://github.com/uzuuzuhonpo/uzuroaster' target='_blank'>GitHub</a>から最新版をダウンロード<br>
+		・ファームウェア： Artisan_sample.ino.bin<br>
+		・うずロースターコントローラー： index.html<br>
+      2. PCの任意のフォルダに保存<br>
+      3. 下記のフォームでファイルを選択してアップロード<br>
+      <p style="margin-top:20px;"><strong>※バージョンアップは上記2種類のファイルをアップロードしてください（アップロード操作を2回行う必要があります）</strong></p>
+  </div>
+    <div id='mode-label'>SELECT FILE TO DETECT MODE</div>
     <form id='upload-form' method='POST' action='/update' enctype='multipart/form-data'>
-      <input type='file' name='update' id='file-input' accept='.bin'>
+      <input type='file' name='update' id='file-input' accept='.bin,.html,.js,.css,.png,.jpg,.json,.txt,.alog,.csv'>
       <br>
-      <input type='submit' id='btn-submit' value='EXECUTE'>
+      <input type='submit' id='btn-submit' value='実行'>
     </form>
     <div id='prg-wrapper'>
       <div class='bar-frame'><div id='bar' class='bar-fill'></div></div>
       <div id='status'>LOADING: <span id='pct'>0</span>%</div>
     </div>
+  <p style="margin-top:30px;"><a href="/">← メイン画面に戻る</a></p>
   </div>
   <script>
+    // ファイル選択時にモード表示を更新
+    document.getElementById('file-input').addEventListener('change', function() {
+      const file = this.files[0];
+      const label = document.getElementById('mode-label');
+      if (!file) {
+        label.innerHTML = 'SELECT FILE TO DETECT MODE';
+        label.className = '';
+        return;
+      }
+      const isBin = file.name.toLowerCase().endsWith('.bin');
+      if (isBin) {
+        label.innerHTML = '<span id="mode-firmware">[ FIRMWARE UPDATE MODE ]</span>';
+      } else {
+        label.innerHTML = '<span id="mode-fs">[ LITTLEFS FILE MODE ]</span>';
+      }
+    });
+
     const form = document.getElementById('upload-form');
     form.onsubmit = () => {
       const file = document.getElementById('file-input').files[0];
       if(!file) return false;
       form.style.display = 'none';
       document.getElementById('prg-wrapper').style.display = 'block';
+      const isBin = file.name.toLowerCase().endsWith('.bin');
       const xhr = new XMLHttpRequest();
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
           const p = Math.round((e.loaded / e.total) * 100);
           document.getElementById('bar').style.width = p + '%';
           document.getElementById('pct').innerHTML = p;
-          
-          // 100%になったら、返事を待たずに「完了」へ移行開始
           if (p >= 100) {
             document.getElementById('status').innerHTML = 'FLASHING... PLEASE WAIT';
-            // 5秒くらい待って強制的に成功表示にする（ESP32が再起動してるはずの時間）
-            setTimeout(() => {
-              document.getElementById('status').innerHTML = '<span class="success">UPDATE COMPLETED</span>';
+            document.getElementById('status').innerHTML = '<span class="success">UPDATE COMPLETED</span>';
+            // binの場合はリブート、LittleFSの場合はリブートなし
+            if (isBin) {
               document.getElementById('title').innerHTML = 'REBOOTING...';
-            }, 3000);
+              setTimeout(() => { window.location.href = "/update"; }, 3000);
+            } else {
+              document.getElementById('title').innerHTML = 'FILE UPLOADED';
+              setTimeout(() => { window.location.href = "/update"; }, 2000);
+            }
           }
         }
       });
       xhr.onreadystatechange = () => {
-        // ここではマジのエラー（404とか500）の時だけ反応させる
         if (xhr.readyState === 4 && xhr.status !== 200 && xhr.status !== 0) {
           document.getElementById('status').innerHTML = 'ERROR: UPDATE FAILED (' + xhr.status + ')';
         }
@@ -114,7 +159,6 @@ const char* updateIndex = R"rawliteral(
 </body>
 </html>
 )rawliteral";
-
 
 // MAX31855とつなぐピン番号
 const int ThermoDO_pin = 19;   // SO
@@ -142,7 +186,11 @@ bool roasting = false;
 int roastTime = 0;
 int counterx = 0;
 double RoastData[MAX_ROAST_TIME];
-int IPAddressMemory[4] = { 192, 168, 4, 1 };  // デフォルトのUZU ROASTER IPアドレス
+const int DefaultAPIPAddress0 = 192;
+const int DefaultAPIPAddress1 = 168;
+const int DefaultAPIPAddress2 = 4;
+const int DefaultAPIPAddress3 = 1;
+int IPAddressMemory[4] = { DefaultAPIPAddress0, DefaultAPIPAddress1, DefaultAPIPAddress2, DefaultAPIPAddress3 };  // デフォルトのUZU ROASTER IPアドレス
 // 🔑 Wi-Fi設定
 const String Ssid = "UZU-ROASTER";  // デフォルト
 const String Password = ""; // デフォルト
@@ -574,6 +622,7 @@ void setup() {
   parseCommands(b_comm, ButtonCommands, ButtonCommandCount, ButtonIndex);
   parseCommands(bl_comm, LongButtonCommands, LongButtonCommandCount, LongButtonIndex);
 
+  esp_ota_mark_app_valid_cancel_rollback(); // ここまで来たらOTA成功、ということでロールバックをキャンセル
 }
   
 //////////////////////////////////////////////////////////////////////////
@@ -733,10 +782,10 @@ void CommandProcess(String& command, const uint8_t* params) {
       preferences.putString("pass", Password);
       preferences.putString("stassid", StaSsid);
       preferences.putString("stapass", StaPass);
-      IPAddressMemory[0] = 192;
-      IPAddressMemory[1] = 168;
-      IPAddressMemory[2] = 4;
-      IPAddressMemory[3] = 1;
+      IPAddressMemory[0] = DefaultAPIPAddress0;
+      IPAddressMemory[1] = DefaultAPIPAddress1;
+      IPAddressMemory[2] = DefaultAPIPAddress2;
+      IPAddressMemory[3] = DefaultAPIPAddress3;
       preferences.putInt("address0", IPAddressMemory[0]);
       preferences.putInt("address1", IPAddressMemory[1]);
       preferences.putInt("address2", IPAddressMemory[2]);
@@ -1674,10 +1723,10 @@ void WiFiOff() {
 void WiFiSetup() {
   WiFi.onEvent(onWiFiEvent);
   preferences.begin("wifi", true); // 読み取り専用
-  IPAddressMemory[0] = preferences.getInt("address0", IPAddressMemory[0]);
-  IPAddressMemory[1] = preferences.getInt("address1", IPAddressMemory[1]);
-  IPAddressMemory[2] = preferences.getInt("address2", IPAddressMemory[2]);
-  IPAddressMemory[3] = preferences.getInt("address3", IPAddressMemory[3]);
+  IPAddressMemory[0] = preferences.getInt("address0", DefaultAPIPAddress0);
+  IPAddressMemory[1] = preferences.getInt("address1", DefaultAPIPAddress1);
+  IPAddressMemory[2] = preferences.getInt("address2", DefaultAPIPAddress2);
+  IPAddressMemory[3] = preferences.getInt("address3", DefaultAPIPAddress3);
   String ssid = preferences.getString("ssid", Ssid);
   String pass = preferences.getString("pass", Password);
   CurrentStaSsid = preferences.getString("stassid", StaSsid); 
@@ -1704,9 +1753,6 @@ void WiFiSetup() {
     WiFi.softAP(ssid, pass, 1, 0, max_wifi); 
   }
 
-  // WebSerial.begin(&ServerObject);
-  // WebSerial.onMessage(WebReceiveMsg);
-
   IPAddress my_ip = WiFi.softAPIP();
   MySerial.print("IP address: ");
   MySerial.println(my_ip.toString());
@@ -1727,14 +1773,23 @@ void WiFiSetup() {
 
 // ファームウェアアップロード画面の表示
   ServerObject.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", updateIndex);
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", updateIndex);
+    // キャッシュを一切許可しないヘッダ
+    response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response->addHeader("Pragma", "no-cache");
+    response->addHeader("Expires", "0");
+    request->send(response);
   });
 
-  // 3. アップロード処理本体
+  // 3. アップロード処理本体（.bin→firmware / その他→LittleFS 自動振り分け）
   ServerObject.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
     // アップロード完了後のレスポンス
-    bool shouldReboot = !Update.hasError();
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", shouldReboot ? "OK. Rebooting..." : "FAIL");
+    // LittleFSファイルの場合はUpdateは使わないのでhasError()はfalse扱い
+    bool isFirmware = request->hasParam("_type", true) ? 
+                      (request->getParam("_type", true)->value() == "firmware") : false;
+    bool shouldReboot = isFirmware && !Update.hasError();
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", 
+      shouldReboot ? "OK. Rebooting..." : "OK");
     response->addHeader("Connection", "close");
     request->send(response);
     if (shouldReboot) {
@@ -1742,415 +1797,70 @@ void WiFiSetup() {
       ESP.restart();
     }
   }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
-    // 実際のバイナリ書き込み処理
-    if (!index) {
-      Serial.printf("Update Start: %s\n", filename.c_str());
-      // OTAのミラー領域を確保（U_FLASH or U_SPIFFS）
-      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { 
-        Update.printError(Serial);
-      }
-    }
-    if (!Update.hasError()) {
-      if (Update.write(data, len) != len) {
-        Update.printError(Serial);
-      }
-    }
-    if (final) {
-      if (Update.end(true)) {
-        Serial.printf("Update Success: %u B\nRebooting...\n", index + len);
-      } else {
-        Update.printError(Serial);
-      }
-    }
-  });
+    // ファイル名の拡張子で振り分け
+    bool isBin = filename.endsWith(".bin");
 
-  // ★ 追加：LittleFSファイルアップロード用管理画面
-  ServerObject.on("/admin", HTTP_GET, [](AsyncWebServerRequest *request){
-    String html = R"(
-      <!DOCTYPE html>
-      <html>
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>UZU ROASTER ファイル更新</title>
-          <style>
-              body { 
-                  font-family: Arial, sans-serif; 
-                  margin: 40px; 
-                  background: #f5f5f5; 
-              }
-              .container { 
-                  background: white; 
-                  padding: 30px; 
-                  border-radius: 10px; 
-                  max-width: 600px; 
-                  margin: 0 auto;
-              }
-              h1 { 
-                  color: #333; 
-                  border-bottom: 3px solid #ff6b35; 
-                  padding-bottom: 10px; 
-              }
-              .warning { 
-                  background: #fff3cd; 
-                  border: 1px solid #ffeaa7; 
-                  color: #856404; 
-                  padding: 15px; 
-                  border-radius: 5px; 
-                  margin: 20px 0; 
-              }
-              .file-input { 
-                  margin: 15px 0; 
-                  padding: 10px; 
-                  border: 2px dashed #ddd; 
-                  border-radius: 5px; 
-              }
-              input[type="file"] { 
-                  margin: 10px 0; 
-              }
-              input[type="submit"] { 
-                  background: #666666; 
-                  color: white; 
-                  padding: 15px 30px; 
-                  border: none; 
-                  border-radius: 5px; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  margin-top: 20px; 
-              }
-              .info { 
-                  background: #d1ecf1; 
-                  border: 1px solid #bee5eb; 
-                  color: #0c5460; 
-                  padding: 15px; 
-                  border-radius: 5px; 
-                  margin: 20px 0; 
-              }
-              .hidden {
-                  display: none;
-              }
-              .loading {
-                  text-align: center;
-                  padding: 50px;
-              }
-              .spinner {
-                  border: 4px solid #f3f3f3;
-                  border-top: 4px solid #ff6b35;
-                  border-radius: 50%;
-                  width: 60px;
-                  height: 60px;
-                  animation: spin 1s linear infinite;
-                  margin: 0 auto 20px;
-              }
-              @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-              }
-              .loading-text {
-                  font-size: 18px;
-                  color: #ff6b35;
-                  font-weight: bold;
-              }
-          </style>
-      </head>
-      <body>
-          <div class="container">
-              <div id="upload-form">
-                  <h1>🚀 UZU ROASTER ファイル更新</h1>
-                  
-                  <div class="warning">
-                      <strong>⚠️ 重要な注意事項</strong><br>
-                      • この機能はPCブラウザでのみご利用ください<br>
-                      • ファイルアップロード後、UZU ROASTERを再起動し、再接続してください<br>
-                      • アップロード中は電源を切らないでください
-                  </div>
-                  
-                  <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
-                      <div class="file-input">
-                          <label for="index"><strong>📄 index.html ファイル:</strong></label><br>
-                          <input type="file" id="index" name="index" accept=".html">
-                      </div>
-                      
-                      <div class="file-input">
-                          <label for="script"><strong>📄 script.js ファイル:</strong></label><br>
-                          <input type="file" id="script" name="script" accept=".js">
-                      </div>
-                      
-                      <div class="file-input">
-                          <label for="option"><strong>📄 オプション ファイル:</strong></label>（※管理パスワード必須）<br>
-                          <input type="file" id="option" name="option" accept=".*" disabled><br>
-                          <label for="passcode"><strong>管理パスワード:</strong></label><br>
-                          <input type="password" id="passcode" name="passcode" maxlength="4"><br><br>
-                      </div>                      
-                      <input type="submit" value="🚀 アップロード開始" id="submitBtn">
-                  </form>
-                  <script>
-                    const passcodeField = document.getElementById('passcode');
-                    const optionFileField = document.getElementById('option');
-                    const correctPasscode = '0277'; // 暗証番号（オープン）
-
-                    passcodeField.addEventListener('input', () => {
-                      if (passcodeField.value === correctPasscode) {
-                        optionFileField.disabled = false;
-                        optionFileField.style.backgroundColor = ''; 
-                        optionFileField.style.cursor = 'pointer'; 
-                      } else {
-                        optionFileField.disabled = true;
-                        optionFileField.style.backgroundColor = '#e9e9e9'; 
-                        optionFileField.style.cursor = 'not-allowed'; 
-                      }
-                    });
-                    document.addEventListener('DOMContentLoaded', () => {
-                      optionFileField.disabled = true;
-                      optionFileField.style.backgroundColor = '#e9e9e9';
-                      optionFileField.style.cursor = 'not-allowed';
-                    });
-                  </script>
-                  <script>
-                    document.getElementById('index').addEventListener('change', (event) => {
-                      const file = event.target.files[0];
-                      if (file && file.name !== 'index.html') {
-                        alert('ファイル名は index.html である必要があります。');
-                        event.target.value = '';
-                      }
-                    });
-                    document.getElementById('script').addEventListener('change', (event) => {
-                      const file = event.target.files[0];
-                      if (file && file.name !== 'script.js') {
-                        alert('ファイル名は script.js である必要があります。');
-                        event.target.value = '';
-                      }
-                    });
-                  </script>
-                  <div class="info">
-                      <strong>📥 ファイルの入手方法:</strong><br>
-                      1. <a href='https://github.com/uzuuzuhonpo/uzuroaster' target='_blank'>GitHub</a>から最新版をダウンロード<br>
-                      ※オプションでindex.htmlとscript.js以外の任意のファイルをアップロード可能です<br>
-                      2. PCの任意のフォルダに保存<br>
-                      3. 上記のフォームでファイルを選択してアップロード<br>
-                      <strong>※選択していないファイルはバージョンアップされません</strong>
-                  </div>
-                  <p><a href="/">← メイン画面に戻る</a></p>
-              </div>
-              
-              <div id="loading-screen" class="hidden">
-                  <div class="loading">
-                      <div class="spinner"></div>
-                      <div class="loading-text">📤 アップロード中...</div>
-                      <p>UZU ROASTERにファイルを送信しています。<br>
-                      しばらくお待ちください。</p>
-                      <div class="warning">
-                          <strong>⚠️ 電源を切らないでください</strong>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <script>
-              document.getElementById('uploadForm').addEventListener('submit', function(e) {
-                  // フォームを隠してローディング画面を表示
-                  document.getElementById('upload-form').classList.add('hidden');
-                  document.getElementById('loading-screen').classList.remove('hidden');
-              });
-          </script>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const fileInputs = document.querySelectorAll('.file-input input[type="file"]');
-                const submitBtn = document.getElementById('submitBtn');
-
-                // 初回ロード時にボタンの状態を設定
-                updateSubmitButtonState();
-
-                // ファイル選択欄の変更を監視
-                fileInputs.forEach(input => {
-                    input.addEventListener('change', updateSubmitButtonState);
-                });
-
-                // ボタンの状態を更新する関数
-                function updateSubmitButtonState() {
-                    let hasFile = false;
-                    fileInputs.forEach(input => {
-                        if (input.files.length > 0) {
-                            hasFile = true;
-                        }
-                    });
-                    submitBtn.disabled = !hasFile;
-                    if (hasFile == true) {
-                      submitBtn.style.backgroundColor = '#ff6b35';
-                    }
-                    else {
-                      submitBtn.style.backgroundColor = '#666666';
-                    }
-                }
-
-                // フォーム送信時の処理（元々のコード）
-                document.getElementById('uploadForm').addEventListener('submit', function(e) {
-                    // フォームを隠してローディング画面を表示
-                    document.getElementById('upload-form').classList.add('hidden');
-                    document.getElementById('loading-screen').classList.remove('hidden');
-                });
-            });
-        </script>
-
-      </body>
-      </html>
-      )";
-
-    request->send(200, "text/html", html);
-  });
-
-  // ★ 修正版：ファイルアップロード処理
-  ServerObject.on("/upload", HTTP_POST, 
-    // アップロード完了時の処理
-    [](AsyncWebServerRequest *request) {
-
-    String html = R"(
-      <!DOCTYPE html>
-      <html>
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>アップロード完了</title>
-          <style>
-              body { 
-                  font-family: Arial, sans-serif; 
-                  margin: 40px; 
-                  text-align: center; 
-                  background: #f5f5f5; 
-              }
-              .success { 
-                  background: #d4edda; 
-                  border: 1px solid #c3e6cb; 
-                  color: #155724; 
-                  padding: 40px; 
-                  border-radius: 10px; 
-                  max-width: 600px; 
-                  margin: 0 auto; 
-                  line-height: 1.6;
-              }
-              h1 { color: #155724; margin-bottom: 20px; }
-              .step { 
-                  background: #fff; 
-                  padding: 15px; 
-                  margin: 10px 0; 
-                  border-radius: 5px; 
-                  border-left: 4px solid #28a745; 
-              }
-              .important { 
-                  background: #fff3cd; 
-                  border: 1px solid #ffeaa7; 
-                  color: #856404; 
-                  padding: 15px; 
-                  border-radius: 5px; 
-                  margin: 20px 0; 
-              }
-          </style>
-      </head>
-      <body>
-          <div class="success">
-              <h1>✅ ファイルアップロード完了！</h1>
-              
-              <div class="important">
-                  <strong>🔌 次の手順で UZU ROASTER を再起動してください</strong>
-              </div>
-              
-              <div class="step">
-                  <strong>手順1:</strong> UZU ROASTER本体の電源を一度切ってください
-              </div>
-              
-              <div class="step">
-                  <strong>手順2:</strong> 5秒ほど待機
-              </div>
-              
-              <div class="step">
-                  <strong>手順3:</strong> 電源を再度入れ直してください
-              </div>
-              
-              <div class="step">
-                  <strong>手順4:</strong> WiFi「UZU-ROASTER」に再接続
-              </div>
-              
-              <div class="step">
-                  <strong>手順5:</strong> ブラウザで UZU ROASTER URL（デフォルト：192.168.4.1） にアクセス
-              </div>
-              
-              <p style="margin-top: 30px;">
-                  <strong>✨ 新しいバージョンをお試しください</strong>
-              </p>
-              
-              <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                  このページは電源を切るまでそのままにしておいてください
-              </p>
-          </div>
-      </body>
-      </html>
-      )";
-      
-      request->send(200, "text/html; charset=UTF-8", html);
-  },
-    // アップロード処理中の処理
-    [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-      static File uploadFile;
-      static String currentFilePath = "";
-      
-      // アップロード開始
-      if (index == 0) {
-        MySerial.println("=== アップロード開始 ===");
-        MySerial.println("ファイル名: " + filename);
-        currentFilePath = "/" + filename; // 現状はすべてのファイルがアップロード可能(フロントエンドで既に妥当性判断済み)
-        
-       
-        MySerial.println("保存先: " + currentFilePath);
-        
-        // 既存ファイルを削除してから新規作成
-        if (LittleFS.exists(currentFilePath)) {
-          LittleFS.remove(currentFilePath);
-          MySerial.println("既存ファイルを削除: " + currentFilePath);
+    if (isBin) {
+      // ===== Firmware OTA =====
+      if (!index) {
+        Serial.printf("[OTA] Firmware Start: %s\n", filename.c_str());
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) {
+          Update.printError(Serial);
         }
-        
-        uploadFile = LittleFS.open(currentFilePath, "w");
-        if (!uploadFile) {
-          MySerial.println("ファイル作成に失敗: " + currentFilePath);
+      }
+      if (!Update.hasError()) {
+        if (Update.write(data, len) != len) {
+          Update.printError(Serial);
+        }
+      }
+      if (final) {
+        if (Update.end(true)) {
+          Serial.printf("[OTA] Firmware Success: %u B\n", index + len);
+        } else {
+          Update.printError(Serial);
+        }
+      }
+    } else {
+      // ===== LittleFS ファイル書き込み =====
+      // グローバルで管理（AsyncWebServerのuploadハンドラは同時1リクエスト想定）
+      static File fsUploadFile;
+      static String fsUploadPath;
+
+      if (!index) {
+        fsUploadPath = "/" + filename;
+        Serial.printf("[FS] Upload Start: %s\n", fsUploadPath.c_str());
+        // LittleFSはsetup()でマウント済みなのでbegin()不要
+        if (LittleFS.exists(fsUploadPath)) {
+          LittleFS.remove(fsUploadPath);
+        }
+        fsUploadFile = LittleFS.open(fsUploadPath, "w");
+        if (!fsUploadFile) {
+          Serial.println("[FS] Failed to open file for writing");
           return;
         }
-        
-        MySerial.println("ファイル作成成功: " + currentFilePath);
+        Serial.printf("[FS] File opened OK\n");
       }
-      
-      // データ書き込み
-      if (len && uploadFile) {
-        size_t written = uploadFile.write(data, len);
+      if (fsUploadFile && len) {
+        size_t written = fsUploadFile.write(data, len);
         if (written != len) {
-          MySerial.println("書き込みエラー: " + String(written) + "/" + String(len));
-        } else {
-          MySerial.println("書き込み中: " + String(len) + " bytes");
+          Serial.printf("[FS] Write error: %u / %u\n", written, len);
         }
       }
-      
-      // アップロード完了
       if (final) {
-        if (uploadFile) {
-          uploadFile.close();
-          MySerial.println("=== アップロード完了 ===");
-          MySerial.println("ファイル: " + filename);
-          MySerial.println("保存先: " + currentFilePath);
-          MySerial.println("総サイズ: " + String(index + len) + " bytes");
-          
-          // ファイルが正しく保存されたか確認
-          if (LittleFS.exists(currentFilePath)) {
-            File checkFile = LittleFS.open(currentFilePath, "r");
-            if (checkFile) {
-              MySerial.println("保存確認OK: " + String(checkFile.size()) + " bytes");
-              checkFile.close();
-            }
+        if (fsUploadFile) {
+          fsUploadFile.close();
+          // 書き込み確認
+          File check = LittleFS.open(fsUploadPath, "r");
+          if (check) {
+            Serial.printf("[FS] Upload Success: %s (%u B)\n", fsUploadPath.c_str(), check.size());
+            check.close();
           } else {
-            MySerial.println("保存確認NG: ファイルが見つからない");
+            Serial.println("[FS] Upload verify failed!");
           }
         }
-        currentFilePath = "";
       }
     }
-  );
+  });
     // 192.168.4.1/がリクエストされた時に返すWebサーバー設定（最後に設定しないとこれが優先される）
   ServerObject.on("/", HTTP_GET, [](AsyncWebServerRequest *req){
     req->send(LittleFS, "/index.html", "text/html");
