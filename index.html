@@ -155,7 +155,7 @@
     }
 
     .button-header {
-      min-width: 100px;
+      min-width: 50px;
     }
 
     .button-phase-control {
@@ -230,14 +230,39 @@
       z-index: 9999;
       justify-content: center;
       align-items: center;
+      overflow-y: auto;
+      padding: 20px;
     }
 
-    .show {
-      display: block!important;
+    body.modal-open {
+      overflow: hidden;
+      height: 100vh;
     }
 
+    .modal-overlay.active,
     .modal-overlay.show {
-      display: flex;
+      display: flex !important;
+    }
+
+    .modal-content {
+      background: var(--background-dark);
+      color: white;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 95vh;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid #444;
+      overflow-y: auto;
+      transform-origin: center center;
+    }
+
+    .modal-content.modal-popup {
+      max-width: 600px;
+      background: #2c2c2c;
     }
 
     .modal-content {
@@ -403,41 +428,41 @@
   animation: appear-effect 0.2s cubic-bezier(0.215, 0.61, 0.155, 1) forwards !important;
 }
 
-    /* --- 出現：ふわっと浮きつつパカッと開く --- */
+    /* --- 出現：拡大して浮き上がる --- */
 @keyframes slide-in-smart {
   0% {
     opacity: 0;
-    transform: scale(0.9) scaleY(0.02);
+    transform: scale(0.75);
   }
-  50% {
-    opacity: 0.8;
-    transform: scale(0.9) scaleY(1);
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
   }
   100% {
     opacity: 1;
-    transform: scale(1) scaleY(1);
+    transform: scale(1);
   }
 }
 
-/* --- 消滅：光の線になって左へシュパァァン！ --- */
+/* --- 消滅：横縮小→縦縮小 --- */
 @keyframes slide-out-smart {
   0% {
     opacity: 1;
-    transform: scale(1) scaleY(1);
+    transform: scale(1);
   }
-  30% {
-    opacity: 0.5;
-    transform: scaleX(0.01) scaleY(2);
+  40% {
+    opacity: 0.8;
+    transform: scaleX(0.85) scaleY(1);
   }
   100% {
     opacity: 0;
-    transform: scaleX(0.05) scaleY(0.02);
+    transform: scaleX(0.85) scaleY(0.65);
   }
 }
 
 /* 制御用クラス */
 .fx-open {
-  display: block !important;
+  display: flex !important;
   animation: slide-in-smart 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
 }
 
@@ -477,6 +502,7 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      min-height: 32px;
     }
 
     #roasting-indicator {
@@ -915,26 +941,30 @@
     }
 
     #currentTime {
-      bottom: 220px;
+      bottom: 260px;
       color: #3f3738;
     }
 
     #profileTemp {
-      bottom: 180px;
+      bottom: 220px;
       color: #7160ae9d;
     }
 
     #profileRoR {
-      bottom: 140px;
+      bottom: 180px;
       color: #797a88;
     }
 
     #currentTemp {
-      bottom: 100px;
+      bottom: 140px;
       color: #e72e4d;
     }
 
     #currentRoR {
+      bottom: 100px;
+      color: #E0B775;
+    }
+    #currentDTR {
       bottom: 60px;
       color: #E0B775;
     }
@@ -1137,13 +1167,12 @@
       }
 
       .button {
-        padding: 8px 12px;
         font-size: 14px;
         min-width: 20px;
       }
 
       .button-header {
-        min-width: 90px;
+        min-width: 50px;
       }
 
       th, td {
@@ -1169,6 +1198,7 @@
         transform:translateY(0px);
       }
     }
+
     /* ========================================
        ユーティリティクラス
        ======================================== */
@@ -1216,7 +1246,7 @@
     <div class="modal-close" onclick="closeJSONInputModal()">&times;</div>
     <h3 class="modal-title">プロファイル入力</h3>
     <p class="modal-description">JSONデータをペースト、記述、またはリストから選択してください</p>
-    <textarea id="jsonInput" class="modal-textarea font-size-16" placeholder='{"roast_data": [...]}'></textarea>
+    <textarea id="jsonInput" class="modal-textarea" placeholder='{"roast_data": [...]}'></textarea>
     <div id="profileList" style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #444;">
     </div>
     <div style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
@@ -1314,11 +1344,11 @@
 <!-- ========================================
      焙煎メモポップアップ
      ======================================== -->
-<div id="popupTextarea" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background: var(--overlay-bg); backdrop-filter:blur(8px); z-index:20010;">
-  <div style="background:#2c2c2c; color:white; padding:20px; border-radius:12px; max-width:600px; width:90%; box-shadow:0 10px 10px rgba(0,0,0,0.6); border:1px solid #444; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
-    焙煎メモ<br>
+<div id="popupTextarea" class="modal-overlay">
+  <div class="modal-content modal-popup">
+    <h3 class="modal-title">焙煎メモ</h3>
     <textarea id="popupText" class="modal-textarea font-size-16"></textarea>
-    <div style="text-align:right; margin-top:15px;">
+    <div class="modal-actions" style="justify-content:flex-end; margin-top:15px;">
       <button id="closePopup" class="modal-button modal-button-primary">閉じる</button>
     </div>
   </div>
@@ -1364,10 +1394,22 @@
       <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-    <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
-            <input type="number" id="rorWindowInput" value="${rorWindowSize}" min="1" max="100" 
-                style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
-            <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Temperature(℃):</span>
+      <input type="number" id="maxTempInput" min="200" max="999" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveMaxTemp" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror(℃/min):</span>
+      <input type="number" id="MaxRorInput" min="20" max="200" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveMaxRor" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
+      <input type="number" id="rorWindowInput" min="1" max="100" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
     </div>
   <div id="google_translate_element"></div>
   </div>
@@ -1415,16 +1457,46 @@
     <div id="socket-status" class="status-indicator" style="background-color:#cccccc"></div>
     <span id="connection-label">未接続</span>
   </div>
-  <div>
-    <button class="button" title="再読み込み" onclick="location.reload()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">⇄</span></button>
-    <button id="usb-connect-btn" class="button" title="USB接続" style="display:none;"><span style="color:rgba(255,255,255, 1);">USB</span></button>
-    <button class="button" title="UZU ROASTER情報" onclick="helpButtonCommand()">HELP</button>
-    <button class="button" title="取扱説明書" onclick="manualButtonCommand()">マニュアル</button>
-    <button class="button" title="デバッグコンソール" onclick="configButtonCommand()">設定</button>
-    <button class="button" title="うずうず珈琲焙煎工房公式Web" onclick="WebButtonCommand()">WEB</button>
+  <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
+    <button class="button" title="再読み込み" onclick="location.reload()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 26" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+  <path d="M21 14a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 10" />
+  <path d="M21 5v5h-5" />
+</svg></button>
+
+  <button id="usb-connect-btn" class="button" title="USB接続" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:block">
+  <line x1="12" y1="19" x2="12" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <line x1="5" y1="13.5" x2="19" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <line x1="4" y1="13.5" x2="4" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <rect x="1" y="4.2" width="6" height="6" rx="1"/>
+  <line x1="12" y1="13.5" x2="12" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <polygon points="12,1 7.2,7.5 16.8,7.5"/>
+  <line x1="20" y1="13.5" x2="20" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <circle cx="20" cy="5.2" r="3.2"/>
+  <rect x="8.2" y="18.5" width="7.6" height="6" rx="2.5"/>
+</svg></button>
+    <button class="button" title="UZU ROASTER情報" onclick="helpButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10" />
+  <line x1="12" y1="16" x2="12" y2="12" />
+  <line x1="12" y1="8" x2="12.01" y2="8" />
+</svg></button>
+    <button class="button" title="取扱説明書" onclick="manualButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 左側のページ -->
+  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+  <!-- 右側のページ -->
+  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+</svg></button>
+
+    <button class="button" title="設定" onclick="configButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="3" />
+  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+</svg></button>
+    <button class="button" title="うずうず珈琲焙煎工房公式Web" onclick="WebButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10" />
+  <line x1="2" y1="12" x2="22" y2="12" />
+  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+</svg></button>
     <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
-    <!-- ☁️ ログインボタン -->
-    <button id="auth-btn" class="button" title="クラウドログイン" onclick="toggleAuth()" style="background:#1a3a2a;">☁️ ログイン</button>
+    <button id="auth-btn" class="button" title="クラウドログイン" onclick="toggleAuth()" style="background:#1a3a2a;">☁️LOGIN</button>
   </div>
   <div class="profile-meta">
     <div class="meta-field">
@@ -1445,9 +1517,9 @@
      表示エリア
      ======================================== -->
 <div class="display-area">
-  <div class="display-item" id="roast_time_area" style="cursor: pointer;">
+  <div class="display-item" id="roast_time_area" style="cursor: pointer;" title="クリックで秒/分表示切替">
     <div class="display-label">経過時間</div>
-    <div class="display-value" id="roast_time">--<span class='unit_sec unit_generic'>[秒]</span></div>
+    <div class="display-value" id="roast_time">----<span class='unit_sec unit_generic'></span></div>
   </div>
   <div class="display-item" id="roast_temperature_area">
     <div class="display-label">現在温度</div>
@@ -1467,7 +1539,7 @@
   </div>
   <div class="display-item" id="dtr_area">
     <div class="display-label">DTR</div>
-    <div class="display-value" id="roast_dtr">--<span class='unit_dtr unit_generic'>[℃]</span></div>
+    <div class="display-value" id="roast_dtr">--<span class='unit_dtr unit_generic'>[%]</span></div>
   </div>
   <div class="display-item">
     <div class="display-label">評価</div>
@@ -1491,18 +1563,23 @@
 </div>
   <div id="control-buttons">
     <div class="button-container">
-      <button title="チャート拡大" class="button button-chart-control" style="border-radius: 20px 0px 0px 20px;" onclick="shotenChart()" id="shorten-button">+</button>
+      <button title="チャート拡大" class="button button-chart-control" style="border-radius: 20px 0px 0px 20px;" onclick="shortenChart()" id="shorten-button">+</button>
       <button title="チャート等倍" class="button button-chart-control" style="border-radius: 0px 0px 0px 0px;" onclick="resetWidthChart()" id="reset-width-button">1:1</button>
       <button title="チャート縮小" class="button button-chart-control" style="border-radius: 0px 20px 20px 0px;" disabled onclick="enlargeChart()" id="enlarge-button">-</button>
     </div>
     <div class="phase-control-group button-container">
       <button id="phasePrevBtn" class="button button-phase-control" style="border-radius: 20px 0px 0px 20px;" onclick="handlePrevClick()" title="前のフェーズ">&lt;</button>
-      <button id="phaseBtn" class="button button-header button-phase-control" style="border-radius: 0px 0px 0px 0px;" onclick="handlePhaseClick()" title="焙煎フェーズマーク">DE</button>
+      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="焙煎フェーズマーク">DE</button>
       <button id="phaseSkipBtn" class="button button-phase-control" style="border-radius: 0px 20px 20px 0px;" onclick="handleSkipClick()"  title="次のフェーズ">&gt;</button>
     </div>
     <div class="button-container">
-      <button class="button button-header button-success" style="border-radius: 20px 0px 0px 20px;" onclick="sendStartCommand()" id="start-button" title="焙煎開始">▶ START</button>
-      <button class="button button-header button-danger" style="border-radius: 0px 20px 20px 0px;" onclick="sendStopCommand()" id="stop-button" title="焙煎停止">■ STOP</button>
+      <button class="button button-header button-success" style="border-radius: 20px 0px 0px 20px;" onclick="sendStartCommand()" id="start-button" title="焙煎開始">▶</button>
+      <button class="button button-header button-danger" style="border-radius: 0px 20px 20px 0px;" onclick="sendStopCommand()" id="stop-button" title="焙煎停止">■</button>
+      <button id="opacity-toggle" class="toggle-opacity-btn" title="透明度切替"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
+      <path d="M12 2v20a10 10 0 0 0 0-20" fill="currentColor" />
+      </svg>
+      </button>
     </div>
   </div>
 </div>
@@ -1524,12 +1601,10 @@
           </tr>
         </thead>
         <tbody>
-          <!-- テーブル内容はJavaScriptで動的に生成 -->
         </tbody>
       </table>
     </div>
     <div style="padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
-      
       <div class="offset-main-wrapper">
         <div class="offset-unit-column">
           <span class="offset-caption-small">時間オフセット</span>
@@ -1551,13 +1626,12 @@
       </div>
     </div>
   </div>
-
   <!-- チャートセクション -->
   <div class="chart-section no-select" id="chart-section">
     <div class="chart-container" id="chart-area">
       <div class="image-overlay" id="chart-point"></div>
       <div class="image-arrow" id="chart-arrow">
-        <svg viewBox="0 0 30 24">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 24">
           <path d="M2 10L18 10L18 6C18 5.4 18.4 5 19 5C19.3 5 19.5 5.1 19.7 5.3L27.7 11.3C28.1 11.7 28.1 12.3 27.7 12.7L19.7 18.7C19.3 19.1 18.7 19.1 18.3 18.7C18.1 18.5 18 18.2 18 18L18 14L2 14C1.4 14 1 13.6 1 13L1 11C1 10.4 1.4 10 2 10Z" stroke-linejoin="round" stroke-linecap="round"/>
         </svg>
       </div>
@@ -1573,7 +1647,7 @@
       </button>
       <button id="edit-mode-button" title="プロファイル編集" class="chart-control-button">
         <b><span id="edit-mode-icon">
-      <svg viewBox="0 0 100 100" width="23" height="23">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="23" height="23">
         <line x1="18" y1="50" x2="82" y2="50" stroke="white" stroke-width="10" stroke-linecap="round"/>
         <polygon points="95,50 78,38 78,62" fill="white"/> <polygon points="5,50 22,38 22,62" fill="white"/>  <line x1="50" y1="18" x2="50" y2="82" stroke="white" stroke-width="10" stroke-linecap="round"/>
         <polygon points="50,5 38,22 62,22" fill="white"/> <polygon points="50,95 38,78 62,78" fill="white"/> </svg>
@@ -1595,6 +1669,9 @@
         <div id="profileRoR" class="chart-info-box">
           <span class="chart-info-label">P.RoR</span><span id="profileRoRInside">　</span>
         </div>
+        <div id="currentDTR" class="chart-info-box">
+          <span class="chart-info-label">C.DTR</span><span id="currentDTRInside">　</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1604,14 +1681,35 @@
   //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
   //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
   const ROR_WINDOW_KEY = 'uzu_ror_window_size';
+  const MAX_ROR_KEY = 'uzu_max_ror';
+  const MAX_TEMP_KEY = 'uzu_max_temperature';
+  const TIME_FORMAT_KEY = 'uzu_is_min_sec_format';
   const DEFAULT_ROR_WINDOW = 20;
   let rorWindowSize = parseInt(localStorage.getItem(ROR_WINDOW_KEY)) || DEFAULT_ROR_WINDOW;
-
+  let MaxRor = parseInt(localStorage.getItem(MAX_ROR_KEY)) || 100;
+  let isMinutesSecondsFormat = localStorage.getItem(TIME_FORMAT_KEY) === 'true';
+  let maxTemperature = parseInt(localStorage.getItem(MAX_TEMP_KEY)) || 260;
+  
   // ドラッグ可能なデバッグコンソール
   document.addEventListener('DOMContentLoaded', () => {
     const draggableElement = debugConsole;
     const dragHandle = debugDraggableHandle;
     document.getElementById('rorWindowInput').value = rorWindowSize;
+    document.getElementById('maxTempInput').value = maxTemperature;
+    document.getElementById('MaxRorInput').value = MaxRor;
+    document.getElementById('saveMaxTemp').addEventListener('click', () => {
+            let newVal = parseInt(document.getElementById('maxTempInput').value);
+            if (isNaN(newVal) || newVal < 200) {
+                newVal = 200;
+            } else if (newVal > 999) {
+                newVal = 999;
+            }
+            maxTemperature = newVal;
+            document.getElementById('maxTempInput').value = maxTemperature;
+            localStorage.setItem(MAX_TEMP_KEY, maxTemperature);
+            roastChart.options.scales.y.max = maxTemperature;
+            roastChart.update();
+        });
     document.getElementById('saveRorWindow').addEventListener('click', () => {
             let newVal = parseInt(document.getElementById('rorWindowInput').value);
             if (isNaN(newVal) || newVal < 1) {
@@ -1623,6 +1721,21 @@
             document.getElementById('rorWindowInput').value = rorWindowSize;
             localStorage.setItem(ROR_WINDOW_KEY, rorWindowSize);
             alert(`RoR移動平均の窓数を ${rorWindowSize} に設定しました。`);
+            // roastChart.destroy();
+            // initChart();
+        });
+    document.getElementById('saveMaxRor').addEventListener('click', () => {
+            let newVal = parseInt(document.getElementById('MaxRorInput').value);
+            if (isNaN(newVal) || newVal < 20) {
+                newVal = 20;
+            } else if (newVal > 200) {
+                newVal = 200;
+            }
+            MaxRor = newVal;
+            document.getElementById('MaxRorInput').value = MaxRor;
+            localStorage.setItem(MAX_ROR_KEY, MaxRor);
+            roastChart.options.scales.y1.max = MaxRor;
+            roastChart.update();
         });
 
     let isDragging = false;
@@ -1700,11 +1813,12 @@ const chartCanvas = document.getElementById('chart-section');
 const debugConsole = document.getElementById('debug_console');
 const debugDraggableHandle = document.getElementById('draggable-zone');
 const fullscreenToggleBtn = document.getElementById('fullscreen-toggle-btn');
-const profileTitleInput = document.getElementById('profileTitle');
-const profileMemoInput = document.getElementById('profileMemo');
+const profileTitle = document.getElementById('profileTitle');
+const profileMemo = document.getElementById('profileMemo');
 const shortenButton = document.getElementById('shorten-button');
 const enlargeButton = document.getElementById('enlarge-button');
 const resetWidthButton = document.getElementById('reset-width-button');
+const profileTitleInput = document.getElementById('profileTitleInput');
 
 
 ////////////////////////////////////////////////////////////////
@@ -1722,7 +1836,7 @@ function updateAuthUI(user) {
 
     if (!isCloudAvailable()) {
         // クラウド利用不可（AP接続・file://など）
-        btn.textContent = '☁️ ログイン';
+        btn.textContent = '☁️LOGIN';
         btn.title = 'クラウド機能にはインターネット接続が必要です';
         btn.style.background = '#444';
         btn.style.color = '#888';
@@ -1741,7 +1855,7 @@ function updateAuthUI(user) {
         btn.title = 'ログアウト：' + name;
         btn.style.background = '#1a6b3a';
     } else {
-        btn.textContent = '☁️ ログイン';
+        btn.textContent = '☁️LOGIN';
         btn.title = 'クラウドログイン';
         btn.style.background = '#1a3a2a';
     }
@@ -1769,10 +1883,186 @@ async function toggleAuth() {
     }
 }
 
-const unit_temp = "<span class='unit_temp unit_generic'>[℃]</span>";
-const unit_ror = "<span class='unit_ror unit_generic'>[℃/分]</span>";
+const TEMPERATURE_UNIT_KEY = 'uzu_temperature_unit';
+let isFahrenheit = localStorage.getItem(TEMPERATURE_UNIT_KEY) === 'F';
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 const unit_dtr = "<span class='unit_dtr unit_generic'>[%]</span>";
+
+function celsiusToFahrenheit(value) {
+  return value * 9 / 5 + 32;
+}
+
+function fahrenheitToCelsius(value) {
+  return (value - 32) * 5 / 9;
+}
+
+function getUnitTempLabel() {
+  return isFahrenheit ? '[℉]' : '[℃]';
+}
+
+function getUnitRoRLabel() {
+  return isFahrenheit ? '[℉/分]' : '[℃/分]';
+}
+
+function toDisplayTemp(value) {
+  return isFahrenheit ? celsiusToFahrenheit(value) : value;
+}
+
+function toDisplayRoR(value) {
+  return isFahrenheit ? value * 9 / 5 : value;
+}
+
+function formatDisplayTemp(value) {
+  if (value === null || value === undefined || isNaN(value)) {
+    return `--<span class='unit_temp unit_generic'>${getUnitTempLabel()}</span>`;
+  }
+  return `${toDisplayTemp(value).toFixed(1)}<span class='unit_temp unit_generic'>${getUnitTempLabel()}</span>`;
+}
+
+function formatDisplayRoR(value) {
+  if (value === null || value === undefined || isNaN(value)) {
+    return `--<span class='unit_ror unit_generic'>${getUnitRoRLabel()}</span>`;
+  }
+  return `${toDisplayRoR(value).toFixed(1)}<span class='unit_ror unit_generic'>${getUnitRoRLabel()}</span>`;
+}
+
+function setDisplayTempValue(element, celsius) {
+  if (!element) return;
+  if (celsius === null || celsius === undefined || isNaN(celsius)) {
+    element.dataset.celsius = '';
+    element.innerHTML = `--<span class='unit_temp unit_generic'>${getUnitTempLabel()}</span>`;
+    return;
+  }
+  element.dataset.celsius = celsius;
+  element.innerHTML = `${toDisplayTemp(celsius).toFixed(1)}<span class='unit_temp unit_generic'>${getUnitTempLabel()}</span>`;
+}
+
+function setDisplayRoRValue(element, celsiusPerMin) {
+  if (!element) return;
+  if (celsiusPerMin === null || celsiusPerMin === undefined || isNaN(celsiusPerMin)) {
+    element.dataset.celsiusror = '';
+    element.innerHTML = `--<span class='unit_ror unit_generic'>${getUnitRoRLabel()}</span>`;
+    return;
+  }
+  element.dataset.celsiusror = celsiusPerMin;
+  element.innerHTML = `${toDisplayRoR(celsiusPerMin).toFixed(1)}<span class='unit_ror unit_generic'>${getUnitRoRLabel()}</span>`;
+}
+
+function getDisplayTempCelsius(element) {
+  if (!element) return NaN;
+  const stored = element.dataset.celsius;
+  if (stored !== undefined && stored !== '') {
+    return parseFloat(stored);
+  }
+  const raw = parseFloat(element.textContent);
+  return isNaN(raw) ? NaN : (isFahrenheit ? fahrenheitToCelsius(raw) : raw);
+}
+
+function getDisplayRoRCelsius(element) {
+  if (!element) return NaN;
+  const stored = element.dataset.celsiusror;
+  if (stored !== undefined && stored !== '') {
+    return parseFloat(stored);
+  }
+  const raw = parseFloat(element.textContent);
+  return isNaN(raw) ? NaN : (isFahrenheit ? raw * 5 / 9 : raw);
+}
+
+function parseTableTemperatureValue(rawValue) {
+  const value = parseFloat(rawValue);
+  if (isNaN(value)) return NaN;
+  return isFahrenheit ? fahrenheitToCelsius(value) : value;
+}
+
+function formatTableTemperatureValue(tempC) {
+  if (tempC === '' || tempC === null || tempC === undefined || isNaN(tempC)) {
+    return '';
+  }
+  const displayValue = isFahrenheit ? celsiusToFahrenheit(tempC) : tempC;
+  return displayValue.toFixed(1);
+}
+
+function convertDisplayedTemperature(valueText, fromFahrenheit) {
+  const value = parseFloat(valueText);
+  if (isNaN(value)) return null;
+  return fromFahrenheit ? fahrenheitToCelsius(value) : celsiusToFahrenheit(value);
+}
+
+function updateTemperatureUnitLabels() {
+  document.querySelectorAll('.unit_temp').forEach(el => {
+    el.textContent = getUnitTempLabel();
+  });
+  document.querySelectorAll('.unit_ror').forEach(el => {
+    el.textContent = getUnitRoRLabel();
+  });
+  const tempHeader = document.querySelector('#profileTable thead th:nth-child(2)');
+  if (tempHeader) {
+    tempHeader.textContent = `温度 ${getUnitTempLabel()}`;
+  }
+}
+
+function refreshProfileTableTemperatureDisplays() {
+  if (!profileTable) return;
+  const rows = Array.from(profileTable.rows).slice(1);
+  const maxValue = isFahrenheit ? celsiusToFahrenheit(maxTemperature) : maxTemperature;
+  rows.forEach(row => {
+    const tempInput = row.cells[1].querySelector('input');
+    if (!tempInput) return;
+    const storedCelsius = tempInput.dataset.celsius;
+    let celsius = storedCelsius !== undefined && storedCelsius !== ''
+      ? parseFloat(storedCelsius)
+      : parseTableTemperatureValue(tempInput.value);
+    if (!isNaN(celsius)) {
+      tempInput.value = formatTableTemperatureValue(celsius);
+      tempInput.dataset.celsius = celsius;
+    }
+    tempInput.max = maxValue.toFixed(1);
+  });
+}
+
+function refreshTemperatureDisplayBoxes() {
+  if (roastTemperatureDisplay) {
+    const celsius = getDisplayTempCelsius(roastTemperatureDisplay);
+    setDisplayTempValue(roastTemperatureDisplay, celsius);
+  }
+  if (roastRoRDisplay) {
+    const celsiusror = getDisplayRoRCelsius(roastRoRDisplay);
+    setDisplayRoRValue(roastRoRDisplay, celsiusror);
+  }
+  if (profileTemperatureDisplay) {
+    const celsius = getDisplayTempCelsius(profileTemperatureDisplay);
+    setDisplayTempValue(profileTemperatureDisplay, celsius);
+  }
+  if (profileRoRDisplay) {
+    const celsiusror = getDisplayRoRCelsius(profileRoRDisplay);
+    setDisplayRoRValue(profileRoRDisplay, celsiusror);
+  }
+}
+
+function updateChartUnitLabels() {
+  if (!roastChart) return;
+  const yAxisTitle = isFahrenheit ? '温度 [℉]' : '温度 [℃]';
+  const y1AxisTitle = isFahrenheit ? 'RoR [℉/分]' : 'RoR [℃/分]';
+  roastChart.options.scales.y.title.text = yAxisTitle;
+  roastChart.options.scales.y1.title.text = y1AxisTitle;
+}
+
+function updateTemperatureUnitDisplay() {
+  updateTemperatureUnitLabels();
+  if (profileTable) refreshProfileTableTemperatureDisplays();
+  if (roastChart) {
+    updateChartUnitLabels();
+    roastChart.update();
+  }
+  refreshTemperatureDisplayBoxes();
+  updateChartDsiaplayValue();
+}
+
+function toggleTemperatureUnit() {
+  isFahrenheit = !isFahrenheit;
+  localStorage.setItem(TEMPERATURE_UNIT_KEY, isFahrenheit ? 'F' : 'C');
+  updateTemperatureUnitDisplay();
+}
 
 const UzuRoasterControllerVersionStr = "1.2.0";
 let roastChart = null;
@@ -1783,7 +2073,6 @@ const CURRENT_ROR = 3;
 const COMPARE_TEMP = 4;
 const profile_color = 'rgba(80,80,80,0.4)'; // プロファイルの色 
 const active_profile_color = 'rgba(136, 184, 221, 0.8)'; // アクティブプロファイルの色  
-let isMinutesSecondsFormat = false; // 初期値は秒表示
 let ProfileSecondData = []; // 1秒間隔のプロファイルデータ
 let uzcpSupported = false;  // UZCP対応フラグ
 
@@ -1800,7 +2089,6 @@ let LiveData = [];
 let ProfileData = []; // プロファイルデータのグローバル変数
 let ProfileBackGroundColor = 'rgba(0, 0, 0, 0.08)'; // 通常色
 let maxChartTime = 1800;
-let maxTemperature = 260;
 let currentChartMaxTime = maxChartTime;
 
 window.addEventListener('resize', () => {
@@ -2022,15 +2310,15 @@ function isMobile() {
 }
 
 ////////////////////////////////////////////////////////////////
-// --- UZU ROASTER プロファイルストレージ管理 ---
+// --- ページ読み込み時処理 ---
 ////////////////////////////////////////////////////////////////
-// ページ読み込み時にリストを初期化
 window.addEventListener('DOMContentLoaded', () => {
     chartAreaInitialize();
     updateProfileList();
     initColorMode();
     connectionSelect();
     initializeGuideProfileUI();
+    displaySecondsOrMinutes();
 });
 
 function connectionSelect(){
@@ -2149,15 +2437,7 @@ function saveProfileToLocalStorage() {
         
         alert("ストレージに保存しました： " + title);
         updateProfileList(); // リストを更新
-        const modal = document.getElementById('jsonSaveModal');
-        modal.classList.add('fx-close');
-        setTimeout(() => {
-          if (modal.classList.contains('fx-close')) {
-              modal.classList.remove('fx-open');
-              modal.style.display = 'none';
-              modal.classList.remove('fx-close');
-          }
-        }, 600);
+        closeModal('jsonSaveModal');
     } catch (e) {
         alert("JSONデータが正しくありません。");
     }
@@ -2174,13 +2454,31 @@ function updateProfileList() {
   index.forEach(title => {
       const container = document.createElement('div');
       // style属性をcssTextで指定（スマホ対策）
-      container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; margin-bottom:2px; padding:1px; border-radius:4px;";
+      container.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; margin-bottom:1px; padding:1px; border-radius:4px;";
 
       // タイトルボタン（クリックで読み込み）
       const btn = document.createElement('div');
       btn.innerText = title;
       // style属性をcssTextで指定（スマホ対策）
-      btn.style.cssText = "flex-grow:1; cursor:pointer; color:#fff; font-size:16px; max-width:calc(100% - 60px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;border:1px solid rgba(255,255,255,0.3); padding:0px 1px; border-radius:3px; background:#333;";
+      btn.style.cssText = "flex-grow:1; cursor:pointer; color:#fff; font-size:14px; max-width:calc(100% - 60px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;border:1px solid rgba(255,255,255,0.3); padding:0px 1px; border-radius:3px; background:#333;";
+      // マウスが乗った時（明るくする）
+      btn.onmouseenter = () => {
+          btn.style.background = "#444";
+          btn.style.borderColor = "rgba(255,255,255,0.5)";
+      };
+      // マウスが離れた時（元に戻す）
+      btn.onmouseleave = () => {
+          btn.style.background = "#333";
+          btn.style.borderColor = "rgba(255,255,255,0.3)";
+      };
+      // 押した瞬間（暗くして少し小さくする）
+      btn.onmousedown = () => {
+          btn.style.background = "#222";
+      };
+      // 指/マウスを離した時
+      btn.onmouseup = () => {
+          btn.style.background = "#444";
+      };
       btn.onclick = () => {
           const data = localStorage.getItem('uzu_profile_data_' + title);
           document.getElementById('jsonInput').value = data;
@@ -2191,7 +2489,10 @@ function updateProfileList() {
       delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;削除</span>";
       // style属性をcssTextで指定（スマホ対策）
       delBtn.style.cssText = "background:#800; color:#fff; border:none; padding:1px 8px; cursor:pointer; border-radius:3px; margin-left:10px;";
+      delBtn.onmouseenter = () => delBtn.style.background = "#c00";
+      delBtn.onmouseleave = () => delBtn.style.background = "#a00";      
       delBtn.onclick = (e) => {
+          delBtn.style.background = "#400";
           e.stopPropagation(); // 親のクリックイベントを防ぐ
           if (confirm("プロファイル「" + title + "」を完全に削除してもいいですか？")) {
               deleteProfile(title);
@@ -2216,22 +2517,15 @@ function deleteProfile(title) {
 ////////////////////////////////////////////////////////////////
 // ポップアップのテキストエリアをクリックしたときの処理
 ////////////////////////////////////////////////////////////////
-profileMemoInput.addEventListener('click', () => {
-    popupText.value = profileMemoInput.value;
-    popup.classList.add('fx-open');
+profileMemo.addEventListener('click', () => {
+    popupText.value = profileMemo.value;
+    openModal('popupTextarea');
     popupText.focus();
 });
 
 closeButton.addEventListener('click', () => {
-    profileMemoInput.value = popupText.value;
-    popup.classList.add('fx-close');
-    setTimeout(() => {
-      if (popup.classList.contains('fx-close')) {
-          popup.classList.remove('fx-open');
-          popup.style.display = 'none';
-          popup.classList.remove('fx-close');
-    }
-    }, 600);
+    profileMemo.value = popupText.value;
+    closeModal('popupTextarea');
 });
 
 let socket = null;
@@ -2309,10 +2603,10 @@ function receiveWebMessage(data) {
 
       const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
       roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(data.time); 
-      roastTemperatureDisplay.innerHTML = temp + unit_temp;
+      setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
       if (roastChart.data.datasets[PROFILE_TEMP].data.length === 0) {
-          profileTemperatureDisplay.innerHTML = "--" + unit_temp;
-          profileRoRDisplay.innerHTML = "--" + unit_ror;
+          setDisplayTempValue(profileTemperatureDisplay, null);
+          setDisplayRoRValue(profileRoRDisplay, null);
       }
       else {
         const guideOffsetX = parseFloat(offsetInputTime.value) || 0;
@@ -2321,44 +2615,39 @@ function receiveWebMessage(data) {
         const profileTemp = getOneSecondIntervalProfile(getProfileDataFromTable());
 
         if (profileTemp[0].time >= profileTime) {
-          profileTemperatureDisplay.innerHTML = (profileTemp[0].temp + guideOffsetY).toFixed(1) + unit_temp;
+          setDisplayTempValue(profileTemperatureDisplay, profileTemp[0].temp + guideOffsetY);
         }
         else if (profileTemp[profileTemp.length - 1].time >= profileTime) {
           const profileIndex = Math.round(profileTime - profileTemp[0].time);
-          profileTemperatureDisplay.innerHTML = (profileTemp[profileIndex].temp + guideOffsetY).toFixed(1) + unit_temp;
+          setDisplayTempValue(profileTemperatureDisplay, profileTemp[profileIndex].temp + guideOffsetY);
         }
         else {
-          profileTemperatureDisplay.innerHTML = (profileTemp[profileTemp.length - 1].temp + guideOffsetY).toFixed(1) + unit_temp;
+          setDisplayTempValue(profileTemperatureDisplay, profileTemp[profileTemp.length - 1].temp + guideOffsetY);
         }
 
         if (roastChart.data.datasets[PROFILE_ROR].data.length > 0) {
           const profileRoRIndex = Math.round(data.time - guideOffsetX);
           if (profileRoRIndex >= 0 && roastChart.data.datasets[PROFILE_ROR].data.length > profileRoRIndex) {
-            profileRoRDisplay.innerHTML = (roastChart.data.datasets[PROFILE_ROR].data[profileRoRIndex].y).toFixed(1) + unit_ror;
+            setDisplayRoRValue(profileRoRDisplay, roastChart.data.datasets[PROFILE_ROR].data[profileRoRIndex].y);
           }
           else if (profileRoRIndex < 0 && roastChart.data.datasets[PROFILE_ROR].data.length > 0) {
-            profileRoRDisplay.innerHTML = (roastChart.data.datasets[PROFILE_ROR].data[0].y).toFixed(1) + unit_ror;
+            setDisplayRoRValue(profileRoRDisplay, roastChart.data.datasets[PROFILE_ROR].data[0].y);
           }
           else {
-            profileRoRDisplay.innerHTML = "--" + unit_ror;
+            setDisplayRoRValue(profileRoRDisplay, null);
           }
         }
       }
-      roastRoRDisplay.innerHTML = current_ror.y.toFixed(1) + unit_ror;
+      setDisplayRoRValue(roastRoRDisplay, current_ror.y);
       const dtr = PhaseManager.getDTR(getCurrentTime());
       roastDTRDisplay.innerHTML = (dtr !== null) ? dtr + unit_dtr : '--' + unit_dtr;
     }
     else {	//焙煎中以外は現在温度のみ表示
-      if (!isMinutesSecondsFormat) {
-        roastTimeDisplay.innerHTML = "--" + unit_sec;
-      }
-      else {
-        roastTimeDisplay.innerHTML = "--:--"; 
-      }
-      roastTemperatureDisplay.innerHTML = temp + unit_temp;
-      profileTemperatureDisplay.innerHTML = "--" + unit_temp;
-      profileRoRDisplay.innerHTML = "--" + unit_ror;
-      roastRoRDisplay.innerHTML = "--" + unit_ror;        
+      displaySecondsOrMinutes();
+      setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
+      setDisplayTempValue(profileTemperatureDisplay, null);
+      setDisplayRoRValue(profileRoRDisplay, null);
+      setDisplayRoRValue(roastRoRDisplay, null);        
       roastDTRDisplay.innerHTML = "--" + unit_dtr;
     }
     
@@ -2367,6 +2656,20 @@ function receiveWebMessage(data) {
     }
     updateChartDsiaplayValue();  
   } 
+}
+
+function displaySecondsOrMinutes(second = null){
+  if (isRoasting == false || second === null) {
+    if (!isMinutesSecondsFormat) {
+      roastTimeDisplay.innerHTML = "--" + unit_sec;
+    }
+    else {
+      roastTimeDisplay.innerHTML = "--:--"; 
+    }
+  }
+  else {
+    roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(second);
+  }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -2710,7 +3013,7 @@ function enlargeChart() {
   roastChart.update();
 }
 
-function shotenChart() {
+function shortenChart() {
   shortenButton.disabled = true;
   enlargeButton.disabled = false; 
   resetWidthButton.disabled = false; 
@@ -2788,7 +3091,8 @@ function updateChartDsiaplayValue() {
         'roast_temperature':   'currentTempInside',
         'roast_ror':           'currentRoRInside',
         'profile_temperature': 'profileTempInside',
-        'profile_ror':         'profileRoRInside'
+        'profile_ror':         'profileRoRInside',
+        'roast_dtr':           'currentDTRInside'
     };
 
     Object.entries(idMap).forEach(([srcId, destId]) => {
@@ -2940,8 +3244,8 @@ const UZU_PRESETS = {
 function applyPreset(key) {
   const selectedData = UZU_PRESETS[key];
   selectedData.profile = generateCurveData(key);
-  profileTitleInput.value = selectedData.title;
-  profileMemoInput.value = selectedData.memo;
+  profileTitle.value = selectedData.title;
+  profileMemo.value = selectedData.memo;
 
   // 5秒刻みの完全なデータを動的生成（ラオ・ルール計算式）
   const table = profileTable;
@@ -3005,8 +3309,8 @@ function applyAndConfirmGuideOffsets(offsetX, offsetY) {
         const tempInput = row.cells[1].querySelector('input');
         if (tInput && tempInput) {
             currentData.push({
-                time: parseFloat(tInput.value) || 0,
-                temp: parseFloat(tempInput.value) || 0
+                time: getTimeInputSeconds(tInput) || 0,
+                temp: parseTableTemperatureValue(tempInput.value) || 0
             });
         }
     }
@@ -3049,7 +3353,75 @@ function overwriteTableWithLastRoast() {
     addRow(point.x, point.y);
   });
   sendCurrentProfile();
+  copyEventsToProfile();
 }
+
+/**
+ * PhaseManager.phases オブジェクトから値を抽出してプロファイルにコピー
+ */
+function copyEventsToProfile() {
+    // 1. オブジェクトのキー(DRY, FC1等)をループして、値がnullでないものを抽出
+    const recordedEvents = [];
+    
+    for (const key in PhaseManager.phases) {
+        const time = PhaseManager.phases[key];
+        
+        // 値が null でない（時間が記録されている）場合
+        if (time !== null && time !== 0) {
+            // プロファイルデータ(profileData)から、その時間の温度(y)を探す
+            const profileData = getProfileDataFromTable();
+            const profilePoint = profileData.find(d => d.time === time);
+            
+            recordedEvents.push({
+                time: time,
+                temp: profilePoint ? profilePoint.temp : 0,
+                label: key // "DRY", "FC1" などのキー名をラベルにする
+            });
+        }
+    }
+    // グローバル変数に格納してチャート描画で利用
+    window.profileEvents = recordedEvents;
+    roastChart.update(); 
+}
+
+/**
+ * Chart.js 用のカスタムプラグイン
+ * プロファイルチャート上にイベントを円とテキストで描画する
+ */
+const profileEventPlugin = {
+    id: 'profileEventPlugin',
+    afterDatasetsDraw(chart, args, options) {
+        const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+        
+        if (!window.profileEvents || window.profileEvents.length === 0) return;
+
+        ctx.save();
+        window.profileEvents.forEach(ev => {
+            const xPos = x.getPixelForValue(ev.time);
+            const yPos = y.getPixelForValue(ev.temp);
+            if (xPos < left || xPos > right) return;
+            ctx.beginPath();
+            ctx.arc(xPos, yPos, 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0.2, 0.3)'; 
+            ctx.fill();
+            ctx.fillStyle = '#333'; // 文字色
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(ev.label, xPos, yPos + 14); 
+            ctx.save(); // 念のため状態を保存
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.textAlign = 'center';
+            let timeStr = ev.time;;
+            if (isMinutesSecondsFormat) {
+              timeStr = formatSecondsToMinutesSeconds(ev.time);
+            }
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillText(timeStr, xPos, yPos + 24); 
+        });
+        ctx.restore();
+    }
+};
 
 function showUploadOverlay() {
   document.getElementById("uploadOverlay").style.display = "flex";
@@ -3078,6 +3450,90 @@ function formatSecondsToMinutesSeconds(totalSeconds) {
     const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
 
     return `${minutes}:${formattedSeconds}`;
+}
+
+function parseTimeInputValue(rawValue) {
+  if (rawValue === null || rawValue === undefined) return NaN;
+  const value = String(rawValue).trim();
+  if (value === '') return NaN;
+
+  const mmss = value.match(/^(\d+):([0-5]\d)$/);
+  if (mmss) {
+    const minutes = parseInt(mmss[1], 10);
+    const seconds = parseInt(mmss[2], 10);
+    let total = minutes * 60 + seconds;
+    if (total > maxChartTime - 1) total = maxChartTime - 1;
+    return total;
+  }
+
+  if (/^\d+$/.test(value)) {
+    let seconds = parseInt(value, 10);
+    if (seconds > maxChartTime - 1) seconds = maxChartTime - 1;
+    return seconds;
+  }
+
+  return NaN;
+}
+
+function formatTableTimeInputValue(seconds) {
+  if (seconds === '' || seconds === null || seconds === undefined || isNaN(seconds)) {
+    return '';
+  }
+  const clamped = Math.min(Math.max(Math.round(seconds), 0), maxChartTime - 1);
+  if (!isMinutesSecondsFormat) {
+    return clamped.toString();
+  }
+  const minutes = Math.floor(clamped / 60);
+  const secs = clamped % 60;
+  return `${minutes}:${secs < 10 ? '0' + secs : secs}`;
+}
+
+function setTimeInputValue(input, seconds) {
+  if (!input) return;
+  if (seconds === null || seconds === undefined || isNaN(seconds)) {
+    input.dataset.seconds = '';
+    input.value = '';
+    return;
+  }
+  const clamped = Math.min(Math.max(Math.round(seconds), 0), maxChartTime - 1);
+  input.dataset.seconds = clamped;
+  input.value = formatTableTimeInputValue(clamped);
+}
+
+function getTimeInputSeconds(input) {
+  if (!input) return NaN;
+  const rawValue = String(input.value).trim();
+  const parsed = parseTimeInputValue(rawValue);
+  if (!isNaN(parsed)) {
+    input.dataset.seconds = parsed;
+    return parsed;
+  }
+
+  // 入力が不正な場合は古い値を残さず、無効扱いにする
+  if (input.dataset) {
+    input.dataset.seconds = '';
+  }
+  return NaN;
+}
+
+function refreshProfileTableTimeInputs() {
+  if (!profileTable) return;
+  const rows = Array.from(profileTable.rows).slice(1);
+  rows.forEach(row => {
+    const timeInput = row.cells[0].querySelector('input');
+    if (!timeInput) return;
+    const seconds = getTimeInputSeconds(timeInput);
+    if (!isNaN(seconds)) {
+      setTimeInputValue(timeInput, seconds);
+    }
+  });
+}
+
+function updateProfileTableTimeHeader() {
+  const header = document.querySelector('#profileTable thead th:nth-child(1)');
+  if (header) {
+    header.textContent = `時間 ${isMinutesSecondsFormat ? '[分]' : '[秒]'}`;
+  }
 }
 
 function addLiveDataPoint(chart, time, temp) {
@@ -3127,11 +3583,14 @@ function addRow(time = '', temp = '') {
   const deleteCell = row.insertCell(2);
 
   const tempValue = (temp !== '' && !isNaN(parseFloat(temp)))
-    ? parseFloat(temp).toFixed(1)
+    ? formatTableTemperatureValue(parseFloat(temp))
     : '';
+  const tempMax = isFahrenheit ? celsiusToFahrenheit(maxTemperature) : maxTemperature;
+  const timeSeconds = (time !== '' && !isNaN(parseFloat(time))) ? Math.round(parseFloat(time)) : '';
+  const timeValue = timeSeconds !== '' ? formatTableTimeInputValue(timeSeconds) : '';
 
-  timeCell.innerHTML = `<input class="table_edit" type="number" value="${time}" step="1" min="0" max="${maxChartTime - 1}" oninput="validateInput_time(this, 0, ${maxChartTime - 1})">`;
-  tempCell.innerHTML = `<input class="table_edit" type="number" value="${tempValue}" min="0" max="${maxTemperature}" oninput="validateInput_temperature(this, 0, ${maxTemperature})">`;
+  timeCell.innerHTML = `<input class="table_edit" type="text" value="${timeValue}" data-seconds="${timeSeconds !== '' ? timeSeconds : ''}" oninput="validateInput_time(this, 0, ${maxChartTime - 1})" onblur="formatTimeInputOnBlur(this)">`;
+  tempCell.innerHTML = `<input class="table_edit" type="number" value="${tempValue}" min="0" max="${tempMax.toFixed(1)}" data-celsius="${!isNaN(parseFloat(temp)) ? parseFloat(temp) : ''}" oninput="validateInput_temperature(this, 0, ${tempMax.toFixed(1)}); onTemperatureCellInput(this)">`;
   deleteCell.innerHTML = `<button class="table_edit" onclick="this.parentNode.parentNode.remove()">🗑</button>`;
 }
 
@@ -3141,6 +3600,7 @@ function validateInput_temperature(input, min, max) {
   // 数値でない場合は空文字にする
   if (isNaN(value)) {
     input.value = '';
+    input.dataset.celsius = '';
     return;
   }
   
@@ -3149,27 +3609,76 @@ function validateInput_temperature(input, min, max) {
     input.value = min.toString();
   } else if (value > max) {
     input.value = max.toString();
+  }
+  if (input.dataset) {
+    const celsius = parseTableTemperatureValue(input.value);
+    if (!isNaN(celsius)) {
+      input.dataset.celsius = celsius;
+    }
+  }
+}
+function onTemperatureCellInput(input) {
+  if (!input || !input.dataset) return;
+  const value = parseFloat(input.value);
+  if (isNaN(value)) {
+    input.dataset.celsius = '';
+    return;
+  }
+  const celsius = isFahrenheit ? fahrenheitToCelsius(value) : value;
+  input.dataset.celsius = celsius;
+}
+function formatTimeInputOnBlur(input) {
+  if (!input) return;
+  const seconds = parseTimeInputValue(input.value);
+  if (!isNaN(seconds)) {
+    setTimeInputValue(input, seconds);
   }
 }
 function validateInput_time(input, min, max) {
-  let value = parseInt(input.value);
-  
-  // 数値でない場合は空文字にする
-  if (isNaN(value)) {
-    input.value = '';
+  const raw = String(input.value).trim();
+  if (raw === '') {
+    input.dataset.seconds = '';
     return;
   }
-  
-  // 範囲外の場合は制限する
-  if (value < min) {
-    input.value = min.toString();
-    return;
-  } else if (value > max) {
-    input.value = max.toString();
-    return;
-  }
-  input.value = value.toString();
 
+  const mmssMatch = raw.match(/^(\d+):([0-5]\d)$/);
+  const digitsMatch = raw.match(/^\d+$/);
+
+  if (isMinutesSecondsFormat) {
+    if (mmssMatch) {
+      const seconds = parseTimeInputValue(raw);
+      if (!isNaN(seconds)) {
+        setTimeInputValue(input, seconds);
+      } else {
+        input.dataset.seconds = '';
+      }
+      return;
+    }
+    if (digitsMatch) {
+      let seconds = parseInt(raw, 10);
+      if (seconds > max) seconds = max;
+      input.dataset.seconds = seconds;
+      input.value = formatTableTimeInputValue(seconds);
+      return;
+    }
+    input.dataset.seconds = '';
+    return; // 無効フォーマットはそのまま残す
+  }
+
+  if (digitsMatch) {
+    let seconds = parseInt(raw, 10);
+    if (seconds < min) {
+      seconds = min;
+    } else if (seconds > max) {
+      seconds = max;
+    }
+    input.dataset.seconds = seconds;
+    input.value = seconds.toString();
+    return;
+  }
+
+  input.dataset.seconds = '';
+  // 秒表示モードでは `mm:ss` は特殊扱いせず、そのまま残す
 }
 
 function sortTable() {
@@ -3180,8 +3689,8 @@ function sortTable() {
 
   // 最新のエントリを上書き保存
   rows.forEach(row => {
-    let time = parseFloat(row.cells[0].firstChild.value);
-    let temp = parseFloat(row.cells[1].firstChild.value);
+    let time = getTimeInputSeconds(row.cells[0].firstChild);
+    let temp = parseTableTemperatureValue(row.cells[1].firstChild.value);
     if (time < 0) time = 0;
     else if (time > maxChartTime - 1) time = maxChartTime - 1;
     if (temp < 0) temp = 0;
@@ -3225,8 +3734,8 @@ function applyOffsetsToTable() {
         const tempInput = row.cells[1].querySelector('input');
         if (tInput && tempInput) {
             currentData.push({
-                time: parseFloat(tInput.value) || 0,
-                temp: parseFloat(tempInput.value) || 0
+                time: getTimeInputSeconds(tInput) || 0,
+                temp: parseTableTemperatureValue(tempInput.value) || 0
             });
         }
     }
@@ -3246,13 +3755,13 @@ function applyOffsetsToTable() {
         addRow(newTime, newTemp);
     });
     //時間がゼロの点がなくなったら、0秒で一番近い時間の温度の点を追加する
-    if (table.rows.length > 1 && table.rows[1].cells[0].firstChild.value != "0") {
+    if (table.rows.length > 1 && getTimeInputSeconds(table.rows[1].cells[0].firstChild) !== 0) {
       let closestTemp = null;
       let minDiff = Infinity;
       for (let i = 1; i < table.rows.length; i++) {
           const row = table.rows[i];
-          const tValue = parseFloat(row.cells[0].firstChild.value) || 0;
-          const tempValue = parseFloat(row.cells[1].firstChild.value) || 0;
+          const tValue = getTimeInputSeconds(row.cells[0].firstChild) || 0;
+          const tempValue = parseTableTemperatureValue(row.cells[1].firstChild.value) || 0;
           const diff = Math.abs(tValue - 0);  
           if (diff < minDiff) {
               minDiff = diff;
@@ -3303,14 +3812,10 @@ const phaseBackgroundPlugin = {
             while (prevIndex >= 0 && PhaseManager.phases[PhaseManager.order[prevIndex]] === null) {
                 prevIndex--;
             }
-            
-            // もし一個も見つからんかったら（あり得へんけど）スキップ
             if (prevIndex < 0) return;
-
             const startTime = PhaseManager.phases[PhaseManager.order[prevIndex]];
             const startX = x.getPixelForValue(startTime);
             const endX = x.getPixelForValue(endTime);
-
             // 1. 背景塗り（一個前がスキップされてても、繋げて塗る！）
             ctx.fillStyle = getPhaseColor(key, 0.15);
             ctx.fillRect(startX, chartArea.top, endX - startX, 25);//chartArea.bottom - chartArea.top);
@@ -3333,24 +3838,19 @@ const phaseBackgroundPlugin = {
             ctx.restore();
 
             // 3. テキスト表示
+            ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
             ctx.font = '10px sans-serif';
-            ctx.fillText(key, endX - 5, chartArea.top + 15);
-
+            ctx.fillText(key, endX, chartArea.top + 14);
             ctx.save(); // 念のため状態を保存
             ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.textAlign = 'center'; // 中央揃えにすると「ポッチ」とズレなくてエロい
-            
-            // --- 確定時間 ---
             let timeStr = endTime;
-            if (!isMinutesSecondsFormat) {
-
-            } else {
+            if (isMinutesSecondsFormat) {
               timeStr = formatSecondsToMinutesSeconds(endTime);
             }
             ctx.font = '10px sans-serif';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // 時間は少し薄めにして「階層」を作る
-            ctx.fillText(timeStr, endX, chartArea.top + 28); // 名前の13px下に配置
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillText(timeStr, endX, chartArea.top + 24); 
             
             ctx.restore();
         });
@@ -3775,7 +4275,7 @@ function syncChartToTable(index, time, temp) {
         const cells = row.getElementsByTagName('td');
         const timeInput = cells[0].querySelector('input');
         const tempInput = cells[1].querySelector('input');
-        if (timeInput) timeInput.value = Math.round(time);
+        if (timeInput) setTimeInputValue(timeInput, Math.round(time));
         if (tempInput) tempInput.value = temp.toFixed(1);
     }
 }
@@ -3868,8 +4368,8 @@ function downloadJSON() {
   const latestEntries = new Map();
 
   rows.forEach(row => {
-    const time = parseFloat(row.cells[0].firstChild.value);
-    const temp = parseFloat(row.cells[1].firstChild.value);
+    const time = getTimeInputSeconds(row.cells[0].firstChild);
+    const temp = parseTableTemperatureValue(row.cells[1].firstChild.value);
     if (!isNaN(time) && !isNaN(temp)) {
       latestEntries.set(time, temp);
     }
@@ -3884,8 +4384,8 @@ function downloadJSON() {
     .sort((a, b) => a[0] - b[0])
     .map(([time, temp]) => ({ time, temp }));
 
-  const title = profileTitleInput?.value || "";
-  const memo = profileMemoInput?.value || "";
+  const title = profileTitle?.value || "";
+  const memo = profileMemo?.value || "";
 
   const data = {
     type: "roast_profile",
@@ -3937,71 +4437,84 @@ function downloadJSON() {
   roastMessage.textContent = "プロファイルの保存処理が完了しました";
 }
 
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  document.body.classList.add('modal-open');
+  modal.classList.remove('fx-close', 'show');
+  modal.style.display = 'flex';
+  modal.classList.add('active', 'fx-open');
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  document.body.classList.remove('modal-open');
+  modal.classList.remove('fx-open', 'show');
+  modal.classList.add('fx-close');
+  setTimeout(() => {
+    if (modal.classList.contains('fx-close')) {
+      modal.classList.remove('fx-close');
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+  }, 600);
+}
+
+function setupModalOverlayClickHandlers() {
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', event => {
+      if (event.target === overlay) {
+        closeModal(overlay.id);
+      }
+    });
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupModalOverlayClickHandlers);
+} else {
+  setupModalOverlayClickHandlers();
+}
+
 function showProfModal() {
-  const modal = document.getElementById('profModal');
-      modal.classList.add('fx-open');
+  openModal('profModal');
 }
 
 function closeProfModal() {
-    const modal = document.getElementById('profModal');
-    modal.classList.add('fx-close');
-    setTimeout(() => {
-      if (modal.classList.contains('fx-close')) {
-          modal.classList.remove('fx-open');
-          modal.style.display = 'none';
-          modal.classList.remove('fx-close');
-    }
-    }, 600);
-    modal.classList.add('fx-open');
+  closeModal('profModal');
 }
 
 function closeJSONInputModal() {
-    const modal = document.getElementById('jsonInputModal');
-    modal.classList.add('fx-close');
-    document.getElementById('jsonSave').value = '';
-    setTimeout(() => {
-      if (modal.classList.contains('fx-close')) {
-          modal.classList.remove('fx-open');
-          modal.style.display = 'none';
-          modal.classList.remove('fx-close');
-    }
-    }, 600);
+    const textarea = document.getElementById('jsonInput');
+    if (textarea) textarea.value = '';
+    closeModal('jsonInputModal');
 }
 function closeJSONSaveModal() {
-    const modal = document.getElementById('jsonSaveModal');
-    modal.classList.add('fx-close');
-    document.getElementById('jsonInput').value = '';
-    setTimeout(() => {
-      if (modal.classList.contains('fx-close')) {
-          modal.classList.remove('fx-open');
-          modal.style.display = 'none';
-          modal.classList.remove('fx-close');
-    }
-    }, 600);
-    modal.classList.add('fx-open');
+    const textarea = document.getElementById('jsonSave');
+    if (textarea) textarea.value = '';
+    closeModal('jsonSaveModal');
 }
 
 function openJSONInputModal() {
-    const modal = document.getElementById('jsonInputModal');
-    modal.classList.add('fx-open');
+    openModal('jsonInputModal');
     const textarea = document.getElementById('jsonInput');
-    textarea.value = "";
-    textarea.focus();
+    if (textarea) {
+        textarea.value = "";
+        textarea.focus();
+    }
 }
 
 function openJSONSaveModal() {
     if (!window.pywebview) {
-      const modal = document.getElementById('jsonSaveModal');
-      ret = downloadJSON();
-      if (ret == false) {
+      const ret = downloadJSON();
+      if (ret === false) {
         return;
       }
-      else {
-        modal.classList.add('fx-open');
-      }
+      openModal('jsonSaveModal');
       openJSONSaveModalCustom();
       const textarea = document.getElementById('jsonSave');
-      textarea.focus();
+      if (textarea) textarea.focus();
       return;
     }
 
@@ -4097,8 +4610,8 @@ function executeFileLoad(file, e){
     }
 
     // タイトルとメモを反映
-    profileTitleInput.value = result.title || "";
-    profileMemoInput.value = result.memo || "";
+    profileTitle.value = result.title || "";
+    profileMemo.value = result.memo || "";
 
     // テーブル初期化
     const table = profileTable;
@@ -4136,9 +4649,9 @@ function saveProfileDataToGlobal() {
         const cells = rows[i].getElementsByTagName('td');
         if (cells.length < 2) continue;
 
-        const time = parseInt(cells[0].querySelector('input')?.value);
-        //const temp = cells[1].querySelector('input')?.value;
-        const temp = parseFloat(cells[1].querySelector('input')?.value);
+        const timeInput = cells[0].querySelector('input');
+        const time = getTimeInputSeconds(timeInput);
+        const temp = parseTableTemperatureValue(cells[1].querySelector('input')?.value);
         // 空白・NaNは無視
         if (isNaN(time) || isNaN(temp)) continue;
 
@@ -4376,7 +4889,15 @@ function initChart() {
                   position: 'left',
                   title: { display: true, text: '温度 [℃]' },
                   min: 0,
-                  max: maxTemperature
+                  max: maxTemperature,
+                  ticks: {
+                    callback: function(value) {
+                      if (isFahrenheit) {
+                        return Math.round(toDisplayTemp(value)).toFixed(0);
+                      }
+                      return value;
+                    }
+                  }
               },
               y1: { // **右側のY軸（RoR用）**
                   type: 'linear',
@@ -4384,11 +4905,33 @@ function initChart() {
                   title: { display: true, text: 'RoR [℃/分]' },
                   grid: { drawOnChartArea: false }, // メインのグリッド線を引かない
                   min: -10,
-                  max: 50 // RoRの適切な最大値を設定
+                  max: MaxRor,
+                  ticks: {
+                    callback: function(value) {
+                      if (isFahrenheit) {
+                        return Math.round(toDisplayRoR(value)).toFixed(0);
+                      }
+                      return value;
+                    }
+                  }
               }
           },
           plugins: {
               legend: { display: true },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const y = context.parsed.y;
+                    if (context.datasetIndex === PROFILE_TEMP || context.datasetIndex === CURRENT_TEMP) {
+                      return `${context.dataset.label}: ${toDisplayTemp(y).toFixed(1)}`;
+                    }
+                    if (context.datasetIndex === PROFILE_ROR || context.datasetIndex === CURRENT_ROR) {
+                      return `${context.dataset.label}: ${toDisplayRoR(y).toFixed(1)}`;
+                    }
+                    return `${context.dataset.label}: ${y}`;
+                  }
+                }
+              },
               verticalLinePlugin: { xValue: null } // カスタムプラグインの設定
           },
           hover: {
@@ -4404,7 +4947,8 @@ function initChart() {
           smartAIIndicatorPlugin, // スマートAIインジケータープラグイン
           phaseBackgroundPlugin, // フェーズ背景プラグイン 
           touchShieldAreaPlugin, // タッチシールドエリアプラグイン
-          chartAreaInfoPlugin 
+          chartAreaInfoPlugin,
+          profileEventPlugin
       ]
   });
   
@@ -4444,10 +4988,32 @@ function chartAreaInitialize() {
   if (roastTimeDisplayArea) {
     roastTimeDisplayArea.addEventListener('click', () => {
       isMinutesSecondsFormat = !isMinutesSecondsFormat;
+      localStorage.setItem(TIME_FORMAT_KEY, isMinutesSecondsFormat);
       roastChart.options.scales.x.title.text = !isMinutesSecondsFormat ? '経過時間 [秒]' : '経過時間 [分]';
+      displaySecondsOrMinutes(getCurrentTime());
+      updateProfileTableTimeHeader();
+      refreshProfileTableTimeInputs();
       roastChart.update();
     });
   }
+  if (document.getElementById('roast_temperature_area')) {
+    const roastTempArea = document.getElementById('roast_temperature_area');
+    roastTempArea.style.cursor = 'pointer';
+    roastTempArea.title = 'クリックで℃/℉切替';
+    roastTempArea.addEventListener('click', () => {
+      toggleTemperatureUnit();
+    });
+  }
+  if (document.getElementById('profile_temperature_area')) {
+    const profileTempArea = document.getElementById('profile_temperature_area');
+    profileTempArea.style.cursor = 'pointer';
+    profileTempArea.title = 'クリックで℃/℉切替';
+    profileTempArea.addEventListener('click', () => {
+      toggleTemperatureUnit();
+    });
+  }
+  updateProfileTableTimeHeader();
+  refreshProfileTableTimeInputs();
   const displayMappings = {
       // 温度表示エリアはクリック無効
       'currentTime': 'currentTime',
@@ -4479,6 +5045,7 @@ function chartAreaInitialize() {
   });
 
   initChart();
+  updateTemperatureUnitDisplay();
   initPhaseUI();
   stopButton.disabled = true;
   roastChart.resize();
@@ -4729,72 +5296,6 @@ function getRadiusForTemperatureDifference(tempDiff) {
     // 線形に増加させる
     return Math.min(maxRadius, minRadius + (absDiff / diffScale) * (maxRadius - minRadius));
 }
-
-/**
- * プロファイルデータから指定された時間におけるRoRをN秒間の移動平均で取得します。
- * 現在時間とその前後を含めたN秒間のデータを使って平均RoRを計算します。
- * @param {Array<Object>} profileData - { time: number, temp: number } 形式のプロファイルデータ配列。
- * @param {number} currentTime - 目標RoRを計算したい現在の時間 (秒)。
- * @param {number} periodSeconds - 移動平均RoRの計算に使う期間 (秒)。デフォルトは20秒。
- * @param {number} halfposition - 現在の位置を基準にするためのオフセット (デフォルトは0（現在位置よりperiodSeconds分前から計算）)。
- * @returns {number|null} 計算されたRoR (°C/分)、またはデータ不足の場合はnull。
- */
-// function getInterpolatedProfileRoR(profileData, currentTime, periodSeconds = 20, halfposition = 0) {
-//     if (profileData.length < 2) return null;
-
-//     if (halfposition < 0) { halfposition = 0; }
-//     else if (halfposition > periodSeconds) { halfposition = periodSeconds; }
-//     // RoR計算の開始時間と終了時間
-//     const startTime = (currentTime - (periodSeconds - halfposition)).toFixed(0);
-//     const endTime = (currentTime + halfposition).toFixed(0);
-
-//     if (startTime < 1) {
-//       return null;
-//     }
-//     else if (endTime > profileData.length - 1) {
-//       return null;
-//     }
-
-//     // 計算期間内のデータポイントをフィルタリング
-//     // 期間内の最初の点と最後の点を確実に見つけるために、フィルタリング範囲を広げる
-//     const relevantPoints = profileData.filter(p => p.time >= startTime - 1 && p.time <= endTime + 1);
-
-//     // フィルタリングされたデータがRoR計算に不十分な場合
-//     if (relevantPoints.length < 2) {
-//         // 例えば、プロファイルの最初や最後でデータが不足する場合
-//         if (currentTime <= profileData[0].time + periodSeconds) {
-//             // プロファイルの最初から periodSeconds 以内の場合、最初の2点を使う
-//             const p1 = profileData[0];
-//             const p2 = profileData[1];
-//             const dt = p2.time - p1.time;
-//             const dT = p2.temp - p1.temp;
-//             return null; //dt > 0 ? (dT / dt) * 60 : 0;
-//         } else if (currentTime >= profileData[profileData.length - 1].time - periodSeconds) {
-//             // プロファイルの最後から periodSeconds 以内の場合、最後の2点を使う
-//             const p1 = profileData[profileData.length - 2];
-//             const p2 = profileData[profileData.length - 1];
-//             const dt = p2.time - p1.time;
-//             const dT = p2.temp - p1.temp;
-//             return null; // dt > 0 ? (dT / dt) * 60 : 0;
-//         }
-//         return null; // それでもデータが不十分ならnull
-//     }
-
-//     // 計算期間内の最初の点と最後の点の時間と温度を補間して取得
-//     // これにより、正確に startTime と endTime における温度が得られる
-//     const startTemp = getInterpolatedProfileTemp(profileData, startTime);
-//     const endTemp = getInterpolatedProfileTemp(profileData, endTime);
-
-//     // RoR計算の期間が0になるのを防ぐ
-//     const actualDt = endTime - startTime;
-
-//     if (actualDt > 0 && startTemp !== null && endTemp !== null) {
-//         const actualDtTemp = endTemp - startTemp;
-//         return (actualDtTemp / actualDt) * 60; // °C/min に変換
-//     }
-
-//     return null; // 計算できない場合は0を返す (またはnull)
-// }
 
 /**
  * リアルタイム温度データから、指定期間（periodSeconds）内のデータに対する線形回帰を用いてRoRを計算します。
@@ -5316,18 +5817,14 @@ let _cloudDisplayed = 0;     // 現在表示中の件数
 // クラウドブラウザ 開く／閉じる
 // -----------------------------------------------
 function openCloudBrowser() {
-    const modal = document.getElementById('cloudBrowserModal');
-    modal.style.display = 'flex';
-    modal.classList.add('show');
+    openModal('cloudBrowserModal');
     if (_cloudAllDocs.length === 0) {
         loadCloudProfileList();
     }
 }
 
 function closeCloudBrowser() {
-    const modal = document.getElementById('cloudBrowserModal');
-    modal.classList.remove('show');
-    modal.style.display = 'none';
+    closeModal('cloudBrowserModal');
 }
 
 // -----------------------------------------------
@@ -5483,7 +5980,7 @@ async function shareProfileToCloud() {
     if (!comment) { alert("共有コメントを入力してください\n例：エチオピア浅煎り、ベストバッチ！"); return; }
     if (!window._firebaseDb) { alert("Firebase未接続です。"); return; }
     if (!window._currentUser) {
-        alert("クラウドに共有するにはログインが必要です。\n画面上部の「☁️ ログイン」ボタンからGoogleログインしてください。");
+        alert("クラウドに共有するにはログインが必要です。\n画面上部の「☁️LOGIN」ボタンからGoogleログインしてください。");
         return;
     }
 
@@ -5511,6 +6008,132 @@ async function shareProfileToCloud() {
 }
 
 
+</script>
+<style>
+#opacity-toggle {
+  display: none;
+}
+@media (max-width: 600px) {
+#opacity-toggle {
+  display: flex;
+}
+
+#control-buttons {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  width: 150px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 10px;
+  z-index: 99;
+  touch-action: none;
+  user-select: none;
+}
+
+#control-buttons {
+  padding: 25px 10px 5px 10px;
+  cursor: move;
+  background-color: #444;
+  font-size: 10px;
+  text-align: center;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.panel-content {
+  padding: 10px;
+  text-align: center;
+}
+/* 透明状態のスタイル */
+#control-buttons.is-transparent {
+  opacity: 0.25; 
+}
+.toggle-opacity-btn {
+  margin-top: 5px;
+  padding: 5px 10px;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.0);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+}
+</style>
+<script>
+const panelControlButtons = document.getElementById("control-buttons");
+let panelControlButtonsIsDragging = false;
+let panelControlButtonsDragStartPageX = undefined;
+let panelControlButtonsDragStartPageY = undefined;
+let panelControlButtonsStartLeft = 0;
+let panelControlButtonsStartTop = 0;
+
+panelControlButtons.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0 || e.target.closest('button')) return;
+
+  panelControlButtonsDragStartPageX = e.pageX;
+  panelControlButtonsDragStartPageY = e.pageY;
+  panelControlButtonsStartLeft = panelControlButtons.offsetLeft;
+  panelControlButtonsStartTop = panelControlButtons.offsetTop;
+  panelControlButtonsIsDragging = false;
+  panelControlButtons.setPointerCapture(e.pointerId);
+});
+panelControlButtons.addEventListener("pointermove", (e) => {
+  if (panelControlButtonsDragStartPageX === undefined) return;
+
+  const dx = Math.abs(e.pageX - panelControlButtonsDragStartPageX);
+  const dy = Math.abs(e.pageY - panelControlButtonsDragStartPageY);
+  const moveThreshold = 6;
+
+  if (!panelControlButtonsIsDragging) {
+    if (dx < moveThreshold && dy < moveThreshold) {
+      return;
+    }
+    panelControlButtonsIsDragging = true;
+  }
+
+  const x = panelControlButtonsStartLeft + (e.pageX - panelControlButtonsDragStartPageX);
+  const y = panelControlButtonsStartTop + (e.pageY - panelControlButtonsDragStartPageY);
+  
+  panelControlButtons.style.left = x + "px";
+  panelControlButtons.style.top = y + "px";
+
+  // PointerEventではブラウザのデフォルト挙動を止めるために touch-action: none をCSS側に書くのが推奨です
+}, { passive: false });
+panelControlButtons.addEventListener("pointerup", (e) => {
+  panelControlButtonsDragStartPageX = undefined;
+  panelControlButtonsIsDragging = false;
+  panelControlButtons.releasePointerCapture(e.pointerId);
+});
+/**
+ * fixed の時だけ #chart の左上に配置する関数
+ */
+function alignIfFixed() {
+  const chart = document.getElementById("chart-section");
+  if (!chart || !panelControlButtons) return;
+
+  const style = window.getComputedStyle(panelControlButtons);
+  
+  if (style.position === "absolute") {
+    const chartRect = chart.getBoundingClientRect();
+
+    // absolute の場合、現在のスクロール量を加算して「ドキュメント上の絶対位置」を出す
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+    panelControlButtons.style.left = (chartRect.left + scrollX) + "px";
+    panelControlButtons.style.top = (chartRect.top + scrollY) + "px";
+  } else {
+    panelControlButtons.style.left = "";
+    panelControlButtons.style.top = "";
+  }
+}
+document.getElementById("opacity-toggle").addEventListener("click", () => {
+  const panel = document.getElementById("control-buttons");
+  panelControlButtons.classList.toggle("is-transparent");
+});
+window.addEventListener('DOMContentLoaded', alignIfFixed);
+window.addEventListener('resize', alignIfFixed);
 </script>
 
 </body>
