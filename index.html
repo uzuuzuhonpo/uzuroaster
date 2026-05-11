@@ -214,8 +214,8 @@
     /* ========================================
        モーダル・ダイアログ共通スタイル
        ======================================== */
-    .font-size-16 {
-      font-size: 16px;
+    .font-size-14 {
+      font-size: 14px;
     }
 
     .modal-overlay {
@@ -306,7 +306,7 @@
       color: #000;
       border: 1px solid #555;
       border-radius: 5px;
-      padding: 20px;
+      padding: 5px;
       font-family: monospace;
       box-sizing: border-box;
       resize: none;
@@ -762,6 +762,10 @@
 
     tr:nth-child(even) {
       background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    tr.modified-row td {
+      background-color: rgba(255, 180, 180, 0.25);
     }
 
     tr:hover {
@@ -1238,23 +1242,69 @@
   </script>
 </head>
 <body>
+<!-- アイコン定義 -->
+<svg style="display: none;">
+  <symbol id="icon-reload" viewBox="0 0 24 26">
+    <path d="M21 14a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 10" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M21 5v5h-5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </symbol>
+
+<symbol id="icon-usb" viewBox="0 0 24 24">
+    <line x1="11" y1="21" x2="11" y2="14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+    <line x1="3" y1="14" x2="19" y2="14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+    
+    <line x1="3" y1="14" x2="3" y2="8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+    <rect x="0.5" y="4.5" width="5" height="5" rx="1" fill="currentColor" stroke="none"/>
+    
+    <line x1="11" y1="14" x2="11" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+    <polygon points="11,1 7,7.5 15,7.5" fill="currentColor" stroke="none"/>
+    
+    <line x1="19" y1="14" x2="19" y2="8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+    <circle cx="19" cy="5" r="2.8" fill="currentColor" stroke="none"/>
+    
+    <rect x="7.5" y="19" width="7" height="4" rx="2" fill="currentColor" stroke="none"/>
+</symbol>
+
+  <symbol id="icon-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" />
+    <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    <line x1="12" y1="8" x2="12.01" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+  </symbol>
+
+  <symbol id="icon-manual" viewBox="0 0 24 24">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </symbol>
+
+  <symbol id="icon-config" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.5" fill="none" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </symbol>
+
+  <symbol id="icon-web" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+    <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </symbol>
+</svg>
+
 <!-- ========================================
      JSON入力モーダル
      ======================================== -->
 <div id="jsonInputModal" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-close" onclick="closeJSONInputModal()">&times;</div>
-    <h3 class="modal-title">プロファイル入力</h3>
-    <p class="modal-description">JSONデータをペースト、記述、またはリストから選択してください</p>
+    <h3 class="modal-title" data-i18n="MODAL_PROFILE_INPUT_TITLE">プロファイル入力</h3>
+    <p class="modal-description" data-i18n="MODAL_PROFILE_INPUT_DESC">JSONデータをペースト、記述、またはリストから選択してください</p>
     <textarea id="jsonInput" class="modal-textarea" placeholder='{"roast_data": [...]}'></textarea>
     <div id="profileList" style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #444;">
     </div>
     <div style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
-      <button class="modal-button" style="width:100%; background:#1a3a2a;" onclick="openCloudBrowser()">☁️ クラウドのプロファイルを見る</button>
+      <button class="modal-button" style="width:100%; background:#1a3a2a;" onclick="openCloudBrowser()" data-i18n="BUTTON_OPEN_CLOUD_BROWSER">☁️ クラウドのプロファイルを見る</button>
     </div>
     <div class="modal-actions">
-      <button class="modal-button" onclick="closeJSONInputModal()">閉じる</button>
-      <button class="modal-button modal-button-primary" onclick="applyJSONInputModal()">プロファイル読込</button>
+      <button class="modal-button" onclick="closeJSONInputModal()" data-i18n="BUTTON_CLOSE">閉じる</button>
+      <button class="modal-button modal-button-primary" onclick="applyJSONInputModal()" data-i18n="BUTTON_LOAD">プロファイル読込</button>
     </div>
   </div>
 </div>
@@ -1265,32 +1315,32 @@
 <div id="cloudBrowserModal" class="modal-overlay">
   <div class="modal-content" style="max-width:700px; width:95%; max-height:85vh; display:flex; flex-direction:column;">
     <div class="modal-close" onclick="closeCloudBrowser()">&times;</div>
-    <h3 class="modal-title">☁️ クラウドプロファイル</h3>
+    <h3 class="modal-title" data-i18n="CLOUD_PROFILE_BROWSER_TITLE">☁️ クラウドプロファイル</h3>
 
     <!-- 検索・ソートバー -->
     <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-      <input type="text" id="cloudSearchInput" placeholder="🔍 タイトル・コメントで検索..."
+      <input type="text" id="cloudSearchInput" placeholder="🔍 タイトル・コメントで検索..." data-i18n-placeholder="CLOUD_PROFILE_SEARCH_PLACEHOLDER"
         style="flex:1; min-width:150px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:6px 10px; font-size:14px;"
         oninput="filterCloudList()">
       <select id="cloudSortSelect" onchange="sortCloudList()"
         style="background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:6px 10px; font-size:14px;">
-        <option value="newest">🕐 新着順</option>
-        <option value="oldest">🕐 古い順</option>
+        <option value="newest" data-i18n-option="CLOUD_PROFILE_SORT_NEWEST">🕐 新着順</option>
+        <option value="oldest" data-i18n-option="CLOUD_PROFILE_SORT_OLDEST">🕐 古い順</option>
       </select>
-      <button class="modal-button" style="padding:6px 12px;" onclick="loadCloudProfileList()">🔄 更新</button>
+      <button class="modal-button" style="padding:6px 12px;" onclick="loadCloudProfileList()" data-i18n="CLOUD_PROFILE_REFRESH">🔄 更新</button>
     </div>
 
     <!-- リスト -->
     <div id="cloudProfileList" style="flex:1; overflow-y:auto; border:1px solid #444; border-radius:4px; min-height:300px;">
-      <div style="color:#666; font-size:13px; padding:16px; text-align:center;">「更新」を押してクラウドのプロファイルを取得</div>
+      <div style="color:#666; font-size:13px; padding:16px; text-align:center;" data-i18n="CLOUD_PROFILE_LIST_HINT">「更新」を押してクラウドのプロファイルを取得</div>
     </div>
 
     <!-- フッター -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
       <span id="cloudProfileCount" style="color:#666; font-size:12px;"></span>
       <div style="display:flex; gap:8px;">
-        <button id="cloudLoadMoreBtn" class="modal-button" style="display:none;" onclick="loadMoreCloudProfiles()">もっと見る</button>
-        <button class="modal-button" onclick="closeCloudBrowser()">閉じる</button>
+        <button id="cloudLoadMoreBtn" class="modal-button" style="display:none;" onclick="loadMoreCloudProfiles()" data-i18n="CLOUD_PROFILE_LOAD_MORE">もっと見る</button>
+        <button class="modal-button" onclick="closeCloudBrowser()" data-i18n="BUTTON_CLOSE">閉じる</button>
       </div>
     </div>
   </div>
@@ -1302,20 +1352,20 @@
 <div id="jsonSaveModal" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-close" onclick="closeJSONSaveModal()">&times;</div>
-    <h3 class="modal-title">プロファイル表示</h3>
-    <p class="modal-description">JSONデータをコピーして手動保存、またはローカルストレージに保存してください</p>
+    <h3 class="modal-title" data-i18n="MODAL_PROFILE_DISPLAY_TITLE">プロファイル表示</h3>
+    <p class="modal-description" data-i18n="MODAL_PROFILE_DISPLAY_DESC">JSONデータをコピーして手動保存、またはローカルストレージに保存してください</p>
     <textarea id="jsonSave" class="modal-textarea"></textarea>
     <div class="modal-actions">
-      <input type="text" id="profileTitleInput" style="border-radius:5px;" placeholder="プロファイル名を入力...">      
-      <button class="modal-button modal-button-primary" onclick="saveProfileToLocalStorage()">ストレージ保存</button>
+      <input type="text" id="profileTitleInput" style="border-radius:5px;" placeholder="プロファイル名を入力..." data-i18n-placeholder="PLACEHOLDER_PROFILE_NAME">      
+      <button class="modal-button modal-button-primary" onclick="saveProfileToLocalStorage()" data-i18n="BUTTON_PROFILE_SAVE">ストレージ保存</button>
     </div>   
     <div class="modal-actions" style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
-      <input type="text" id="cloudCommentInput" style="border-radius:5px; flex:1;" placeholder="共有コメント（例：エチオピア浅煎り、ベストバッチ！）">
-      <button class="modal-button" style="background:#1a6b3a;" onclick="shareProfileToCloud()">☁️ クラウドに共有</button>
+      <input type="text" id="cloudCommentInput" style="border-radius:5px; flex:1;" placeholder="共有コメント（例：エチオピア浅煎り、ベストバッチ！）" data-i18n-placeholder="PLACEHOLDER_SHARE_COMMENT">
+      <button class="modal-button" style="background:#1a6b3a;" onclick="shareProfileToCloud()" data-i18n="BUTTON_PROFILE_SHARE">☁️ クラウドに共有</button>
     </div>   
     <div class="modal-actions">
-      <button class="modal-button" onclick="closeJSONSaveModal()">閉じる</button>
-      <button class="modal-button modal-button-primary" onclick="applyJSONAllCopyModal()">プロファイルコピー</button>
+      <button class="modal-button" onclick="closeJSONSaveModal()" data-i18n="BUTTON_CLOSE">閉じる</button>
+      <button class="modal-button modal-button-primary" onclick="applyJSONAllCopyModal()" data-i18n="BUTTON_PROFILE_COPY">プロファイルコピー</button>
     </div>
   </div>
 </div>
@@ -1325,7 +1375,7 @@
      ======================================== -->
 <div id="profModal" class="modal-overlay">
   <div class="modal-content" style="max-width: 320px; background:#1a1a1a;">
-    <h3 style="text-align:center; font-weight:300; letter-spacing:2px; margin-bottom:25px; color:#fff;">焙煎度 [ROAST LEVEL]</h3>
+    <h3 style="text-align:center; font-weight:300; letter-spacing:2px; margin-bottom:25px; color:#fff;" data-i18n="MODAL_ROAST_LEVEL_TITLE">焙煎度 [ROAST LEVEL]</h3>
     <div style="display:flex; flex-direction:column; gap:15px;">
       <button onclick="applyPreset('light')" class="modal-button" style="width:100%; padding:15px; background:#c49a6c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
         浅煎り [LIGHT ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(High / Cinnamon)</span>
@@ -1337,7 +1387,7 @@
         深煎り [DARK ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(French / Italian)</span>
       </button>
     </div>
-    <button onclick="closeProfModal()" style="background:none; border:none; color:#e6e6e6; width:100%; margin-top:20px; cursor:pointer; font-size:12px;">閉じる</button>
+    <button onclick="closeProfModal()" style="background:none; border:none; color:#e6e6e6; width:100%; margin-top:20px; cursor:pointer; font-size:12px;" data-i18n="BUTTON_CLOSE">閉じる</button>
   </div>
 </div>
 
@@ -1346,10 +1396,10 @@
      ======================================== -->
 <div id="popupTextarea" class="modal-overlay">
   <div class="modal-content modal-popup">
-    <h3 class="modal-title">焙煎メモ</h3>
-    <textarea id="popupText" class="modal-textarea font-size-16"></textarea>
+    <h3 class="modal-title" data-i18n="MODAL_ROAST_NOTE_TITLE">焙煎メモ</h3>
+    <textarea id="popupText" class="modal-textarea font-size-14"></textarea>
     <div class="modal-actions" style="justify-content:flex-end; margin-top:15px;">
-      <button id="closePopup" class="modal-button modal-button-primary">閉じる</button>
+      <button id="closePopup" class="modal-button modal-button-primary" data-i18n="BUTTON_CLOSE">閉じる</button>
     </div>
   </div>
 </div>
@@ -1358,8 +1408,15 @@
      デバッグコンソール
      ======================================== -->
 <div id="debug_console">
-  <div id="draggable-zone">SYSTEM DEBUG MODE</div>
+  <div id="draggable-zone" data-i18n="DEBUG_MODE_LABEL">SYSTEM DEBUG MODE</div>
   <div style="padding:15px;">
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:12px;">
+      <label for="language-select" style="color:#fff; font-size:0.75em; white-space:nowrap;" data-i18n="LANGUAGE_LABEL">言語</label>
+      <select id="language-select" style="background:#111; color:#fff; border:1px solid #444; border-radius:4px; padding:4px 6px; font-size:0.8em;">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:12px;">
       <button class="button-debug" onclick="OffsetIncrement(0.1)" style="background:#333; color:#ff8888; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+0.1</button>
       <button class="button-debug" onclick="OffsetIncrement(1)" style="background:#333; color:#ff6666; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+1</button>
@@ -1453,59 +1510,45 @@
      ヘッダーセクション
      ======================================== -->
 <div class="header">
-  <div class="connection-status" onclick="webReconnect()" style="cursor:pointer;" title="クリックで再接続">
+  <div class="connection-status" onclick="webReconnect()" style="cursor:pointer;" title="" data-i18n-title="TOOLTIP_RECONNECT">
     <div id="socket-status" class="status-indicator" style="background-color:#cccccc"></div>
-    <span id="connection-label">未接続</span>
+    <span id="connection-label" data-i18n="CONNECTION_STATUS_DISCONNECTED">未接続</span>
   </div>
   <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
-    <button class="button" title="再読み込み" onclick="location.reload()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 26" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" style="display:block">
-  <path d="M21 14a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 10" />
-  <path d="M21 5v5h-5" />
-</svg></button>
+    <button class="button" title="" data-i18n-title="TOOLTIP_RELOAD" onclick="location.reload()">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-reload"/></svg>
+    </button>
 
-  <button id="usb-connect-btn" class="button" title="USB接続" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:block">
-  <line x1="12" y1="19" x2="12" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-  <line x1="5" y1="13.5" x2="19" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-  <line x1="4" y1="13.5" x2="4" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-  <rect x="1" y="4.2" width="6" height="6" rx="1"/>
-  <line x1="12" y1="13.5" x2="12" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-  <polygon points="12,1 7.2,7.5 16.8,7.5"/>
-  <line x1="20" y1="13.5" x2="20" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-  <circle cx="20" cy="5.2" r="3.2"/>
-  <rect x="8.2" y="18.5" width="7.6" height="6" rx="2.5"/>
-</svg></button>
-    <button class="button" title="UZU ROASTER情報" onclick="helpButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="10" />
-  <line x1="12" y1="16" x2="12" y2="12" />
-  <line x1="12" y1="8" x2="12.01" y2="8" />
-</svg></button>
-    <button class="button" title="取扱説明書" onclick="manualButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <!-- 左側のページ -->
-  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-  <!-- 右側のページ -->
-  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-</svg></button>
+    <button id="usb-connect-btn" class="button" title="" data-i18n-title="TOOLTIP_USB_CONNECT" style="display:none;">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-usb"/></svg>
+    </button>
 
-    <button class="button" title="設定" onclick="configButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="3" />
-  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-</svg></button>
-    <button class="button" title="うずうず珈琲焙煎工房公式Web" onclick="WebButtonCommand()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="10" />
-  <line x1="2" y1="12" x2="22" y2="12" />
-  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-</svg></button>
-    <button class="button button-danger" title="機器リセット" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
-    <button id="auth-btn" class="button" title="クラウドログイン" onclick="toggleAuth()" style="background:#1a3a2a;">☁️LOGIN</button>
+    <button class="button" title="" data-i18n-title="TOOLTIP_INFO" onclick="helpButtonCommand()">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-info"/></svg>
+    </button>
+
+    <button class="button" title="" data-i18n-title="TOOLTIP_MANUAL" onclick="manualButtonCommand()">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-manual"/></svg>
+    </button>
+
+    <button class="button" title="" data-i18n-title="TOOLTIP_SETTINGS" onclick="configButtonCommand()">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-config"/></svg>
+    </button>
+
+    <button class="button" title="" data-i18n-title="TOOLTIP_WEB" onclick="WebButtonCommand()">
+        <svg width="24" height="24" style="display:block;"><use href="#icon-web"/></svg>
+    </button>
+    <button class="button button-danger" title="" data-i18n-title="TOOLTIP_RESET" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
+    <button id="auth-btn" class="button" title="" data-i18n-title="TOOLTIP_CLOUD_LOGIN" onclick="toggleAuth()" style="background:#1a3a2a;">☁️LOGIN</button>
   </div>
   <div class="profile-meta">
     <div class="meta-field">
-      <label for="profileTitle">タイトル：</label>
-      <input type="text" id="profileTitle" placeholder="タイトルを入力">
+      <label for="profileTitle" data-i18n="LABEL_TITLE">タイトル：</label>
+      <input type="text" id="profileTitle" placeholder="" data-i18n-placeholder="PLACEHOLDER_TITLE">
     </div>
     <div class="meta-field">
-      <label for="profileMemo">メモ：</label>
-      <textarea id="profileMemo" rows="1" placeholder="メモを入力" onClick=""></textarea>
+      <label for="profileMemo" data-i18n="LABEL_MEMO">メモ：</label>
+      <textarea id="profileMemo" rows="1" placeholder="" data-i18n-placeholder="PLACEHOLDER_MEMO" onClick=""></textarea>
     </div>
   </div>
   <div class="roast-controls">
@@ -1517,35 +1560,35 @@
      表示エリア
      ======================================== -->
 <div class="display-area">
-  <div class="display-item" id="roast_time_area" style="cursor: pointer;" title="クリックで秒/分表示切替">
-    <div class="display-label">経過時間</div>
+  <div class="display-item" id="roast_time_area" style="cursor: pointer;" title="" data-i18n-title="TOOLTIP_TOGGLE_TIME_FORMAT">
+    <div class="display-label" data-i18n="DISPLAY_LABEL_TIME">経過時間</div>
     <div class="display-value" id="roast_time">----<span class='unit_sec unit_generic'></span></div>
   </div>
   <div class="display-item" id="roast_temperature_area">
-    <div class="display-label">現在温度</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_CURRENT_TEMP">現在温度</div>
     <div class="display-value" id="roast_temperature">--<span class='unit_temp unit_generic'>[℃]</span></div>
   </div>
   <div class="display-item" id="roast_ror_area">
-    <div class="display-label">RoR(現在温度)</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_CURRENT_ROR">RoR(現在温度)</div>
     <div class="display-value" id="roast_ror">--<span class='unit_ror unit_generic'>[℃/分]</span></div>
   </div>
   <div class="display-item" id="profile_temperature_area">
-    <div class="display-label">プロファイル温度</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_PROFILE_TEMP">プロファイル温度</div>
     <div class="display-value" id="profile_temperature">--<span class='unit_temp unit_generic'>[℃]</span></div>
   </div>
   <div class="display-item" id="profile_ror_area">
-    <div class="display-label">RoR(プロファイル温度)</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_PROFILE_ROR">RoR(プロファイル温度)</div>
     <div class="display-value" id="profile_ror">--<span class='unit_ror unit_generic'>[℃/分]</span></div>
   </div>
   <div class="display-item" id="dtr_area">
-    <div class="display-label">DTR</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_DTR">DTR</div>
     <div class="display-value" id="roast_dtr">--<span class='unit_dtr unit_generic'>[%]</span></div>
   </div>
   <div class="display-item">
-    <div class="display-label">評価</div>
+    <div class="display-label" data-i18n="DISPLAY_LABEL_SCORE">評価</div>
     <div class="display-value" id="score">　</div>
   </div>
-  <div id="roast_message">焙煎待機中</div>
+  <div id="roast_message" data-i18n="ROAST_MESSAGE_WAITING">焙煎待機中</div>
 </div>
 
 <!-- ========================================
@@ -1553,29 +1596,28 @@
      ======================================== -->
 <div class="table-controls">
 <div class="button-container" style="border-radius: 5px;">
-  <span class="profile_manupilation_title">プロファイル操作</span>
-  <button type="button" class="button table_edit" title="プロファイル読み込み" onclick="openFileDialog()">読込</button>
+  <span class="profile_manupilation_title" data-i18n="PROFILE_MANIPULATION_TITLE">プロファイル操作</span>
+  <button type="button" class="button table_edit" title="" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
   <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
-  <button onclick="openJSONSaveModal()" class="button table_edit" title="プロファイル保存">保存</button>
-  <button class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="焙煎データ⇒プロファイルにコピー">焙煎データ⇒</button>
-  <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare()"; title="比較用プロファイルとして表示">比較プロファイル表示</button>
-  <button id="button-default-profile" class="button table_edit" onclick="showProfModal()"; title="標準焙煎カーブ読み込み">標準カーブ</button>
+  <button onclick="openJSONSaveModal()" class="button table_edit" title="" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
+  <button class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="" data-i18n-title="TOOLTIP_COPY_ROAST_TO_PROFILE" data-i18n="BUTTON_COPY_FROM_ROAST">焙煎データ⇒</button>
+  <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare()"; title="" data-i18n-title="TOOLTIP_COMPARE_PROFILE" data-i18n="BUTTON_COMPARE_PROFILE_SHOW">比較プロファイル表示</button>
+  <button id="button-default-profile" class="button table_edit" onclick="showProfModal()"; title="" data-i18n-title="TOOLTIP_STANDARD_CURVE" data-i18n="BUTTON_STANDARD_CURVE">標準カーブ</button>
 </div>
   <div id="control-buttons">
     <div class="button-container">
-      <button title="チャート拡大" class="button button-chart-control" style="border-radius: 20px 0px 0px 20px;" onclick="shortenChart()" id="shorten-button">+</button>
-      <button title="チャート等倍" class="button button-chart-control" style="border-radius: 0px 0px 0px 0px;" onclick="resetWidthChart()" id="reset-width-button">1:1</button>
-      <button title="チャート縮小" class="button button-chart-control" style="border-radius: 0px 20px 20px 0px;" disabled onclick="enlargeChart()" id="enlarge-button">-</button>
+      <button title="" data-i18n-title="TOOLTIP_CHART_ZOOM_IN" class="button button-chart-control" style="border-radius: 20px 0px 0px 20px;" onclick="shortenChart()" id="shorten-button">+</button>
+      <button title="" data-i18n-title="TOOLTIP_CHART_RESET" class="button button-chart-control" style="border-radius: 0px 0px 0px 0px;" onclick="resetWidthChart()" id="reset-width-button">1:1</button>
+      <button title="" data-i18n-title="TOOLTIP_CHART_ZOOM_OUT" class="button button-chart-control" style="border-radius: 0px 20px 20px 0px;" disabled onclick="enlargeChart()" id="enlarge-button">-</button>
     </div>
     <div class="phase-control-group button-container">
-      <button id="phasePrevBtn" class="button button-phase-control" style="border-radius: 20px 0px 0px 20px;" onclick="handlePrevClick()" title="前のフェーズ">&lt;</button>
-      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="焙煎フェーズマーク">DE</button>
-      <button id="phaseSkipBtn" class="button button-phase-control" style="border-radius: 0px 20px 20px 0px;" onclick="handleSkipClick()"  title="次のフェーズ">&gt;</button>
+      <button id="phasePrevBtn" class="button button-phase-control" style="border-radius: 20px 0px 0px 20px;" onclick="handlePrevClick()" title="" data-i18n-title="TOOLTIP_PREV_PHASE">&lt;</button>
+      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="" data-i18n-title="TOOLTIP_PHASE_MARK">DE</button>
+      <button id="phaseSkipBtn" class="button button-phase-control" style="border-radius: 0px 20px 20px 0px;" onclick="handleSkipClick()"  title="" data-i18n-title="TOOLTIP_NEXT_PHASE">&gt;</button>
     </div>
     <div class="button-container">
-      <button class="button button-header button-success" style="border-radius: 20px 0px 0px 20px;" onclick="sendStartCommand()" id="start-button" title="焙煎開始">▶</button>
-      <button class="button button-header button-danger" style="border-radius: 0px 20px 20px 0px;" onclick="sendStopCommand()" id="stop-button" title="焙煎停止">■</button>
-      <button id="opacity-toggle" class="toggle-opacity-btn" title="透明度切替"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="button button-header button-success" style="border-radius: 20px 0px 0px 20px;" onclick="sendStartCommand()" id="start-button" title="" data-i18n-title="TOOLTIP_ROAST_START">▶</button>
+      <button class="button button-header button-danger" style="border-radius: 0px 20px 20px 0px;" onclick="sendStopCommand()" id="stop-button" title="" data-i18n-title="TOOLTIP_ROAST_STOP">■</button>
       <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
       <path d="M12 2v20a10 10 0 0 0 0-20" fill="currentColor" />
       </svg>
@@ -1591,12 +1633,12 @@
   <!-- テーブルセクション -->
   <div class="table-section" id="table_contents">
     <div class="table-container">
-      <div id="table_title">焙煎プロファイル</div>
+      <div id="table_title" data-i18n="TABLE_TITLE">焙煎プロファイル</div>
       <table id="profileTable">
         <thead>
           <tr>
-            <th>時間 [秒]</th>
-            <th>温度 [℃]</th>
+            <th data-i18n="TABLE_HEADER_TIME_SEC">時間 [秒]</th>
+            <th data-i18n="TABLE_HEADER_TEMP_C">温度 [℃]</th>
             <th>🗑</th>
           </tr>
         </thead>
@@ -1607,21 +1649,21 @@
     <div style="padding: 10px; display: flex; justify-content: center; align-items: center; gap: 15px; background-color: #f5f5f5; border-top: 1px solid var(--border-color);">
       <div class="offset-main-wrapper">
         <div class="offset-unit-column">
-          <span class="offset-caption-small">時間オフセット</span>
+          <span class="offset-caption-small" data-i18n="OFFSET_TIME_LABEL">時間オフセット</span>
           <input type="number" id="offset-input-time" class="offset-input-box" value="0" 
                 oninput="if(value > maxChartTime - 1) value = maxChartTime - 1; if(value < -maxChartTime + 1) value = -maxChartTime + 1;">
         </div>
 
         <div class="offset-unit-column">
-          <span class="offset-caption-small">温度オフセット</span>
+          <span class="offset-caption-small" data-i18n="OFFSET_TEMP_LABEL">温度オフセット</span>
           <input type="number" id="offset-input-temp" class="offset-input-box" value="0" 
                 oninput="if(value > maxTemperature) value = maxTemperature; if(value < -maxTemperature) value = -maxTemperature;">
         </div>
         <div class="table-edit-buttons">
-          <button id="guide-move-toggle-btn" class="button table_edit" style="background: #888; color: white; border: 2px solid transparent; display: none;" onclick="toggleGuideMoveMode()">📐 移動</button>
-          <button id="align-button" class="button" onclick="sendCurrentProfile();" title="焙煎プロファイルテーブル整列・チャート更新">整列</button>
-          <button class="button table_edit" onclick="addRowByButton();" title="行の追加">行追加</button>
-          <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = profileTable; while (t.rows.length > 1) {t.deleteRow(1); }" title="全行削除">🗑 全削除</button>
+          <button id="guide-move-toggle-btn" class="button table_edit" style="background: #888; color: white; border: 2px solid transparent; display: none;" onclick="toggleGuideMoveMode()" data-i18n="BUTTON_GUIDE_MOVE">📐 移動</button>
+          <button id="align-button" class="button" onclick="sendCurrentProfile();" title="" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
+          <button class="button table_edit" onclick="addRowByButton();" title="" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
+          <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = profileTable; while (t.rows.length > 1) {t.deleteRow(1); }" title="" data-i18n-title="TOOLTIP_DELETE_ALL" data-i18n="BUTTON_DELETE_ALL">🗑 全削除</button>
         </div>
       </div>
     </div>
@@ -1684,6 +1726,7 @@
   const MAX_ROR_KEY = 'uzu_max_ror';
   const MAX_TEMP_KEY = 'uzu_max_temperature';
   const TIME_FORMAT_KEY = 'uzu_is_min_sec_format';
+  const LANGUAGE_KEY = 'uzu_language';
   const DEFAULT_ROR_WINDOW = 20;
   let rorWindowSize = parseInt(localStorage.getItem(ROR_WINDOW_KEY)) || DEFAULT_ROR_WINDOW;
   let MaxRor = parseInt(localStorage.getItem(MAX_ROR_KEY)) || 100;
@@ -1720,7 +1763,7 @@
             rorWindowSize = newVal;
             document.getElementById('rorWindowInput').value = rorWindowSize;
             localStorage.setItem(ROR_WINDOW_KEY, rorWindowSize);
-            alert(`RoR移動平均の窓数を ${rorWindowSize} に設定しました。`);
+            alert(t('ALERT_ROR_WINDOW_SET') + rorWindowSize + t('ALERT_ROR_WINDOW_SET_SUFFIX'));
             // roastChart.destroy();
             // initChart();
         });
@@ -1817,6 +1860,234 @@ const profileTitle = document.getElementById('profileTitle');
 const profileMemo = document.getElementById('profileMemo');
 const shortenButton = document.getElementById('shorten-button');
 const enlargeButton = document.getElementById('enlarge-button');
+
+const i18n = {
+  langs: ['ja', 'en'],
+  texts: {
+    PAGE_TITLE: ['UZU ROASTER CONTROLLER | うずロースターコントローラー（URC）', 'UZU ROASTER CONTROLLER | UZU Roaster Controller (URC)'],
+    LANGUAGE_LABEL: ['言語', 'Language'],
+    CONNECTION_STATUS_DISCONNECTED: ['未接続', 'Disconnected'],
+    CONNECTION_STATUS_USB: ['接続中[USB]', 'Connected [USB]'],
+    CONNECTION_STATUS_WIFI: ['接続中[WiFi]', 'Connected [WiFi]'],
+    CONNECTION_STATUS_PYTHON: ['接続中[USB]', 'Connected [USB]'],
+    TOOLTIP_RECONNECT: ['クリックで再接続', 'Click to reconnect'],
+    TOOLTIP_RELOAD: ['再読み込み', 'Reload'],
+    TOOLTIP_USB_CONNECT: ['USB接続', 'USB connect'],
+    TOOLTIP_INFO: ['UZU ROASTER情報', 'UZU ROASTER info'],
+    TOOLTIP_MANUAL: ['取扱説明書', 'Manual'],
+    TOOLTIP_SETTINGS: ['設定', 'Settings'],
+    TOOLTIP_WEB: ['うずうず珈琲焙煎工房公式Web', 'UZU Roaster official Web'],
+    TOOLTIP_RESET: ['機器リセット', 'Reset device'],
+    TOOLTIP_CLOUD_LOGIN: ['クラウドログイン', 'Cloud login'],
+    CLOUD_LOGIN_LABEL: ['☁️LOGIN', '☁️LOGIN'],
+    CLOUD_LOGIN_DISABLED_HINT: ['クラウド機能にはインターネット接続が必要です', 'Cloud features require an internet connection'],
+    CLOUD_LOGOUT_TITLE: ['ログアウト：', 'Logout: '],
+    TOOLTIP_TOGGLE_TIME_FORMAT: ['クリックで秒/分表示切替', 'Click to toggle seconds/minutes'],
+    LABEL_TITLE: ['タイトル：', 'Title:'],
+    LABEL_MEMO: ['メモ：', 'Memo:'],
+    PLACEHOLDER_TITLE: ['タイトルを入力', 'Enter title'],
+    PLACEHOLDER_MEMO: ['メモを入力', 'Enter memo'],
+    DISPLAY_LABEL_TIME: ['経過時間', 'Elapsed time'],
+    DISPLAY_LABEL_CURRENT_TEMP: ['現在温度', 'Current temp'],
+    DISPLAY_LABEL_CURRENT_ROR: ['RoR(現在温度)', 'RoR (current temp)'],
+    DISPLAY_LABEL_PROFILE_TEMP: ['プロファイル温度', 'Profile temp'],
+    DISPLAY_LABEL_PROFILE_ROR: ['RoR(プロファイル温度)', 'RoR (profile temp)'],
+    DISPLAY_LABEL_DTR: ['DTR', 'DTR'],
+    DISPLAY_LABEL_SCORE: ['評価', 'Score'],
+    ROAST_MESSAGE_WAITING: ['焙煎待機中', 'Ready to roast'],
+    PROFILE_MANIPULATION_TITLE: ['プロファイル操作', 'Profile actions'],
+    BUTTON_LOAD: ['読込', 'Load'],
+    BUTTON_SAVE: ['保存', 'Save'],
+    BUTTON_COPY_FROM_ROAST: ['焙煎データ⇒', 'Roast data⇒'],
+    BUTTON_COMPARE_PROFILE_SHOW: ['比較プロファイル表示', 'Show compare profile'],
+    BUTTON_COMPARE_PROFILE_HIDE: ['比較プロファイル解除', 'Hide compare profile'],
+    BUTTON_STANDARD_CURVE: ['標準カーブ', 'Standard curve'],
+    TABLE_TITLE: ['焙煎プロファイル', 'Roast profile'],
+    TABLE_HEADER_TIME_SEC: ['時間 [秒]', 'Time [sec]'],
+    TABLE_HEADER_TIME_PREFIX: ['時間', 'Time'],
+    TABLE_HEADER_TEMP_C: ['温度 [℃]', 'Temp [℃]'],
+    TABLE_HEADER_TEMP_PREFIX: ['温度', 'Temp'],
+    OFFSET_TIME_LABEL: ['時間オフセット', 'Time offset'],
+    OFFSET_TEMP_LABEL: ['温度オフセット', 'Temp offset'],
+    CHART_DATASET_PROFILE_TEMP: ['プロファイル温度', 'Profile temp'],
+    CHART_DATASET_CURRENT_TEMP: ['現在温度', 'Current temp'],
+    CHART_DATASET_PROFILE_ROR: ['RoR (プロファイル温度)', 'RoR (profile temp)'],
+    CHART_DATASET_CURRENT_ROR: ['RoR (現在温度)', 'RoR (current temp)'],
+    CHART_X_AXIS_TITLE: ['経過時間', 'Elapsed time'],
+    CHART_Y_AXIS_TITLE_TEMP: ['温度', 'Temp'],
+    CHART_Y_AXIS_TITLE_ROR: ['RoR', 'RoR'],
+    BUTTON_GUIDE_MOVE: ['📐 移動', '📐 Move'],
+    BUTTON_ALIGN: ['整列', 'Align'],
+    BUTTON_ADD_ROW: ['行追加', 'Add row'],
+    BUTTON_DELETE_ALL: ['🗑 全削除', '🗑 Delete all'],
+    TOOLTIP_ALIGN: ['焙煎プロファイルテーブル整列・チャート更新', 'Align profile table and update chart'],
+    TOOLTIP_ADD_ROW: ['行の追加', 'Add row'],
+    TOOLTIP_DELETE_ALL: ['全行削除', 'Delete all rows'],
+    TOOLTIP_LOAD_PROFILE: ['プロファイル読み込み', 'Load profile'],
+    TOOLTIP_SAVE_PROFILE: ['プロファイル保存', 'Save profile'],
+    TOOLTIP_COPY_ROAST_TO_PROFILE: ['焙煎データ⇒プロファイルにコピー', 'Copy roast data to profile'],
+    TOOLTIP_COMPARE_PROFILE: ['比較用プロファイルとして表示', 'Show compare profile'],
+    TOOLTIP_STANDARD_CURVE: ['標準焙煎カーブ読み込み', 'Load standard curve'],
+    TOOLTIP_CHART_ZOOM_IN: ['チャート拡大', 'Zoom chart in'],
+    TOOLTIP_CHART_RESET: ['チャート等倍', 'Reset chart'],
+    TOOLTIP_CHART_ZOOM_OUT: ['チャート縮小', 'Zoom chart out'],
+    TOOLTIP_PREV_PHASE: ['前のフェーズ', 'Previous phase'],
+    TOOLTIP_PHASE_MARK: ['焙煎フェーズマーク', 'Roast phase mark'],
+    TOOLTIP_NEXT_PHASE: ['次のフェーズ', 'Next phase'],
+    TOOLTIP_ROAST_START: ['焙煎開始', 'Start roasting'],
+    TOOLTIP_ROAST_STOP: ['焙煎停止', 'Stop roasting'],
+    TOOLTIP_CHART_INFOS: ['測定値表示', 'Show measured values'],
+    TOOLTIP_FULLSCREEN_ENTER: ['全画面表示', 'Enter fullscreen'],
+    TOOLTIP_FULLSCREEN_EXIT: ['全画面表示終了', 'Exit fullscreen'],
+    BUTTON_DELETE_ROW: ['行削除', 'Delete row'],
+    BUTTON_CLOSE: ['閉じる', 'Close'],
+    BUTTON_PROFILE_SAVE: ['ストレージ保存', 'Save to storage'],
+    BUTTON_PROFILE_SHARE: ['☁️ クラウドに共有', '☁️ Share to cloud'],
+    BUTTON_PROFILE_COPY: ['プロファイルコピー', 'Copy profile'],
+    MODAL_PROFILE_INPUT_TITLE: ['プロファイル入力', 'Profile input'],
+    MODAL_PROFILE_INPUT_DESC: ['JSONデータをペースト、記述、またはリストから選択してください', 'Paste, write, or select JSON data from the list'],
+    MODAL_PROFILE_DISPLAY_TITLE: ['プロファイル表示', 'Profile display'],
+    MODAL_PROFILE_DISPLAY_DESC: ['JSONデータをコピーして手動保存、またはローカルストレージに保存してください', 'Copy JSON data to save manually or store locally'],
+    MODAL_ROAST_LEVEL_TITLE: ['焙煎度 [ROAST LEVEL]', 'Roast level [ROAST LEVEL]'],
+    MODAL_ROAST_NOTE_TITLE: ['焙煎メモ', 'Roast note'],
+    PLACEHOLDER_PROFILE_NAME: ['プロファイル名を入力...', 'Enter profile name...'],
+    PLACEHOLDER_SHARE_COMMENT: ['共有コメント（例：エチオピア浅煎り、ベストバッチ！）', 'Share comment (e.g. Ethiopian light roast, best batch!)'],
+    CLOUD_PROFILE_BROWSER_TITLE: ['☁️ クラウドプロファイル', '☁️ Cloud profiles'],
+    CLOUD_PROFILE_SORT_NEWEST: ['🕐 新着順', '🕐 Newest'],
+    CLOUD_PROFILE_SORT_OLDEST: ['🕐 古い順', '🕐 Oldest'],
+    CLOUD_PROFILE_REFRESH: ['🔄 更新', '🔄 Refresh'],
+    CLOUD_PROFILE_SEARCH_PLACEHOLDER: ['🔍 タイトル・コメントで検索...', '🔍 Search by title or comment...'],
+    DEBUG_MODE_LABEL: ['SYSTEM DEBUG MODE', 'SYSTEM DEBUG MODE'],
+    CLOUD_PROFILE_LIST_HINT: ['「更新」を押してクラウドのプロファイルを取得', 'Press refresh to load cloud profiles'],
+    CLOUD_PROFILE_LOAD_MORE: ['もっと見る', 'Load more'],
+    CLOUD_PROFILE_SUFFIX_UNTITLED: ['無題', 'Untitled'],
+    CLOUD_PROFILE_UNKNOWN: ['匿名', 'Anonymous'],
+    ALERT_TITLE_REQUIRED: ['タイトルを入力してください', 'Please enter a title'],
+    ALERT_SAVE_LIMIT: ['【警告】保存上限（50個）に達しています。不要なプロファイルを削除してください\nファイル読み込みダイアログからストレージのプロファイルを削除できます', 'Warning: storage limit (50 items) reached. Delete unneeded profiles. Use file dialog to remove saved profiles.'],
+    ALERT_SAVE_DONE: ['ストレージに保存しました： ', 'Saved to storage: '],
+    ALERT_ROR_WINDOW_SET: ['RoR移動平均の窓数を ', 'RoR moving-average window size set to '],
+    ALERT_ROR_WINDOW_SET_SUFFIX: [' に設定しました。', '.'],
+    ALERT_WEBSOCKET_NOT_CONNECTED: ['WebSocketが未接続です。\n再接続してください。', 'WebSocket is not connected.\nPlease reconnect.'],
+    ALERT_WEBSOCKET_ERROR: ['WebSocketに異常があります。\n再接続してください\nエラーコード：', 'WebSocket error occurred.\nPlease reconnect.\nError code: '],
+    ALERT_SYSTEM_RESET: ['システムをリセットしました', 'System reset completed'],
+    ALERT_NO_PREVIOUS_ROAST: ['直前の焙煎データが存在しません。焙煎を行ってください。', 'No recent roast data found. Please roast first.'],
+    ALERT_NO_VALID_PROFILE_TABLE: ['テーブルに有効なプロファイルがありません。', 'No valid profile data found in the table.'],
+    ALERT_CLIPBOARD_COPIED: ['クリップボードにコピーしました。メモ帳などにペーストして保存してください', 'Copied to clipboard. Paste into a text editor to save.'],
+    ALERT_CLIPBOARD_MANUAL_COPY: ['自動コピーできないようなので、手動でコピーしてください', 'Automatic copy failed, please copy manually.'],
+    ALERT_CLOUD_PROFILE_LOADED_PREFIX: ['「', '"'],
+    ALERT_CLOUD_PROFILE_LOADED_SUFFIX: ['」を読み込みました\nプロファイル読み込みボタンで適用してください', '" loaded\nPlease apply with the Load profile button'],
+    ALERT_APP_HELP: ['うずロースターコントローラー（URC）　Version {version}\n\nDeveloped and Maintained\nうずうず本舗/うずうず珈琲焙煎工房', 'UZU ROASTER CONTROLLER (URC) Version {version}\n\nDeveloped and Maintained\nUzuuzu Honpo / Uzuuzu Coffee Roastery'],
+    ALERT_INVALID_JSON: ['JSONデータが正しくありません。', 'Invalid JSON data.'],
+    ALERT_LOGIN_FAILED: ['ログインに失敗しました：', 'Login failed: '],
+    ALERT_FIREBASE_NOT_CONNECTED: ['Firebase未接続です。firebaseConfigを設定してください。', 'Firebase is not connected. Please configure firebaseConfig.'],
+    ALERT_CLOUD_SHARE_LOGIN_REQUIRED: ['クラウドに共有するにはログインが必要です。\n画面上部の「☁️LOGIN」ボタンからGoogleログインしてください。', 'Login is required to share to cloud.\nUse the ☁️LOGIN button above to sign in with Google.'],
+    ALERT_CLOUD_SHARE_SUCCESS: ['☁️ クラウドに共有しました！\n「', '☁️ Shared to cloud!\n"'],
+    ALERT_CLOUD_SHARE_FAILED: ['クラウド共有に失敗しました：', 'Cloud share failed: '],
+    ALERT_PROFILE_LOAD_FAILED: ['プロファイル読み込みに失敗しました: ', 'Failed to load profile: '],
+    ALERT_PROFILE_NAME_REQUIRED: ['プロファイル名を入力してください', 'Please enter a profile name'],
+    ALERT_PROFILE_COMMENT_REQUIRED: ['共有コメントを入力してください\n例：エチオピア浅煎り、ベストバッチ！', 'Please enter a share comment\nExample: Ethiopian light roast, best batch!'],
+    ALERT_CLOUD_NOT_CONNECTED: ['Firebase未接続です。', 'Firebase is not connected.'],
+    ALERT_CLOUD_LOAD_FAILED: ['読み込み失敗：', 'Load failed: '],
+    ALERT_USB_DISCONNECTED: ['USBシリアルが未接続です。\n再接続してください。', 'USB serial is disconnected.\nPlease reconnect.'],
+    ALERT_USB_SERIAL_FAILED: ['USB Serial接続に失敗しました。\n接続を確認してください', 'USB serial connection failed.\nPlease check the connection.'],
+    ROAST_MESSAGE_STARTED: ['焙煎中', 'Roasting'],
+    ROAST_MESSAGE_STOPPED: ['焙煎を停止しました', 'Roasting stopped'],
+    ROAST_MESSAGE_PROFILE_LOADED: ['プロファイルを読み込みました', 'Profile loaded'],
+    ROAST_MESSAGE_PROFILE_SAVED: ['プロファイルの保存処理が完了しました', 'Profile save completed'],
+    ROAST_MESSAGE_DISCONNECTED: ['接続が解除されました', 'Connection lost'],
+    CLOUD_PROFILE_NONE: ['クラウドにプロファイルはありません', 'No cloud profiles found'],
+    CLOUD_PROFILE_NOT_FOUND: ['該当するプロファイルがありません', 'No matching profiles found'],
+    CLOUD_PROFILE_LOADING: ['読み込み中...', 'Loading...'],
+  }
+};
+let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || 'ja';
+if (!i18n.langs.includes(currentLanguage)) currentLanguage = 'ja';
+
+function t(key, fallback = '') {
+  const entry = i18n.texts[key];
+  if (!entry) return fallback || key;
+  const index = i18n.langs.indexOf(currentLanguage);
+  return entry[index] || entry[0] || fallback || key;
+}
+
+function updateUnitLabels() {
+  document.querySelectorAll('.unit_sec').forEach(el => el.textContent = currentLanguage === 'en' ? '[sec]' : '[秒]');
+  document.querySelectorAll('.unit_temp').forEach(el => el.textContent = getUnitTempLabel());
+  document.querySelectorAll('.unit_ror').forEach(el => el.textContent = getUnitRoRLabel());
+  document.querySelectorAll('.unit_dtr').forEach(el => el.textContent = '[%]');
+  updateChartTexts();
+}
+
+function getTimeAxisUnitLabel() {
+  if (isMinutesSecondsFormat) {
+    return currentLanguage === 'en' ? '[min]' : '[分]';
+  }
+  return currentLanguage === 'en' ? '[sec]' : '[秒]';
+}
+
+function updateChartTexts() {
+  if (!roastChart) return;
+  if (roastChart.options?.scales?.x?.title) {
+    roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
+  }
+  if (roastChart.options?.scales?.y?.title) {
+    roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
+  }
+  if (roastChart.options?.scales?.y1?.title) {
+    roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
+  }
+  const datasets = roastChart.data?.datasets;
+  if (datasets) {
+    if (datasets[0]) datasets[0].label = t('CHART_DATASET_PROFILE_TEMP');
+    if (datasets[1]) datasets[1].label = t('CHART_DATASET_CURRENT_TEMP');
+    if (datasets[2]) datasets[2].label = t('CHART_DATASET_PROFILE_ROR');
+    if (datasets[3]) datasets[3].label = t('CHART_DATASET_CURRENT_ROR');
+  }
+  roastChart.update('none');
+}
+
+function translatePage() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (key) el.textContent = t(key, el.textContent);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.dataset.i18nTitle;
+    if (key) el.title = t(key, el.title);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (key) el.placeholder = t(key, el.placeholder);
+  });
+  document.querySelectorAll('[data-i18n-value]').forEach(el => {
+    const key = el.dataset.i18nValue;
+    if (key) el.value = t(key, el.value);
+  });
+  updateUnitLabels();
+  document.title = t('PAGE_TITLE', document.title);
+  document.documentElement.lang = currentLanguage;
+  const select = document.getElementById('language-select');
+  if (select) select.value = currentLanguage;
+}
+
+function setLanguage(lang) {
+  if (!i18n.langs.includes(lang)) lang = 'ja';
+  currentLanguage = lang;
+  localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+  translatePage();
+}
+
+function setupLanguageControl() {
+  const select = document.getElementById('language-select');
+  if (select) {
+    select.value = currentLanguage;
+    select.addEventListener('change', () => {
+      setLanguage(select.value);
+    });
+  }
+  translatePage();
+}
+
 const resetWidthButton = document.getElementById('reset-width-button');
 const profileTitleInput = document.getElementById('profileTitleInput');
 
@@ -1836,8 +2107,8 @@ function updateAuthUI(user) {
 
     if (!isCloudAvailable()) {
         // クラウド利用不可（AP接続・file://など）
-        btn.textContent = '☁️LOGIN';
-        btn.title = 'クラウド機能にはインターネット接続が必要です';
+        btn.textContent = t('CLOUD_LOGIN_LABEL');
+        btn.title = t('CLOUD_LOGIN_DISABLED_HINT');
         btn.style.background = '#444';
         btn.style.color = '#888';
         btn.style.cursor = 'not-allowed';
@@ -1852,11 +2123,11 @@ function updateAuthUI(user) {
     if (user) {
         const name = user.displayName || user.email || 'ユーザー';
         btn.textContent = '☁️ ' + name.split(' ')[0];
-        btn.title = 'ログアウト：' + name;
+        btn.title = t('CLOUD_LOGOUT_TITLE') + name;
         btn.style.background = '#1a6b3a';
     } else {
-        btn.textContent = '☁️LOGIN';
-        btn.title = 'クラウドログイン';
+        btn.textContent = t('CLOUD_LOGIN_LABEL');
+        btn.title = t('TOOLTIP_CLOUD_LOGIN');
         btn.style.background = '#1a3a2a';
     }
 }
@@ -1865,7 +2136,7 @@ function updateAuthUI(user) {
 async function toggleAuth() {
     if (!isCloudAvailable()) return;  // グレーアウト中は何もしない
     if (!window._firebaseAuth) {
-        alert("Firebase未接続です。");
+        alert(t('ALERT_CLOUD_NOT_CONNECTED'));
         return;
     }
     if (window._currentUser) {
@@ -1878,7 +2149,7 @@ async function toggleAuth() {
             await window._firebaseAuth.signInWithPopup(provider);
         } catch (e) {
             console.error(e);
-            alert("ログインに失敗しました：" + e.message);
+            alert(t('ALERT_LOGIN_FAILED') + e.message);
         }
     }
 }
@@ -1997,7 +2268,7 @@ function updateTemperatureUnitLabels() {
   });
   const tempHeader = document.querySelector('#profileTable thead th:nth-child(2)');
   if (tempHeader) {
-    tempHeader.textContent = `温度 ${getUnitTempLabel()}`;
+    tempHeader.textContent = `${t('TABLE_HEADER_TEMP_PREFIX')} ${getUnitTempLabel()}`;
   }
 }
 
@@ -2041,10 +2312,8 @@ function refreshTemperatureDisplayBoxes() {
 
 function updateChartUnitLabels() {
   if (!roastChart) return;
-  const yAxisTitle = isFahrenheit ? '温度 [℉]' : '温度 [℃]';
-  const y1AxisTitle = isFahrenheit ? 'RoR [℉/分]' : 'RoR [℃/分]';
-  roastChart.options.scales.y.title.text = yAxisTitle;
-  roastChart.options.scales.y1.title.text = y1AxisTitle;
+  roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
+  roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
 }
 
 function updateTemperatureUnitDisplay() {
@@ -2330,7 +2599,7 @@ function connectionSelect(){
     // 1. まずはWiFi接続は試みてるので繋ぐならつなぐ
     // 2. 「USBで繋ぎたい環境」かどうかを判定してボタンを出す
     if (protocol === 'file:' || host === 'uzuuzu.shop') {
-        usbBtn.style.display = 'inline'; // 「USBで繋ぐ」ボタンを表示
+        usbBtn.style.display = 'inline-flex';
         USBInitialize();
     }
 }
@@ -2377,7 +2646,7 @@ function USBInitialize(){
           }
       } catch (error) {
           console.error("USBエラー:", error);
-          alert("USB Serial接続に失敗しました。\n接続を確認してください");
+          alert(t('ALERT_USB_SERIAL_FAILED'));
           connectBtn.disabled = false; // 再度クリック可能に
           USBPort = null;
           updateConnectionStatus(false);
@@ -2410,7 +2679,7 @@ function saveProfileToLocalStorage() {
     let title = profileTitleInput.value.trim();
     
     if (!title) {
-        alert("タイトルを入力してください");
+        alert(t('ALERT_TITLE_REQUIRED'));
         return;
     }
 
@@ -2418,7 +2687,7 @@ function saveProfileToLocalStorage() {
     
     // 新規保存かつ50個超えのチェック
     if (!index.includes(title) && index.length >= 50) {
-        alert("【警告】保存上限（50個）に達しています。不要なプロファイルを削除してください\nファイル読み込みダイアログからストレージのプロファイルを削除できます");
+        alert(t('ALERT_SAVE_LIMIT'));
         return;
     }
 
@@ -2435,11 +2704,11 @@ function saveProfileToLocalStorage() {
             localStorage.setItem('uzu_profile_index', JSON.stringify(index));
         }
         
-        alert("ストレージに保存しました： " + title);
+        alert(t('ALERT_SAVE_DONE') + title);
         updateProfileList(); // リストを更新
         closeModal('jsonSaveModal');
     } catch (e) {
-        alert("JSONデータが正しくありません。");
+        alert(t('ALERT_INVALID_JSON'));
     }
 }
 
@@ -2599,7 +2868,7 @@ function receiveWebMessage(data) {
     }
 
     if (data.time > -1 && isRoasting) {
-      roastMessage.textContent = "焙煎中";
+      roastMessage.textContent = t('ROAST_MESSAGE_STARTED');
 
       const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
       roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(data.time); 
@@ -2683,7 +2952,7 @@ function ResetKeepAliveTimer() {
     if (window.pywebview || USBPort) { return; }
     console.warn("キープアライブメッセージが受信できませんでした");
     updateConnectionStatus(false);
-    roastMessage.textContent = "接続が解除されました";
+    roastMessage.textContent = t('ROAST_MESSAGE_DISCONNECTED');
     //sendStopCommand(); // 焙煎を停止
     HideChartIndicators();
     webReconnect(); // 再接続を試みる
@@ -2773,7 +3042,7 @@ function connectWebSocket() {
       return;
     }
     updateConnectionStatus(false);
-    roastMessage.textContent = "接続が解除されました";
+    roastMessage.textContent = t('ROAST_MESSAGE_DISCONNECTED');
     SetRoastingState(false);
     HideChartIndicators();
     console.log("WebSocket切断");
@@ -2909,27 +3178,22 @@ function sendSafe(data) {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
     } else {
-      alert("WebSocketが未接続です。\n 再接続してください。");
+      alert(t('ALERT_WEBSOCKET_NOT_CONNECTED'));
       // 必要なら再接続処理とかキューに貯める処理もここで
     }
   } catch (err) {
-    alert("WebSocketに異常があります。\n再接続してください\nエラーコード：", err);
+    alert(t('ALERT_WEBSOCKET_ERROR') + err);
     hideUploadOverlay(); 
     // エラー処理（UIに通知とか、ログに出すとか）入れてもOK
   }
 }
 
 function USBConnectionAlert() {
-  alert("USBシリアルが未接続です。\n再接続してください。");
+  alert(t('ALERT_USB_DISCONNECTED'));
 }
 
 function helpButtonCommand() {
-  alert(`うずロースターコントローラー（URC）　Version${UzuRoasterControllerVersionStr}
-
-Developed and Maintained
-うずうず本舗/うずうず珈琲焙煎工房
-
-`);
+  alert(t('ALERT_APP_HELP').replace('{version}', UzuRoasterControllerVersionStr));
 }
 
 function manualButtonCommand() {
@@ -2962,7 +3226,7 @@ function ResetButtonCommand() {
       return;
     }
     window.pywebview.api.send_command("reset");
-    alert("システムをリセットしました");
+    alert(t('ALERT_SYSTEM_RESET'));
     setTimeout(() => {    
       location.reload(true);
       window.pywebview.api.send_command("usbserial on");
@@ -2975,7 +3239,7 @@ function ResetButtonCommand() {
       return;
     }
     USBWrite("reset\n");
-    alert("システムをリセットしました");  
+    alert(t('ALERT_SYSTEM_RESET'));
     setTimeout(() => {    
       location.reload(true);
       USBWrite("usbserial on\n");
@@ -3140,7 +3404,7 @@ function sendStartCommand() {
 ////////////////////////////////////////////////////////////////
 function executeStartCommand(){
   LiveData = [];
-  roastMessage.textContent = "焙煎中";
+  roastMessage.textContent = t('ROAST_MESSAGE_STARTED');
   roastChart.destroy();
   initChart();
   initPhaseUI();
@@ -3148,7 +3412,7 @@ function executeStartCommand(){
   SetRoastingState(true);
 
   isCompareProfileShown = false;
-  document.getElementById('button-copy-profile').textContent = "比較プロファイル表示";
+  document.getElementById('button-copy-profile').textContent = t('BUTTON_COMPARE_PROFILE_SHOW');
 }
 
 ////////////////////////////////////////////////////////////////
@@ -3179,7 +3443,7 @@ function sendStopCommand() {
 function executeStopCommand(){
   SetRoastingState(false);
   HideChartIndicators();
-  roastMessage.textContent = "焙煎を停止しました";
+  roastMessage.textContent = t('ROAST_MESSAGE_STOPPED');
 }
 
 ////////////////////////////////////////////////////////////////
@@ -3277,7 +3541,8 @@ function generateCurveData(type) {
 }
 
 function sendCurrentProfile() {
-  
+  clearModifiedHighlights();
+
   sortTable();
   
   // ガイドプロファイルのオフセットをテーブルに適用・確定
@@ -3293,6 +3558,40 @@ function sendCurrentProfile() {
   const profileData = getProfileDataFromTable();
   updateChartWithProfile(profileData);
   return; // 直接アップロードはしない 
+}
+
+function markProfileRowModified(input) {
+  const row = input.closest('tr');
+  if (row) {
+    row.classList.add('modified-row');
+  }
+}
+
+function clearModifiedHighlights() {
+  document.querySelectorAll('#profileTable tr.modified-row').forEach(row => {
+    row.classList.remove('modified-row');
+  });
+}
+
+function setupProfileModificationTracking() {
+  if (profileTable) {
+    profileTable.addEventListener('input', event => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement) {
+        markProfileRowModified(target);
+      }
+    });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setupProfileModificationTracking();
+    setupLanguageControl();
+  });
+} else {
+  setupProfileModificationTracking();
+  setupLanguageControl();
 }
 
 // ======================================
@@ -3341,7 +3640,7 @@ function applyAndConfirmGuideOffsets(offsetX, offsetY) {
 
 function overwriteTableWithLastRoast() {
   if (!roastChart || !roastChart.data.datasets || !roastChart.data.datasets[CURRENT_TEMP] || !roastChart.data.datasets[CURRENT_TEMP].data || roastChart.data.datasets[CURRENT_TEMP].data.length === 0) {
-    alert("直前の焙煎データが存在しません。焙煎を行ってください。");
+    alert(t('ALERT_NO_PREVIOUS_ROAST'));
     return;
   }
   const realTimeData = roastChart.data.datasets[CURRENT_TEMP].data;
@@ -3532,7 +3831,7 @@ function refreshProfileTableTimeInputs() {
 function updateProfileTableTimeHeader() {
   const header = document.querySelector('#profileTable thead th:nth-child(1)');
   if (header) {
-    header.textContent = `時間 ${isMinutesSecondsFormat ? '[分]' : '[秒]'}`;
+    header.textContent = `${t('TABLE_HEADER_TIME_PREFIX')} ${getTimeAxisUnitLabel()}`;
   }
 }
 
@@ -3771,12 +4070,10 @@ function applyOffsetsToTable() {
       addRow(0, closestTemp);
       sortTable(); // 再度ソートして順番を整える
     }
-    
-    //  5. 【お片付け】インプットフィールドをゼロに戻す！
+    //  5. インプットフィールドをゼロに戻す！
     inputTime.value = 0;
     inputTemp.value = 0;
 }
-
 
 //////////////////////////////////////////////////////
 /**
@@ -4313,10 +4610,10 @@ function updateFullscreenButtonIcon() {
     if (fullscreenToggleBtn) {
         if (isFullscreen) {
             fullscreenToggleBtn.textContent = '❐'; 
-            fullscreenToggleBtn.title = '全画面表示終了';
+            fullscreenToggleBtn.title = t('TOOLTIP_FULLSCREEN_EXIT');
         } else {
             fullscreenToggleBtn.textContent = '⛶';
-            fullscreenToggleBtn.title = '全画面表示';
+            fullscreenToggleBtn.title = t('TOOLTIP_FULLSCREEN_ENTER');
         }
     }
 }
@@ -4324,7 +4621,7 @@ function updateFullscreenButtonIcon() {
 function createDeleteButton() {
   const button = document.createElement("button");
   button.textContent = "🗑";
-  button.title = "行削除";
+  button.title = t('BUTTON_DELETE_ROW');
   button.addEventListener("click", function () {
     const row = button.closest("tr");
     if (row) {
@@ -4346,18 +4643,18 @@ function updateConnectionStatus(isConnected) {
   if (isConnected) {
     statusIndicator.style.backgroundColor = '#1ecc32';
     if (USBPort) {
-      connectionLabel.innerHTML = '<span class="usb status_text">接続中[USB]</span>';
+      connectionLabel.innerHTML = `<span class="usb status_text">${t('CONNECTION_STATUS_USB')}</span>`;
     } 
     else if (window.pywebview){
-      connectionLabel.innerHTML = '<span class="python status_text">接続中[USB]</span>';
+      connectionLabel.innerHTML = `<span class="python status_text">${t('CONNECTION_STATUS_PYTHON')}</span>`;
     } 
     else {
-      connectionLabel.innerHTML = '<span class="wifi status_text">接続中[WiFi]</span>';
+      connectionLabel.innerHTML = `<span class="wifi status_text">${t('CONNECTION_STATUS_WIFI')}</span>`;
     } 
   }
   else {
     statusIndicator.style.backgroundColor = '#cccccc';
-    connectionLabel.innerHTML = '<span class="status_no_connection_text">未接続</span>';
+    connectionLabel.innerHTML = `<span class="status_no_connection_text">${t('CONNECTION_STATUS_DISCONNECTED')}</span>`;
   }
 }
  
@@ -4376,7 +4673,7 @@ function downloadJSON() {
   });
 
   if (latestEntries.size === 0) {
-    alert("テーブルに有効なプロファイルがありません。");
+    alert(t('ALERT_NO_VALID_PROFILE_TABLE'));
     return false;
   }
 
@@ -4410,7 +4707,7 @@ function downloadJSON() {
     (async () => {
       const success = await window.pywebview.api.save_file(jsonString);
       if (success) {
-        roastMessage.textContent = "プロファイルの保存処理が完了しました";
+        roastMessage.textContent = t('ROAST_MESSAGE_PROFILE_SAVED');
       }
     })();
     return true; // Python側で処理したらここで終了
@@ -4434,7 +4731,7 @@ function downloadJSON() {
   a.click();
   document.body.removeChild(a);
 
-  roastMessage.textContent = "プロファイルの保存処理が完了しました";
+  roastMessage.textContent = t('ROAST_MESSAGE_PROFILE_SAVED');
 }
 
 function openModal(modalId) {
@@ -4540,11 +4837,11 @@ function applyJSONAllCopyModal() {
     jsonString = area.value;
     // クリップボードに直接書き込み（最新のやり方）
     navigator.clipboard.writeText(jsonString).then(() => {
-        alert("クリップボードにコピーしました。メモ帳などにペーストして保存してください");
+        alert(t('ALERT_CLIPBOARD_COPIED'));
     }).catch(err => {
         // 万が一、ブラウザが拒否した時のバックアップ
         console.error('コピー失敗', err);
-        alert("自動コピーできないようなので、手動でコピーしてください");
+        alert(t('ALERT_CLIPBOARD_MANUAL_COPY'));
     });
 
     return;
@@ -4626,11 +4923,11 @@ function executeFileLoad(file, e){
     }
 
     sendCurrentProfile();
-    roastMessage.textContent = "プロファイルを読み込みました";
+    roastMessage.textContent = t('ROAST_MESSAGE_PROFILE_LOADED');
 
     return true;
   } catch (err) {
-    alert("プロファイル読み込みに失敗しました: " + err);
+    alert(t('ALERT_PROFILE_LOAD_FAILED') + err);
     //hideUploadOverlay(); 
     return false;
   }
@@ -4779,7 +5076,7 @@ function initChart() {
       data: {
           labels: [], // profileDataは既存のHTMLから取得する必要がある
           datasets: [{
-              label: 'プロファイル温度',
+              label: t('CHART_DATASET_PROFILE_TEMP'),
               data: [],
               borderColor: active_profile_color,
               fill: true,
@@ -4792,7 +5089,7 @@ function initChart() {
               pointRadius: 0, 
               pointHoverRadius: 10
           }, {
-              label: '現在温度',
+              label: t('CHART_DATASET_CURRENT_TEMP'),
               data: [], // ここを最初から空配列に
               borderColor: 'rgba(255, 66, 99, 1)',
               fill: false,
@@ -4805,7 +5102,7 @@ function initChart() {
               pointRadius: 0,
               pointHoverRadius: 8
           }, {
-              label: 'RoR (プロファイル温度）',
+              label: t('CHART_DATASET_PROFILE_ROR'),
               data: [],
               borderColor: 'rgba(75, 68, 178, 0.4)', 
               backgroundColor: 'rgba(157, 132, 255, 0.4)',
@@ -4819,7 +5116,7 @@ function initChart() {
               pointRadius: 0,
               pointHoverRadius: 8
           },{
-              label: 'RoR (現在温度)',
+              label: t('CHART_DATASET_CURRENT_ROR'),
               data: [],
               borderColor: 'rgba(194, 120, 29, 0.5)', 
               backgroundColor: 'rgba(255, 223, 61, 0.5)',
@@ -4868,7 +5165,7 @@ function initChart() {
                   type: 'linear', // 時間を数値として扱う
                   position: 'bottom',
                   title: {  display: true,
-                            text: '経過時間 [秒]'
+                            text: `${t('CHART_X_AXIS_TITLE')} ${currentLanguage === 'en' ? '[sec]' : '[秒]'}`
                   },
                   min: 0,
                   max: currentChartMaxTime, // 30分
@@ -4887,7 +5184,7 @@ function initChart() {
               y: { // 左側のY軸（温度用）
                   type: 'linear',
                   position: 'left',
-                  title: { display: true, text: '温度 [℃]' },
+                  title: { display: true, text: `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}` },
                   min: 0,
                   max: maxTemperature,
                   ticks: {
@@ -4902,7 +5199,7 @@ function initChart() {
               y1: { // **右側のY軸（RoR用）**
                   type: 'linear',
                   position: 'right',
-                  title: { display: true, text: 'RoR [℃/分]' },
+                  title: { display: true, text: `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}` },
                   grid: { drawOnChartArea: false }, // メインのグリッド線を引かない
                   min: -10,
                   max: MaxRor,
@@ -4989,7 +5286,7 @@ function chartAreaInitialize() {
     roastTimeDisplayArea.addEventListener('click', () => {
       isMinutesSecondsFormat = !isMinutesSecondsFormat;
       localStorage.setItem(TIME_FORMAT_KEY, isMinutesSecondsFormat);
-      roastChart.options.scales.x.title.text = !isMinutesSecondsFormat ? '経過時間 [秒]' : '経過時間 [分]';
+      roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
       displaySecondsOrMinutes(getCurrentTime());
       updateProfileTableTimeHeader();
       refreshProfileTableTimeInputs();
@@ -5243,13 +5540,13 @@ function copyProfileChartToCompare(chart = roastChart) {
             order: 15
         });
         isCompareProfileShown = true;
-        if (btn) btn.textContent = "比較プロファイル解除";
+        if (btn) btn.textContent = t('BUTTON_COMPARE_PROFILE_HIDE');
     } 
     else if (isCompareProfileShown && compareIndex !== -1) {
         // 削除
         chart.data.datasets.splice(compareIndex, 1);
         isCompareProfileShown = false;
-        if (btn) btn.textContent = "比較プロファイル表示";
+        if (btn) btn.textContent = t('BUTTON_COMPARE_PROFILE_SHOW');
     }
     chart.update();
 }
@@ -5832,12 +6129,12 @@ function closeCloudBrowser() {
 // -----------------------------------------------
 async function loadCloudProfileList() {
     if (!window._firebaseDb) {
-        alert("Firebase未接続です。firebaseConfigを設定してください。");
+        alert(t('ALERT_FIREBASE_NOT_CONNECTED'));
         return;
     }
 
     const listEl = document.getElementById('cloudProfileList');
-    listEl.innerHTML = '<div style="color:#aaa; font-size:13px; padding:16px; text-align:center;">読み込み中...</div>';
+    listEl.innerHTML = `<div style="color:#aaa; font-size:13px; padding:16px; text-align:center;">${t('CLOUD_PROFILE_LOADING')}</div>`;
     document.getElementById('cloudProfileCount').textContent = '';
     document.getElementById('cloudLoadMoreBtn').style.display = 'none';
 
@@ -5852,7 +6149,7 @@ async function loadCloudProfileList() {
         snapshot.forEach(doc => _cloudAllDocs.push(doc.data()));
 
         if (_cloudAllDocs.length === 0) {
-            listEl.innerHTML = '<div style="color:#666; font-size:13px; padding:16px; text-align:center;">クラウドにプロファイルはありません</div>';
+            listEl.innerHTML = `<div style="color:#666; font-size:13px; padding:16px; text-align:center;">${t('CLOUD_PROFILE_NONE')}</div>`;
             return;
         }
 
@@ -5861,7 +6158,7 @@ async function loadCloudProfileList() {
 
     } catch (e) {
         console.error(e);
-        listEl.innerHTML = '<div style="color:#f66; font-size:13px; padding:16px; text-align:center;">読み込み失敗：' + e.message + '</div>';
+        listEl.innerHTML = `<div style="color:#f66; font-size:13px; padding:16px; text-align:center;">${t('ALERT_CLOUD_LOAD_FAILED') + e.message}</div>`;
     }
 }
 
@@ -5874,7 +6171,7 @@ function renderCloudList(docs) {
     const moreBtn = document.getElementById('cloudLoadMoreBtn');
 
     if (docs.length === 0) {
-        listEl.innerHTML = '<div style="color:#666; font-size:13px; padding:16px; text-align:center;">該当するプロファイルがありません</div>';
+        listEl.innerHTML = `<div style="color:#666; font-size:13px; padding:16px; text-align:center;">${t('CLOUD_PROFILE_NOT_FOUND')}</div>`;
         countEl.textContent = '';
         moreBtn.style.display = 'none';
         return;
@@ -5917,21 +6214,20 @@ function createCloudItem(d) {
     const info = document.createElement('div');
     info.style.cssText = "flex:1; overflow:hidden; margin-right:8px;";
     info.innerHTML = `
-        <div style="color:#fff; font-size:14px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.title || '無題'}</div>
+        <div style="color:#fff; font-size:14px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.title || t('CLOUD_PROFILE_SUFFIX_UNTITLED')}</div>
         <div style="color:#8b8; font-size:12px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 ${d.comment || ''}</div>
-        <div style="color:#555; font-size:11px; margin-top:2px;">${d.createdAt ? d.createdAt.substring(0, 10) : ''} · ${d.device || 'Unknown'} · 👤 ${d.userName || '匿名'}</div>
+        <div style="color:#555; font-size:11px; margin-top:2px;">${d.createdAt ? d.createdAt.substring(0, 10) : ''} · ${d.device || 'Unknown'} · 👤 ${d.userName || t('CLOUD_PROFILE_UNKNOWN')}</div>
     `;
 
     const btn = document.createElement('button');
-    btn.innerText = "読込";
+    btn.dataset.i18n = 'BUTTON_LOAD';
+    btn.innerText = t('BUTTON_LOAD');
     btn.style.cssText = "background:#1a6b3a; color:#fff; border:none; padding:8px 16px; cursor:pointer; border-radius:4px; font-size:13px; white-space:nowrap;";
     btn.onclick = () => {
         document.getElementById('jsonInput').value = JSON.stringify(d.data, null, 2);
         closeCloudBrowser();
-        alert("「" + d.title + "」を読み込みました\nプロファイル読み込みボタンで適用してください");
+        alert(t('ALERT_CLOUD_PROFILE_LOADED_PREFIX') + d.title + t('ALERT_CLOUD_PROFILE_LOADED_SUFFIX'));
     };
-
-    container.appendChild(info);
     container.appendChild(btn);
     return container;
 }
@@ -5976,11 +6272,11 @@ async function shareProfileToCloud() {
     const title = profileTitleInput.value.trim();
     const comment = document.getElementById('cloudCommentInput').value.trim();
 
-    if (!title) { alert("プロファイル名を入力してください"); return; }
-    if (!comment) { alert("共有コメントを入力してください\n例：エチオピア浅煎り、ベストバッチ！"); return; }
-    if (!window._firebaseDb) { alert("Firebase未接続です。"); return; }
+    if (!title) { alert(t('ALERT_PROFILE_NAME_REQUIRED')); return; }
+    if (!comment) { alert(t('ALERT_PROFILE_COMMENT_REQUIRED')); return; }
+    if (!window._firebaseDb) { alert(t('ALERT_CLOUD_NOT_CONNECTED')); return; }
     if (!window._currentUser) {
-        alert("クラウドに共有するにはログインが必要です。\n画面上部の「☁️LOGIN」ボタンからGoogleログインしてください。");
+        alert(t('ALERT_CLOUD_SHARE_LOGIN_REQUIRED'));
         return;
     }
 
@@ -5999,141 +6295,14 @@ async function shareProfileToCloud() {
         _cloudAllDocs = [];
         document.getElementById('cloudCommentInput').value = "";
         setTimeout(() => {
-            alert("☁️ クラウドに共有しました！\n「" + title + "」\n" + comment);
+            alert(t('ALERT_CLOUD_SHARE_SUCCESS') + title + (currentLanguage === 'en' ? '"' : '」') + "\n" + comment);
         }, 300);
     } catch (e) {
         console.error(e);
-        setTimeout(() => { alert("クラウド共有に失敗しました：" + e.message); }, 300);
+        setTimeout(() => { alert(t('ALERT_CLOUD_SHARE_FAILED') + e.message); }, 300);
     }
 }
 
-
-</script>
-<style>
-#opacity-toggle {
-  display: none;
-}
-@media (max-width: 600px) {
-#opacity-toggle {
-  display: flex;
-}
-
-#control-buttons {
-  position: absolute;
-  top: 50px;
-  left: 20px;
-  width: 150px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  border-radius: 10px;
-  z-index: 99;
-  touch-action: none;
-  user-select: none;
-}
-
-#control-buttons {
-  padding: 25px 10px 5px 10px;
-  cursor: move;
-  background-color: #444;
-  font-size: 10px;
-  text-align: center;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.panel-content {
-  padding: 10px;
-  text-align: center;
-}
-/* 透明状態のスタイル */
-#control-buttons.is-transparent {
-  opacity: 0.25; 
-}
-.toggle-opacity-btn {
-  margin-top: 5px;
-  padding: 5px 10px;
-  font-size: 10px;
-  background: rgba(0, 0, 0, 0.0);
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-}
-</style>
-<script>
-const panelControlButtons = document.getElementById("control-buttons");
-let panelControlButtonsIsDragging = false;
-let panelControlButtonsDragStartPageX = undefined;
-let panelControlButtonsDragStartPageY = undefined;
-let panelControlButtonsStartLeft = 0;
-let panelControlButtonsStartTop = 0;
-
-panelControlButtons.addEventListener("pointerdown", (e) => {
-  if (e.button !== 0 || e.target.closest('button')) return;
-
-  panelControlButtonsDragStartPageX = e.pageX;
-  panelControlButtonsDragStartPageY = e.pageY;
-  panelControlButtonsStartLeft = panelControlButtons.offsetLeft;
-  panelControlButtonsStartTop = panelControlButtons.offsetTop;
-  panelControlButtonsIsDragging = false;
-  panelControlButtons.setPointerCapture(e.pointerId);
-});
-panelControlButtons.addEventListener("pointermove", (e) => {
-  if (panelControlButtonsDragStartPageX === undefined) return;
-
-  const dx = Math.abs(e.pageX - panelControlButtonsDragStartPageX);
-  const dy = Math.abs(e.pageY - panelControlButtonsDragStartPageY);
-  const moveThreshold = 6;
-
-  if (!panelControlButtonsIsDragging) {
-    if (dx < moveThreshold && dy < moveThreshold) {
-      return;
-    }
-    panelControlButtonsIsDragging = true;
-  }
-
-  const x = panelControlButtonsStartLeft + (e.pageX - panelControlButtonsDragStartPageX);
-  const y = panelControlButtonsStartTop + (e.pageY - panelControlButtonsDragStartPageY);
-  
-  panelControlButtons.style.left = x + "px";
-  panelControlButtons.style.top = y + "px";
-
-  // PointerEventではブラウザのデフォルト挙動を止めるために touch-action: none をCSS側に書くのが推奨です
-}, { passive: false });
-panelControlButtons.addEventListener("pointerup", (e) => {
-  panelControlButtonsDragStartPageX = undefined;
-  panelControlButtonsIsDragging = false;
-  panelControlButtons.releasePointerCapture(e.pointerId);
-});
-/**
- * fixed の時だけ #chart の左上に配置する関数
- */
-function alignIfFixed() {
-  const chart = document.getElementById("chart-section");
-  if (!chart || !panelControlButtons) return;
-
-  const style = window.getComputedStyle(panelControlButtons);
-  
-  if (style.position === "absolute") {
-    const chartRect = chart.getBoundingClientRect();
-
-    // absolute の場合、現在のスクロール量を加算して「ドキュメント上の絶対位置」を出す
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-
-    panelControlButtons.style.left = (chartRect.left + scrollX) + "px";
-    panelControlButtons.style.top = (chartRect.top + scrollY) + "px";
-  } else {
-    panelControlButtons.style.left = "";
-    panelControlButtons.style.top = "";
-  }
-}
-document.getElementById("opacity-toggle").addEventListener("click", () => {
-  const panel = document.getElementById("control-buttons");
-  panelControlButtons.classList.toggle("is-transparent");
-});
-window.addEventListener('DOMContentLoaded', alignIfFixed);
-window.addEventListener('resize', alignIfFixed);
 </script>
 
 </body>
