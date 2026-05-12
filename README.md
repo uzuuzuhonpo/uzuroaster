@@ -3,7 +3,7 @@
 **ESP32ベースのオープンソース・コーヒー焙煎コントローラー**  
 USBシリアル通信 ✕ Web技術 ✕ WiFiで実現する、次世代の小型焙煎機コントローラー
 
-![UZU ROASTER](uzuroaster.jpg)
+![UZU ROASTER](assets/uzuroaster.jpg)
 
 自家焙煎をもっと楽しく、もっと本格的に。  
 うずうずコーヒー焙煎工房のオープンソース自動焙煎プロジェクトです。
