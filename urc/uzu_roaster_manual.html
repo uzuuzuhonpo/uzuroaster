@@ -257,6 +257,49 @@
     </style>
 </head>
 <body>
+    <!-- アイコン定義 -->
+    <svg style="display: none;">
+    <symbol id="icon-reload" viewBox="0 0 24 26">
+        <path d="M21 14a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 10" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        <path d="M21 5v5h-5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </symbol>
+
+    <symbol id="icon-usb" viewBox="0 0 24 24">
+        <line x1="12" y1="19" x2="12" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <line x1="5" y1="13.5" x2="19" y2="13.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <line x1="4" y1="13.5" x2="4" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <rect x="1" y="4.2" width="6" height="6" rx="1" fill="currentColor" stroke="none"/>
+        <line x1="12" y1="13.5" x2="12" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <polygon points="12,1 7.2,7.5 16.8,7.5" fill="currentColor" stroke="none"/>
+        <line x1="20" y1="13.5" x2="20" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <circle cx="20" cy="5.2" r="3.2" fill="currentColor" stroke="none"/>
+        <rect x="8.2" y="18.5" width="7.6" height="6" rx="2.5" fill="currentColor" stroke="none"/>
+    </symbol>
+
+    <symbol id="icon-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" />
+        <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        <line x1="12" y1="8" x2="12.01" y2="8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    </symbol>
+
+    <symbol id="icon-manual" viewBox="0 0 24 24">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </symbol>
+
+    <symbol id="icon-config" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.5" fill="none" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </symbol>
+
+    <symbol id="icon-web" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+        <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </symbol>
+    </svg>
+
+
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
         <div style="text-align: right;"><span>最終更新日: 2026年4月20日　Version 1.3.0</span></div><br>
@@ -502,11 +545,6 @@
                 </ul>
             </li>
         </ul>
-        <div class="tip">
-            <h4>ヒント:</h4>
-            <p>このデータ形式は、Web/USBシリアルコマンドにより柔軟に変更可能です。</p>
-        </div>
-
         <h3 id="subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）:</h3>
         <p>UZU ROASTERをUSBでPCに接続するために、USBシリアルドライバのインストールが必要です。</p>
         <ul>
@@ -518,7 +556,9 @@
                 <a href="https://www.acebott.com/ja/docs/download-ch340-driver-on-mac-system/" target="_blank">https://www.acebott.com/ja/docs/download-ch340-driver-on-mac-system/</a>
             </li>
         </ul>
-
+        <div class="warning">
+            ⚠️ ロットにUSBシリアルコントローラーがCH340ではなく、CP2102が搭載されている場合があります。その場合はCP2102用のシリアルドライバを別途インストールするか、お問い合わせください。
+        </div>
         <h3 id="subsection-artisan-settings">⚙️ 3. Artisanの設定手順:</h3>
         <ol>
             <li>UZU ROASTERとPCをUSBケーブルで接続します。</li>
@@ -2028,8 +2068,8 @@
             <li>
                 <strong>ルーターのSSIDとパスワードを設定する</strong><br>
                 USBシリアルまたはデバッグコンソールのコマンドプロンプトから以下のコマンドを送信します。
-                <pre><code>stassid ご使用のルーターのSSID
-                stapassword ご使用のルーターのパスワード</code></pre>
+                <pre><code>stassid ご使用のルーターのSSID</code></pre>
+                <pre><code>stapassword ご使用のルーターのパスワード</code></pre>
                 <span style="font-size:0.9em;color:#666;">※ パスワードは8文字以上必要です。パスワードなしのルーターの場合は<code>stapassword</code>コマンドを省略してください。</span>
             </li>
             <li>
@@ -2054,13 +2094,13 @@
         <h4>APモードに戻す方法:</h4>
         <p>STAモードからAPモードに戻すには、USBシリアルから以下のコマンドを送信します。</p>
         <pre><code>wifimode ap</code></pre>
-        <p>あらかじめボタン長押しコマンドに登録しておくと、USBなしでAPモードに復帰できます。</p>
+        <p>あらかじめボタン長押しコマンドに登録しておくと、USB接続なしでAPモードに復帰できます。</p>
         <pre><code>blpress wifimode ap</code></pre>
 
         <div class="tip"><h4>ヒント: STAモードでIPアドレスが分からなくなったら</h4>
         <ul>
             <li>USBシリアルモニタで <code>staip</code> コマンドを送信するとIPアドレスが確認できます。</li>
-            <li><code>ipled on</code> コマンドでLEDの点滅パターンからIPアドレスを読み取れます。</li>
+            <li><code>ipled sta</code> コマンドでLEDの点滅パターンからIPアドレスを読み取れます。</li>
             <li>ボタン長押しに <code>wifimode ap</code> を登録していれば、ボタン長押しでAPモードに復帰できます。</li>
             <li>上記の方法で確認できない場合は、USBシリアルから <code>reset all</code> コマンドで全設定を初期化し、APモードに戻すことができます。</li>
         </ul>
@@ -2117,6 +2157,7 @@
 
 <div style="text-align: center; margin: 10px 0; position: relative;"">
  <iframe 
+    id="urc-iframe" 
     src="index.html" 
     width="100%" 
     height="auto" 
@@ -2127,6 +2168,20 @@
   <p style="font-size: 1em; text-align: center; margin-bottom: 30px;">図2: うずロースターコントローラー操作画面</p>
 </div>
 
+<style>
+    .icon-button {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #927b6b;
+        color: #fff;
+        border: 1px solid #927b6b;
+        border-radius: 3px;
+        font-size: 0.85em;
+        font-weight: normal;
+        cursor: default;
+        margin: 0 2px;
+    }
+</style>
 
         <p>「うずロースターコントローラー」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
 
@@ -2143,13 +2198,13 @@
                 目標となる「プロファイル温度」、現在の「リアルタイム温度」、そして「RoR（温度上昇速度）」がチャートで表示されます。チャートエリアをクリックすると、全画面表示/解除をトグルで切り替えられます。</li>
             <li><strong>操作ボタン:</strong>
                 <ul>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#2e8b57; color:#fff; border:1px solid #1e5a38; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">▶ スタート</span>： チャートへの記録を開始します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>： チャートへの記録を停止します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が解除される事があります）</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">⇄</span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">USB</span>： Webアプリ使用時に、Wi-FiではなくUSB接続でUZU ROASTERに接続します。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">設定</span>： デバッグコンソールの表示/非表示を切り替えます。シリアルコマンド入力、温度調整、画面色調調整が可能です。</li>
-                    <li><span style="display:inline-block; padding:2px 8px; background:#8a5e4b; color:#fff; border:1px solid #634336; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px; box-shadow:0 1px 2px rgba(0,0,0,0.3);">マニュアル</span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
+                    <li><span style="background:#2e8b57; border:1px solid #2e8b57;" class="icon-button">▶</span>： チャートへの記録を開始します。</li>
+                    <li><span style=" background:#C62828; border:1px solid #C62828;" class="icon-button">■</span>： チャートへの記録を停止します。</li>
+                    <li><span style="background:#C62828; color:#fff; border:1px solid #ac1f1f; font-size:0.85em;" class="icon-button">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が解除される事があります）</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-reload"/></svg></span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>： Webアプリ使用時に、Wi-FiではなくUSB接続でUZU ROASTERに接続します。</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-config"/></svg></span>： デバッグコンソールの表示/非表示を切り替えます。シリアルコマンド入力、温度調整、画面色調調整が可能です。</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-manual"/></svg></span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
                 </ul>
             </li>
         </ul>
@@ -2204,8 +2259,8 @@
 
         <h3 id="subsection-web-app-roast-control">5. 焙煎開始・停止の操作:</h3>
         <ul>
-            <li>焙煎を始める際に<span style="display:inline-block; padding:2px 8px; background:#2e8b57; color:#fff; border:1px solid #1e5a38; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">▶ スタート</span>ボタンを押すことで、温度データのチャート記録が開始されます。</li>
-            <li>焙煎が終了したら<span style="display:inline-block; padding:2px 8px; background:#C62828; color:#fff; border:1px solid #ac1f1f; border-radius:3px; font-size:0.85em; font-weight:normal; cursor:default; margin:0 2px;">■ ストップ</span>ボタンを押して、チャートへの記録を停止してください。</li>
+            <li>焙煎を始める際に<span style="background:#2e8b57; border:1px solid #2e8b57;" class="icon-button">▶</span>ボタンを押すことで、温度データのチャート記録が開始されます。</li>
+            <li>焙煎が終了したら<span style="background:#C62828; color:#fff; border:1px solid #ac1f1f;" class="icon-button">■</span>ボタンを押して、チャートへの記録を停止してください。</li>
             <li>焙煎時間が30分（1799秒）を超えると、自動的にチャートへの記録は停止します。</li>
             <li>温度表示エリアの「経過時間」をクリックすると、チャートの焙煎時間表示が分⇔秒、交互に切り替わります。</li>
             <li><span style="display:inline-block; padding:2px 6px; background:#888; color:#f8f8f8; border:0px solid #777; border-radius:3px; font-size:0.85em; cursor:default; margin:0 2px;">◀</span>
@@ -2677,4 +2732,87 @@ C:\path_to_arduino\packages\esp32\tools\esptool_py\4.9.dev3/esptool.exe" --chip 
 
     </div>
 </body>
+
+<style>
+  /* 親要素ごと画面右下に固定する */
+#google_translate_element {
+  position: fixed;
+  bottom: 20px;   /* 下からの距離 */
+  right: 20px;    /* 右からの距離 */
+  z-index: 9999;  /* 他の要素より上に表示 */
+}
+
+/* ウィジェット自体のデザインを整える（モノトーン・プロ仕様） */
+.goog-te-gadget-simple {
+  background-color: #000 !important; /* 黒背景 */
+  border: 1px solid #444 !important; /* ダークな枠線 */
+  border-radius: 5px !important;    /* あえて少し角を残したミニマルな角丸 */
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; /* 浮いてる感 */
+  cursor: pointer;
+}
+
+/* 文字色を白にして馴染ませる */
+.goog-te-gadget-simple a, 
+.goog-te-gadget-simple span {
+  color: #fff !important;
+  font-size: 12px !important;
+  text-decoration: none !important;
+}
+
+/* Googleのロゴ（画像）を白黒っぽく見せる裏技 */
+.goog-te-gadget-simple img {
+  filter: grayscale(1) brightness(2); /* 白黒にして明るくする */
+  margin-right: 8px;
+}
+</style>
+<script type="text/javascript">
+(function() {
+    // 1. 判定ロジック
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    // プライベートIPアドレス（127.x / 192.168.x / 10.x / 172.16-31.x）および localhost の判定
+    const isLocalIP = /^(127\.|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname) || hostname === 'localhost';
+
+    // 条件：プロトコルが http かつ ローカルIP の場合は、ここで処理を終了（ボタンを出さない）
+    if (protocol === 'http:' && isLocalIP) {
+        console.log("Local network detected. Google Translate disabled.");
+        return;
+    }
+
+    // --- ここから「ボタンを出す」場合の処理 ---
+
+    // 2. ウィジェット表示用のコンテナ（div）を生成して右下に配置
+    const translateDiv = document.createElement('div');
+    translateDiv.id = 'google_translate_element';
+    translateDiv.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(translateDiv);
+
+    // 3. Google翻訳の初期化関数をグローバルに定義
+    window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'ja',
+            includedLanguages: 'ja,en,zh-CN,zh-TW,de,fr,es,it,pt,ru,ko,th,vi', // タイ語(th)も追加しておきました
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    };
+
+    // 4. Googleの外部スクリプトを動的に読み込む
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    document.head.appendChild(script);
+})();
+
+</script>
 </html>

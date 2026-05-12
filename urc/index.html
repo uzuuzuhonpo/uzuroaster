@@ -758,6 +758,7 @@
       top: 0;
       z-index: 10;
       height: 30px;
+      font-weight: normal;
     }
 
     tr:nth-child(even) {
@@ -1378,13 +1379,16 @@
     <h3 style="text-align:center; font-weight:300; letter-spacing:2px; margin-bottom:25px; color:#fff;" data-i18n="MODAL_ROAST_LEVEL_TITLE">焙煎度 [ROAST LEVEL]</h3>
     <div style="display:flex; flex-direction:column; gap:15px;">
       <button onclick="applyPreset('light')" class="modal-button" style="width:100%; padding:15px; background:#c49a6c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
-        浅煎り [LIGHT ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(High / Cinnamon)</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_LIGHT">浅煎り [LIGHT ROAST]</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_LIGHT_DESC" style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(High / Cinnamon)</span>
       </button>
       <button onclick="applyPreset('medium')" class="modal-button" style="width:100%; padding:15px; background:#6f4e37; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
-        中煎り [MEDIUM ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(City / Fullcity)</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_MEDIUM">中煎り [MEDIUM ROAST]</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_MEDIUM_DESC" style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(City / Fullcity)</span>
       </button>
       <button onclick="applyPreset('dark')" class="modal-button" style="width:100%; padding:15px; background:#3d2b1f; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
-        深煎り [DARK ROAST] <span style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(French / Italian)</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_DARK">深煎り [DARK ROAST]</span>
+        <span data-i18n="MODAL_ROAST_LEVEL_DARK_DESC" style="display:block; font-size:10px; font-weight:normal; opacity:0.8;">(French / Italian)</span>
       </button>
     </div>
     <button onclick="closeProfModal()" style="background:none; border:none; color:#e6e6e6; width:100%; margin-top:20px; cursor:pointer; font-size:12px;" data-i18n="BUTTON_CLOSE">閉じる</button>
@@ -1639,6 +1643,7 @@
           <tr>
             <th data-i18n="TABLE_HEADER_TIME_SEC">時間 [秒]</th>
             <th data-i18n="TABLE_HEADER_TEMP_C">温度 [℃]</th>
+            <th data-i18n="TABLE_HEADER_EVENT">イベント</th>
             <th>🗑</th>
           </tr>
         </thead>
@@ -1684,10 +1689,10 @@
       </div>
         <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; touch-action: none; z-index: 100; background: rgba(0, 0, 0, 0.0);"></div>
       <!-- 全画面トグルボタン -->
-      <button id="fullscreen-toggle-btn" title="全画面表示切替" class="chart-control-button" style="bottom: 5px;  text-align:center; justify-content: center;">
+      <button id="fullscreen-toggle-btn" title="全画面表示切替" data-i18n-title="TOOLTIP_FULLSCREEN_ENTER" class="chart-control-button" style="bottom: 5px;  text-align:center; justify-content: center;">
         <b><span id="fullscreen-toggle-icon" style="display: block; transform: translateY(-2px); margin: 0 auto;">⛶</span></b>
       </button>
-      <button id="edit-mode-button" title="プロファイル編集" class="chart-control-button">
+      <button id="edit-mode-button" title="プロファイル編集" data-i18n-title="TOOLTIP_PROFILE_EDIT" class="chart-control-button">
         <b><span id="edit-mode-icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="23" height="23">
         <line x1="18" y1="50" x2="82" y2="50" stroke="white" stroke-width="10" stroke-linecap="round"/>
@@ -1913,6 +1918,7 @@ const i18n = {
     CHART_DATASET_CURRENT_TEMP: ['現在温度', 'Current temp'],
     CHART_DATASET_PROFILE_ROR: ['RoR (プロファイル温度)', 'RoR (profile temp)'],
     CHART_DATASET_CURRENT_ROR: ['RoR (現在温度)', 'RoR (current temp)'],
+    CHART_DATASET_COMPARE_PROFILE: ['比較用プロファイル', 'Compare profile'],
     CHART_X_AXIS_TITLE: ['経過時間', 'Elapsed time'],
     CHART_Y_AXIS_TITLE_TEMP: ['温度', 'Temp'],
     CHART_Y_AXIS_TITLE_ROR: ['RoR', 'RoR'],
@@ -1927,8 +1933,8 @@ const i18n = {
     TOOLTIP_SAVE_PROFILE: ['プロファイル保存', 'Save profile'],
     TOOLTIP_COPY_ROAST_TO_PROFILE: ['焙煎データ⇒プロファイルにコピー', 'Copy roast data to profile'],
     TOOLTIP_COMPARE_PROFILE: ['比較用プロファイルとして表示', 'Show compare profile'],
+    TOOLTIP_PROFILE_EDIT: ['プロファイル編集', 'Edit profile'],
     TOOLTIP_STANDARD_CURVE: ['標準焙煎カーブ読み込み', 'Load standard curve'],
-    TOOLTIP_CHART_ZOOM_IN: ['チャート拡大', 'Zoom chart in'],
     TOOLTIP_CHART_RESET: ['チャート等倍', 'Reset chart'],
     TOOLTIP_CHART_ZOOM_OUT: ['チャート縮小', 'Zoom chart out'],
     TOOLTIP_PREV_PHASE: ['前のフェーズ', 'Previous phase'],
@@ -1944,11 +1950,21 @@ const i18n = {
     BUTTON_PROFILE_SAVE: ['ストレージ保存', 'Save to storage'],
     BUTTON_PROFILE_SHARE: ['☁️ クラウドに共有', '☁️ Share to cloud'],
     BUTTON_PROFILE_COPY: ['プロファイルコピー', 'Copy profile'],
+    BUTTON_OPEN_CLOUD_BROWSER: ['☁️ クラウドのプロファイルを見る', '☁️ View cloud profiles'],
+    BUTTON_DELETE_PROFILE: ['削除', 'Delete'],
+    ALERT_PROFILE_DELETE_CONFIRM: ['プロファイル「{title}」を完全に削除してもいいですか？', 'Delete profile "{title}" permanently?'],
     MODAL_PROFILE_INPUT_TITLE: ['プロファイル入力', 'Profile input'],
     MODAL_PROFILE_INPUT_DESC: ['JSONデータをペースト、記述、またはリストから選択してください', 'Paste, write, or select JSON data from the list'],
     MODAL_PROFILE_DISPLAY_TITLE: ['プロファイル表示', 'Profile display'],
     MODAL_PROFILE_DISPLAY_DESC: ['JSONデータをコピーして手動保存、またはローカルストレージに保存してください', 'Copy JSON data to save manually or store locally'],
+    TABLE_HEADER_EVENT: ['イベント', 'Event'],
     MODAL_ROAST_LEVEL_TITLE: ['焙煎度 [ROAST LEVEL]', 'Roast level [ROAST LEVEL]'],
+    MODAL_ROAST_LEVEL_LIGHT: ['浅煎り [LIGHT ROAST]', 'Light roast [LIGHT ROAST]'],
+    MODAL_ROAST_LEVEL_LIGHT_DESC: ['(High / Cinnamon)', '(High / Cinnamon)'],
+    MODAL_ROAST_LEVEL_MEDIUM: ['中煎り [MEDIUM ROAST]', 'Medium roast [MEDIUM ROAST]'],
+    MODAL_ROAST_LEVEL_MEDIUM_DESC: ['(City / Fullcity)', '(City / Fullcity)'],
+    MODAL_ROAST_LEVEL_DARK: ['深煎り [DARK ROAST]', 'Dark roast [DARK ROAST]'],
+    MODAL_ROAST_LEVEL_DARK_DESC: ['(French / Italian)', '(French / Italian)'],
     MODAL_ROAST_NOTE_TITLE: ['焙煎メモ', 'Roast note'],
     PLACEHOLDER_PROFILE_NAME: ['プロファイル名を入力...', 'Enter profile name...'],
     PLACEHOLDER_SHARE_COMMENT: ['共有コメント（例：エチオピア浅煎り、ベストバッチ！）', 'Share comment (e.g. Ethiopian light roast, best batch!)'],
@@ -2016,6 +2032,7 @@ function updateUnitLabels() {
   document.querySelectorAll('.unit_ror').forEach(el => el.textContent = getUnitRoRLabel());
   document.querySelectorAll('.unit_dtr').forEach(el => el.textContent = '[%]');
   updateChartTexts();
+  updateProfileTableTimeHeader();
 }
 
 function getTimeAxisUnitLabel() {
@@ -2042,6 +2059,11 @@ function updateChartTexts() {
     if (datasets[1]) datasets[1].label = t('CHART_DATASET_CURRENT_TEMP');
     if (datasets[2]) datasets[2].label = t('CHART_DATASET_PROFILE_ROR');
     if (datasets[3]) datasets[3].label = t('CHART_DATASET_CURRENT_ROR');
+    datasets.forEach(ds => {
+      if (ds?.compareProfile) {
+        ds.label = t('CHART_DATASET_COMPARE_PROFILE');
+      }
+    });
   }
   roastChart.update('none');
 }
@@ -2062,6 +2084,10 @@ function translatePage() {
   document.querySelectorAll('[data-i18n-value]').forEach(el => {
     const key = el.dataset.i18nValue;
     if (key) el.value = t(key, el.value);
+  });
+  document.querySelectorAll('[data-i18n-option]').forEach(el => {
+    const key = el.dataset.i18nOption;
+    if (key) el.textContent = t(key, el.textContent);
   });
   updateUnitLabels();
   document.title = t('PAGE_TITLE', document.title);
@@ -2755,7 +2781,7 @@ function updateProfileList() {
 
       // 削除ボタン（X）
       const delBtn = document.createElement('button');
-      delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;削除</span>";
+      delBtn.innerHTML = "<span style='white-space: nowrap; font-size:14px;'>&times;" + t('BUTTON_DELETE_PROFILE') + "</span>";
       // style属性をcssTextで指定（スマホ対策）
       delBtn.style.cssText = "background:#800; color:#fff; border:none; padding:1px 8px; cursor:pointer; border-radius:3px; margin-left:10px;";
       delBtn.onmouseenter = () => delBtn.style.background = "#c00";
@@ -2763,7 +2789,7 @@ function updateProfileList() {
       delBtn.onclick = (e) => {
           delBtn.style.background = "#400";
           e.stopPropagation(); // 親のクリックイベントを防ぐ
-          if (confirm("プロファイル「" + title + "」を完全に削除してもいいですか？")) {
+          if (confirm(t('ALERT_PROFILE_DELETE_CONFIRM').replace('{title}', title))) {
               deleteProfile(title);
           }
       };
@@ -2852,8 +2878,8 @@ function webReconnect() {
 
 ////////////////////////////////////////////////////////////////
 function receiveWebMessage(data) {
-  const t = (data.temp + TemperatureOffset); // 温度にオフセットを適用し、1桁小数にフォーマット
-  const temp = t.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
+  const tempWithOffset = data.temp + TemperatureOffset; // 温度にオフセットを適用し、1桁小数にフォーマット
+  const temp = tempWithOffset.toFixed(1); // 温度にオフセットを適用し、1桁小数にフォーマット
 
   if ("time" in data && "temp" in data) {
     if ((data.time > -1) && !isRoasting) { // 現在の焙煎時間が0秒以上なら他のクライアントが既にスタートしているのでスタート状態にしてグラフを更新する
@@ -2870,7 +2896,7 @@ function receiveWebMessage(data) {
     if (data.time > -1 && isRoasting) {
       roastMessage.textContent = t('ROAST_MESSAGE_STARTED');
 
-      const current_ror = addLiveDataPoint(roastChart, data.time, t); // グラフ追加関数
+      const current_ror = addLiveDataPoint(roastChart, data.time, tempWithOffset); // グラフ追加関数
       roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(data.time); 
       setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
       if (roastChart.data.datasets[PROFILE_TEMP].data.length === 0) {
@@ -2911,13 +2937,13 @@ function receiveWebMessage(data) {
       const dtr = PhaseManager.getDTR(getCurrentTime());
       roastDTRDisplay.innerHTML = (dtr !== null) ? dtr + unit_dtr : '--' + unit_dtr;
     }
-    else {	//焙煎中以外は現在温度のみ表示
-      displaySecondsOrMinutes();
+    else {
       setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
-      setDisplayTempValue(profileTemperatureDisplay, null);
-      setDisplayRoRValue(profileRoRDisplay, null);
-      setDisplayRoRValue(roastRoRDisplay, null);        
-      roastDTRDisplay.innerHTML = "--" + unit_dtr;
+      // displaySecondsOrMinutes();  // 測定終了後も表示を残す
+      // setDisplayTempValue(profileTemperatureDisplay, null);
+      // setDisplayRoRValue(profileRoRDisplay, null);
+      // setDisplayRoRValue(roastRoRDisplay, null);        
+      // roastDTRDisplay.innerHTML = "--" + unit_dtr;
     }
     
     if (isRoasting == true && data.time >= maxChartTime - 1) {
@@ -3659,25 +3685,31 @@ function overwriteTableWithLastRoast() {
  * PhaseManager.phases オブジェクトから値を抽出してプロファイルにコピー
  */
 function copyEventsToProfile() {
+    saveProfileDataToGlobal();
+
     // 1. オブジェクトのキー(DRY, FC1等)をループして、値がnullでないものを抽出
     const recordedEvents = [];
     
+    const profileData = getProfileDataFromTable();
     for (const key in PhaseManager.phases) {
         const time = PhaseManager.phases[key];
         
         // 値が null でない（時間が記録されている）場合
         if (time !== null && time !== 0) {
-            // プロファイルデータ(profileData)から、その時間の温度(y)を探す
-            const profileData = getProfileDataFromTable();
             const profilePoint = profileData.find(d => d.time === time);
+            const temp = profilePoint
+                ? profilePoint.temp
+                : getInterpolatedProfileTemp(profileData, time) ?? 0;
             
             recordedEvents.push({
                 time: time,
-                temp: profilePoint ? profilePoint.temp : 0,
+                temp: temp,
                 label: key // "DRY", "FC1" などのキー名をラベルにする
             });
         }
     }
+    mergeProfileEventsIntoTable(recordedEvents);
+
     // グローバル変数に格納してチャート描画で利用
     window.profileEvents = recordedEvents;
     roastChart.update(); 
@@ -3874,12 +3906,13 @@ function addRowByButton(){
   table.rows[table.rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function addRow(time = '', temp = '') {
+function addRow(time = '', temp = '', eventLabel = '') {
   const table = profileTable;
   const row = table.insertRow();
   const timeCell = row.insertCell(0);
   const tempCell = row.insertCell(1);
-  const deleteCell = row.insertCell(2);
+  const eventCell = row.insertCell(2);
+  const deleteCell = row.insertCell(3);
 
   const tempValue = (temp !== '' && !isNaN(parseFloat(temp)))
     ? formatTableTemperatureValue(parseFloat(temp))
@@ -3890,7 +3923,58 @@ function addRow(time = '', temp = '') {
 
   timeCell.innerHTML = `<input class="table_edit" type="text" value="${timeValue}" data-seconds="${timeSeconds !== '' ? timeSeconds : ''}" oninput="validateInput_time(this, 0, ${maxChartTime - 1})" onblur="formatTimeInputOnBlur(this)">`;
   tempCell.innerHTML = `<input class="table_edit" type="number" value="${tempValue}" min="0" max="${tempMax.toFixed(1)}" data-celsius="${!isNaN(parseFloat(temp)) ? parseFloat(temp) : ''}" oninput="validateInput_temperature(this, 0, ${tempMax.toFixed(1)}); onTemperatureCellInput(this)">`;
+  eventCell.textContent = eventLabel || '';
+  if (row.dataset) row.dataset.eventLabel = eventLabel || '';
   deleteCell.innerHTML = `<button class="table_edit" onclick="this.parentNode.parentNode.remove()">🗑</button>`;
+}
+
+function getProfileRowByTime(time) {
+  const normalizedTime = Number(time);
+  if (isNaN(normalizedTime)) return null;
+  return Array.from(profileTable.rows)
+    .slice(1)
+    .find(row => {
+      const input = row.cells[0]?.querySelector('input');
+      return input && getTimeInputSeconds(input) === normalizedTime;
+    }) || null;
+}
+
+function setProfileRowEventLabel(row, eventLabel = '') {
+  if (!row) return;
+  const eventCell = row.cells[2];
+  if (!eventCell) return;
+  eventCell.textContent = eventLabel || '';
+  if (row.dataset) row.dataset.eventLabel = eventLabel || '';
+}
+
+function ensureProfileRowWithEvent(time, eventLabel) {
+  const normalizedTime = Number(time);
+  if (isNaN(normalizedTime)) return null;
+
+  let row = getProfileRowByTime(normalizedTime);
+  if (!row) {
+    const profileData = getProfileDataFromTable();
+    const interpolatedTemp = getInterpolatedProfileTemp(profileData, normalizedTime);
+    addRow(normalizedTime, interpolatedTemp !== null ? interpolatedTemp : 0, eventLabel);
+    row = profileTable.rows[profileTable.rows.length - 1];
+  } else {
+    const existingEvent = row.cells[2]?.textContent?.trim() || '';
+    const mergedEvent = existingEvent && existingEvent !== eventLabel
+      ? `${existingEvent}, ${eventLabel}`
+      : eventLabel;
+    setProfileRowEventLabel(row, mergedEvent);
+  }
+  return row;
+}
+
+function mergeProfileEventsIntoTable(events) {
+  if (!events || events.length === 0) return;
+  saveProfileDataToGlobal();
+  events.forEach(ev => {
+    if (!ev || typeof ev.time !== 'number') return;
+    ensureProfileRowWithEvent(ev.time, ev.label || '');
+  });
+  sortTable();
 }
 
 function validateInput_temperature(input, min, max) {
@@ -3990,13 +4074,14 @@ function sortTable() {
   rows.forEach(row => {
     let time = getTimeInputSeconds(row.cells[0].firstChild);
     let temp = parseTableTemperatureValue(row.cells[1].firstChild.value);
+    const eventLabel = row.cells[2]?.textContent?.trim() || '';
     if (time < 0) time = 0;
     else if (time > maxChartTime - 1) time = maxChartTime - 1;
     if (temp < 0) temp = 0;
     else if (temp > maxTemperature) temp = maxTemperature;
     
     if (!isNaN(time) && !isNaN(temp)) {
-      latestEntries.set(time, { time, temp });
+      latestEntries.set(time, { time, temp, eventLabel });
     }
   });
 
@@ -4009,8 +4094,8 @@ function sortTable() {
   }
 
   // テーブル再描画（削除ボタン付き）
-  sorted.forEach(({ time, temp }) => {
-    addRow(time, temp);
+  sorted.forEach(({ time, temp, eventLabel }) => {
+    addRow(time, temp, eventLabel);
   });
 
   saveProfileDataToGlobal(); // グローバル変数に保存
@@ -4085,10 +4170,10 @@ function applyOffsetsToTable() {
 const ROAST_PHASES = {
     DRY:   { name: 'DRY START',   color: '#d4d4d4' },
     DE:    { name: 'DRY END',   color: '#d4d4d4' },
-    FC:    { name: 'FC START',  color: '#f1c40f' },
-    FE:    { name: 'FC END',  color: '#f1c40f' },
-    SC:    { name: 'SC START',  color: '#e67e22' },
-    SE:    { name: 'SC END',  color: '#e67e22' },
+    FCS:    { name: 'FC START',  color: '#f1c40f' },
+    FCE:    { name: 'FC END',  color: '#f1c40f' },
+    SCS:    { name: 'SC START',  color: '#e67e22' },
+    SCE:    { name: 'SC END',  color: '#e67e22' },
     DROP:  { name: 'DROP',   color: '#a04000' }
 };
 
@@ -4194,11 +4279,9 @@ const PhaseManager = {
             this.notify();
         }
     },
-
-    // DTR計算も order を使うから DE とか FC の文字列を直接書かなくて済む
     getDTR(currentTime) {
         const de = this.phases.DE;
-        const fc = this.phases.FC;
+        const fc = this.phases.FCS;
         const drop = this.phases.DROP || currentTime;
         if (de === null || fc === null || drop <= fc) return null;
         return (((drop - fc) / (drop - de)) * 100).toFixed(1);
@@ -4564,7 +4647,7 @@ function handleGuideProfileDragMove(e) {
 
 // 5. チャートの値をテーブルのinputに書き戻す関数
 function syncChartToTable(index, time, temp) {
-    const table =profileTable;
+    const table = profileTable;
     const rows = table.getElementsByTagName('tr');
     // ヘッダー(i=0)があるので、index + 1 行目のセルを狙い撃ち
     const row = rows[index + 1];
@@ -4573,7 +4656,10 @@ function syncChartToTable(index, time, temp) {
         const timeInput = cells[0].querySelector('input');
         const tempInput = cells[1].querySelector('input');
         if (timeInput) setTimeInputValue(timeInput, Math.round(time));
-        if (tempInput) tempInput.value = temp.toFixed(1);
+        if (tempInput) {
+            tempInput.value = formatTableTemperatureValue(temp);
+            if (tempInput.dataset) tempInput.dataset.celsius = temp;
+        }
     }
 }
 
@@ -5522,14 +5608,16 @@ function copyProfileChartToCompare(chart = roastChart) {
     const btn = document.getElementById('button-copy-profile');
     if (!chart) return;
     // 比較用データセットのインデックスを探す
-    const compareIndex = chart.data.datasets.findIndex(ds => ds.label === '比較用プロファイル');
+    const compareProfileLabel = t('CHART_DATASET_COMPARE_PROFILE');
+    const compareIndex = chart.data.datasets.findIndex(ds => ds.label === compareProfileLabel || ds.label === '比較用プロファイル');
 
     if (!isCompareProfileShown && compareIndex === -1) {
         // 追加
         const profileData = getProfileDataFromTable();
         if (!profileData || profileData.length === 0) return;
         chart.data.datasets.push({
-            label: '比較用プロファイル',
+            label: compareProfileLabel,
+            compareProfile: true,
             data: profileData.map(p => ({ x: p.time, y: p.temp })),
             borderColor: 'rgba(52, 181, 89, 0.7)',
             backgroundColor: 'rgba(0, 104, 61, 0.04)',
