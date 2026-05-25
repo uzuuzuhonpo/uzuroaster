@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UZU ROASTER CONTROLLER | うずロースターコントローラー（URC）</title>
+  <title>UZU ROASTER CONTROLLER (URC)</title>
   <meta name="description" content="UZU ROASTER(うずロースター)専用のWeb制御システム。リアルタイムの焙煎グラフ描画、プロファイル管理、USBシリアル接続およびWiFi接続に対応。ブラウザだけで本格的な焙煎ログを実現。">
   <meta name="keywords" content="UZU ROASTER, うずロースター, URC, 焙煎管理, 焙煎ログ, Web Serial API, コーヒーロースター, 自作焙煎, コーヒー焙煎ソフト, スマートフォン">
 
@@ -209,6 +209,16 @@
     .button-debug:active {
       filter: brightness(0.8) saturate(1.2); /* 明るさを落として、彩度を少し上げる */
       transform: scale(0.98); 
+    }
+    #fsBtn {
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.0); /* 通常時の影 */
+      transition: all 1.0s;
+    }
+
+    /* 凹んだ状態のスタイル */
+    .active {
+      box-shadow: inset 0px 0px 100px rgba(0,0,0,0.35); /* 内側に影（凹み） */
+      transition: all 1.0s;
     }
 
     /* ========================================
@@ -781,7 +791,7 @@
       font-size: 100%;
       max-width: 100%;
       height: 100%;
-      padding: 0px 5px;
+      padding: 0px 2px;
       border: 1px solid transparent;
       text-align: center;
       background-color: transparent;
@@ -1183,7 +1193,7 @@
       th, td {
         padding: 4px 8px;
         font-size: 14px;
-        max-width: 100px;
+        max-width: 150px;
       }
 
       .display-value {
@@ -1253,16 +1263,12 @@
 <symbol id="icon-usb" viewBox="0 0 24 24">
     <line x1="11" y1="21" x2="11" y2="14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     <line x1="3" y1="14" x2="19" y2="14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-    
     <line x1="3" y1="14" x2="3" y2="8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     <rect x="0.5" y="4.5" width="5" height="5" rx="1" fill="currentColor" stroke="none"/>
-    
     <line x1="11" y1="14" x2="11" y2="7.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     <polygon points="11,1 7,7.5 15,7.5" fill="currentColor" stroke="none"/>
-    
     <line x1="19" y1="14" x2="19" y2="8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     <circle cx="19" cy="5" r="2.8" fill="currentColor" stroke="none"/>
-    
     <rect x="7.5" y="19" width="7" height="4" rx="2" fill="currentColor" stroke="none"/>
 </symbol>
 
@@ -1413,28 +1419,54 @@
      ======================================== -->
 <div id="debug_console">
   <div id="draggable-zone" data-i18n="DEBUG_MODE_LABEL">SYSTEM DEBUG MODE</div>
-  <div style="padding:15px;">
-    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:12px;">
+  <div style="padding:10px;">
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:8px;">
+      <button class="button-debug" onclick="CloseOffsetDialogBox()" style="flex:0.2; margin-right: auto; background:#800; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:0.8em;">✖</button>
+      <div style="flex:0.5;"></div>
       <label for="language-select" style="color:#fff; font-size:0.75em; white-space:nowrap;" data-i18n="LANGUAGE_LABEL">言語</label>
-      <select id="language-select" style="background:#111; color:#fff; border:1px solid #444; border-radius:4px; padding:4px 6px; font-size:0.8em;">
+      <select id="language-select" style="background:#111; color:#fff; border-radius:4px; padding:2px 6px; font-size:0.8em;">
         <option value="ja">日本語</option>
         <option value="en">English</option>
       </select>
     </div>
-    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:12px;">
+    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
+      <button class="button-debug" onclick="changeColorMode(1)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C1</button>
+      <button class="button-debug" onclick="changeColorMode(2)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C2</button>
+      <button class="button-debug" onclick="changeColorMode(3)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C3</button>
+      <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C4</button>
+      <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C5</button>
+      <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C6</button>
+      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C7</button>
+      <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span id="maxTempLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Temperature(℃):</span>
+      <input type="number" id="maxTempInput" min="200" max="999" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveMaxTemp" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span id="maxRorLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror(℃/min):</span>
+      <input type="number" id="MaxRorInput" min="20" max="200" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveMaxRor" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
+      <input type="number" id="rorWindowInput" min="1" max="100" 
+          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
+      <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
+    </div>
+    <div style="margin-bottom: 8px; border-bottom:1px solid #555; padding-top:12px;"></div>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:12px;">
       <button class="button-debug" onclick="OffsetIncrement(0.1)" style="background:#333; color:#ff8888; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+0.1</button>
       <button class="button-debug" onclick="OffsetIncrement(1)" style="background:#333; color:#ff6666; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+1</button>
       <button class="button-debug" onclick="OffsetIncrement(10)" style="background:#333; color:#ff4444; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">+10</button>
+      <button class="button-debug" onclick="OffsetReset()" style="flex:2; background:#444; color:#fff; border:1px solid #666; padding:1px; border-radius:4px; cursor:pointer; font-size:0.7em;">RESET</button>
       <button class="button-debug" onclick="OffsetIncrement(-0.1)" style="background:#333; color:#88ff88; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-0.1</button>
       <button class="button-debug" onclick="OffsetIncrement(-1)" style="background:#333; color:#66ff66; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-1</button>
       <button class="button-debug" onclick="OffsetIncrement(-10)" style="background:#333; color:#44ff44; border:1px solid #555; padding:5px 0; border-radius:4px; cursor:pointer;">-10</button>
     </div>
-
-    <div style="display:flex; gap:8px; margin-bottom:15px;">
-      <button class="button-debug" onclick="OffsetReset()" style="flex:2; background:#444; color:#fff; border:1px solid #666; padding:6px; border-radius:4px; cursor:pointer; font-size:0.8em;">RESET</button>
-      <button class="button-debug" onclick="CloseOffsetDialogBox()" style="flex:1; background:#800; color:#fff; border:none; padding:6px; border-radius:4px; cursor:pointer; font-size:0.8em;">✖</button>
-    </div>
-
     <div style="background:#000; border:1px solid #444; border-radius:4px; padding:5px; display:flex; align-items:center; gap:5px;">
       <span style="color:#ff4444; font-size:0.8em;">&gt;</span>
       <input type="text" id="cmdInput" placeholder="COMMAND..." style="width: 100%; background:transparent; border:none; color:#0f0; outline:none; font-size:0.85em; font-family:monospace;" onkeydown="if(event.key==='Enter') sendDebugCommand()">
@@ -1444,35 +1476,7 @@
       <button onclick="enableReceiveMessageTextBox()" class="button-debug" style="width: 100%; background:#222; color:#aaa ; border:1px solid #444; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">RECEIVE MESSAGES</button>
       <textarea id="receivemessagearea" rows="20" onClick="" style="width: 100%; background:transparent; border:none; color:#0f0; outline:none; font-size:0.85em; font-family:monospace; display:none;"></textarea>
     </div>
-    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
-      <button class="button-debug" onclick="changeColorMode(1)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M1</button>
-      <button class="button-debug" onclick="changeColorMode(2)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M2</button>
-      <button class="button-debug" onclick="changeColorMode(3)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M3</button>
-      <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M4</button>
-      <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">M5</button>
-      <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">M6</button>
-      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">M7</button>
-      <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
-    </div>
-    <div style="display:flex; gap:5px; align-items:center;">
-      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Temperature(℃):</span>
-      <input type="number" id="maxTempInput" min="200" max="999" 
-          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
-      <button id="saveMaxTemp" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
-    </div>
-    <div style="display:flex; gap:5px; align-items:center;">
-      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror(℃/min):</span>
-      <input type="number" id="MaxRorInput" min="20" max="200" 
-          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
-      <button id="saveMaxRor" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
-    </div>
-    <div style="display:flex; gap:5px; align-items:center;">
-      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
-      <input type="number" id="rorWindowInput" min="1" max="100" 
-          style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
-      <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; padding:2px 8px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
-    </div>
-  <div id="google_translate_element"></div>
+    <div style="margin-bottom: 10px; border-bottom:1px solid #555; padding-top:12px;"></div>
   </div>
 </div>
 
@@ -1495,20 +1499,6 @@
         display: none !important;
     }
     </style>
-
-    <!-- Google翻訳バー(ネット環境ないと重いのでコメントアウト中)
-    <script type="text/javascript">
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-          pageLanguage: 'ja',
-          includedLanguages: 'ja,en,zh-CN,zh-TW,de,fr,es,it,pt,ru,ko', 
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-          autoDisplay: false
-        }, 'google_translate_element');
-      }    
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    -->
 
 <!-- ========================================
      ヘッダーセクション
@@ -1535,13 +1525,14 @@
         <svg width="24" height="24" style="display:block;"><use href="#icon-manual"/></svg>
     </button>
 
-    <button class="button" title="" data-i18n-title="TOOLTIP_SETTINGS" onclick="configButtonCommand()">
+    <button id="config-button" class="button" title="" data-i18n-title="TOOLTIP_SETTINGS" onclick="configButtonCommand()">
         <svg width="24" height="24" style="display:block;"><use href="#icon-config"/></svg>
     </button>
 
     <button class="button" title="" data-i18n-title="TOOLTIP_WEB" onclick="WebButtonCommand()">
         <svg width="24" height="24" style="display:block;"><use href="#icon-web"/></svg>
     </button>
+    <button  class="button" title="" id="fsBtn" data-i18n-title="TOOLTIP_FULL_SCREEN" onclick="toggleFS()"><span style="color:rgba(255,255,255, 1); font-size:24px;font-weight: bold; transform: translateY(-2.4px);">⛶</span></button>
     <button class="button button-danger" title="" data-i18n-title="TOOLTIP_RESET" onclick="ResetButtonCommand()"><span style="color:rgba(255,255,255, 1); font-weight: bold;">💀</span></button>
     <button id="auth-btn" class="button" title="" data-i18n-title="TOOLTIP_CLOUD_LOGIN" onclick="toggleAuth()" style="background:#1a3a2a;">☁️LOGIN</button>
   </div>
@@ -1600,7 +1591,7 @@
      ======================================== -->
 <div class="table-controls">
 <div class="button-container" style="border-radius: 5px;">
-  <span class="profile_manupilation_title" data-i18n="PROFILE_MANIPULATION_TITLE">プロファイル操作</span>
+  <span class="profile_manupilation_title" data-i18n="PROFILE_MANIPULATION_TITLE">プロファイル</span>
   <button type="button" class="button table_edit" title="" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
   <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
   <button onclick="openJSONSaveModal()" class="button table_edit" title="" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
@@ -1622,9 +1613,6 @@
     <div class="button-container">
       <button class="button button-header button-success" style="border-radius: 20px 0px 0px 20px;" onclick="sendStartCommand()" id="start-button" title="" data-i18n-title="TOOLTIP_ROAST_START">▶</button>
       <button class="button button-header button-danger" style="border-radius: 0px 20px 20px 0px;" onclick="sendStopCommand()" id="stop-button" title="" data-i18n-title="TOOLTIP_ROAST_STOP">■</button>
-      <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
-      <path d="M12 2v20a10 10 0 0 0 0-20" fill="currentColor" />
-      </svg>
       </button>
     </div>
   </div>
@@ -1666,7 +1654,7 @@
         </div>
         <div class="table-edit-buttons">
           <button id="guide-move-toggle-btn" class="button table_edit" style="background: #888; color: white; border: 2px solid transparent; display: none;" onclick="toggleGuideMoveMode()" data-i18n="BUTTON_GUIDE_MOVE">📐 移動</button>
-          <button id="align-button" class="button" onclick="sendCurrentProfile();" title="" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
+          <button id="align-button" class="button" onclick="applyCurrentProfile();" title="" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
           <button class="button table_edit" onclick="addRowByButton();" title="" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
           <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = profileTable; while (t.rows.length > 1) {t.deleteRow(1); }" title="" data-i18n-title="TOOLTIP_DELETE_ALL" data-i18n="BUTTON_DELETE_ALL">🗑 全削除</button>
         </div>
@@ -1743,17 +1731,21 @@
     const draggableElement = debugConsole;
     const dragHandle = debugDraggableHandle;
     document.getElementById('rorWindowInput').value = rorWindowSize;
-    document.getElementById('maxTempInput').value = maxTemperature;
-    document.getElementById('MaxRorInput').value = MaxRor;
+    refreshDebugConsoleSettings();
     document.getElementById('saveMaxTemp').addEventListener('click', () => {
-            let newVal = parseInt(document.getElementById('maxTempInput').value);
-            if (isNaN(newVal) || newVal < 200) {
+            let rawVal = parseFloat(document.getElementById('maxTempInput').value);
+            if (isNaN(rawVal)) {
+                rawVal = isFahrenheit ? celsiusToFahrenheit(200) : 200;
+            }
+            let newVal = isFahrenheit ? fahrenheitToCelsius(rawVal) : rawVal;
+            newVal = Math.round(newVal);
+            if (newVal < 200) {
                 newVal = 200;
             } else if (newVal > 999) {
                 newVal = 999;
             }
             maxTemperature = newVal;
-            document.getElementById('maxTempInput').value = maxTemperature;
+            document.getElementById('maxTempInput').value = formatDebugInputTemp(maxTemperature);
             localStorage.setItem(MAX_TEMP_KEY, maxTemperature);
             roastChart.options.scales.y.max = maxTemperature;
             roastChart.update();
@@ -1773,14 +1765,19 @@
             // initChart();
         });
     document.getElementById('saveMaxRor').addEventListener('click', () => {
-            let newVal = parseInt(document.getElementById('MaxRorInput').value);
-            if (isNaN(newVal) || newVal < 20) {
+            let rawVal = parseFloat(document.getElementById('MaxRorInput').value);
+            if (isNaN(rawVal)) {
+                rawVal = isFahrenheit ? 20 * 9 / 5 : 20;
+            }
+            let newVal = isFahrenheit ? rawVal * 5 / 9 : rawVal;
+            newVal = Math.round(newVal);
+            if (newVal < 20) {
                 newVal = 20;
             } else if (newVal > 200) {
                 newVal = 200;
             }
             MaxRor = newVal;
-            document.getElementById('MaxRorInput').value = MaxRor;
+            document.getElementById('MaxRorInput').value = formatDebugInputRoR(MaxRor);
             localStorage.setItem(MAX_ROR_KEY, MaxRor);
             roastChart.options.scales.y1.max = MaxRor;
             roastChart.update();
@@ -1878,11 +1875,13 @@ const i18n = {
     TOOLTIP_RECONNECT: ['クリックで再接続', 'Click to reconnect'],
     TOOLTIP_RELOAD: ['再読み込み', 'Reload'],
     TOOLTIP_USB_CONNECT: ['USB接続', 'USB connect'],
+    TOOLTIP_USB_DISCONNECT: ['USB切断', 'USB disconnect'],
     TOOLTIP_INFO: ['UZU ROASTER情報', 'UZU ROASTER info'],
     TOOLTIP_MANUAL: ['取扱説明書', 'Manual'],
     TOOLTIP_SETTINGS: ['設定', 'Settings'],
     TOOLTIP_WEB: ['うずうず珈琲焙煎工房公式Web', 'UZU Roaster official Web'],
     TOOLTIP_RESET: ['機器リセット', 'Reset device'],
+    TOOLTIP_FULL_SCREEN: ['全画面表示切替', 'Toggle full screen'],
     TOOLTIP_CLOUD_LOGIN: ['クラウドログイン', 'Cloud login'],
     CLOUD_LOGIN_LABEL: ['☁️LOGIN', '☁️LOGIN'],
     CLOUD_LOGIN_DISABLED_HINT: ['クラウド機能にはインターネット接続が必要です', 'Cloud features require an internet connection'],
@@ -1900,12 +1899,12 @@ const i18n = {
     DISPLAY_LABEL_DTR: ['DTR', 'DTR'],
     DISPLAY_LABEL_SCORE: ['評価', 'Score'],
     ROAST_MESSAGE_WAITING: ['焙煎待機中', 'Ready to roast'],
-    PROFILE_MANIPULATION_TITLE: ['プロファイル操作', 'Profile actions'],
+    PROFILE_MANIPULATION_TITLE: ['プロファイル', 'Profile'],
     BUTTON_LOAD: ['読込', 'Load'],
     BUTTON_SAVE: ['保存', 'Save'],
     BUTTON_COPY_FROM_ROAST: ['焙煎データ⇒', 'Roast data⇒'],
-    BUTTON_COMPARE_PROFILE_SHOW: ['比較プロファイル表示', 'Show compare profile'],
-    BUTTON_COMPARE_PROFILE_HIDE: ['比較プロファイル解除', 'Hide compare profile'],
+    BUTTON_COMPARE_PROFILE_SHOW: ['比較表示', 'Show comparison'],
+    BUTTON_COMPARE_PROFILE_HIDE: ['比較非表示', 'Hide comparison'],
     BUTTON_STANDARD_CURVE: ['標準カーブ', 'Standard curve'],
     TABLE_TITLE: ['焙煎プロファイル', 'Roast profile'],
     TABLE_HEADER_TIME_SEC: ['時間 [秒]', 'Time [sec]'],
@@ -1973,7 +1972,11 @@ const i18n = {
     CLOUD_PROFILE_SORT_OLDEST: ['🕐 古い順', '🕐 Oldest'],
     CLOUD_PROFILE_REFRESH: ['🔄 更新', '🔄 Refresh'],
     CLOUD_PROFILE_SEARCH_PLACEHOLDER: ['🔍 タイトル・コメントで検索...', '🔍 Search by title or comment...'],
-    DEBUG_MODE_LABEL: ['SYSTEM DEBUG MODE', 'SYSTEM DEBUG MODE'],
+    DEBUG_MODE_LABEL: ['SETTINGS', 'SETTINGS'],
+    UNIT_ROR_PER: ['/分', '/min'],
+    UNIT_SEC: ['[秒]', '[sec]'],
+    UNIT_MIN: ['[分]', '[min]'],
+    QUOTE_END: ['」', '"'],
     CLOUD_PROFILE_LIST_HINT: ['「更新」を押してクラウドのプロファイルを取得', 'Press refresh to load cloud profiles'],
     CLOUD_PROFILE_LOAD_MORE: ['もっと見る', 'Load more'],
     CLOUD_PROFILE_SUFFIX_UNTITLED: ['無題', 'Untitled'],
@@ -2027,7 +2030,7 @@ function t(key, fallback = '') {
 }
 
 function updateUnitLabels() {
-  document.querySelectorAll('.unit_sec').forEach(el => el.textContent = currentLanguage === 'en' ? '[sec]' : '[秒]');
+  document.querySelectorAll('.unit_sec').forEach(el => el.textContent = t('UNIT_SEC'));
   document.querySelectorAll('.unit_temp').forEach(el => el.textContent = getUnitTempLabel());
   document.querySelectorAll('.unit_ror').forEach(el => el.textContent = getUnitRoRLabel());
   document.querySelectorAll('.unit_dtr').forEach(el => el.textContent = '[%]');
@@ -2037,14 +2040,14 @@ function updateUnitLabels() {
 
 function getTimeAxisUnitLabel() {
   if (isMinutesSecondsFormat) {
-    return currentLanguage === 'en' ? '[min]' : '[分]';
+    return t('UNIT_MIN');
   }
-  return currentLanguage === 'en' ? '[sec]' : '[秒]';
+  return t('UNIT_SEC');
 }
 
 function updateChartTexts() {
   if (!roastChart) return;
-  if (roastChart.options?.scales?.x?.title) {
+    if (roastChart.options?.scales?.x?.title) {
     roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
   }
   if (roastChart.options?.scales?.y?.title) {
@@ -2198,7 +2201,57 @@ function getUnitTempLabel() {
 }
 
 function getUnitRoRLabel() {
-  return isFahrenheit ? '[℉/分]' : '[℃/分]';
+  const per = t('UNIT_ROR_PER', '/分');
+  return isFahrenheit ? `[℉${per}]` : `[℃${per}]`;
+}
+
+function getDebugTempInputLimits() {
+  return {
+    min: isFahrenheit ? celsiusToFahrenheit(200) : 200,
+    max: isFahrenheit ? celsiusToFahrenheit(999) : 999,
+  };
+}
+
+function getDebugRoRInputLimits() {
+  return {
+    min: isFahrenheit ? 20 * 9 / 5 : 20,
+    max: isFahrenheit ? 200 * 9 / 5 : 200,
+  };
+}
+
+function formatDebugInputTemp(celsiusValue) {
+  const displayValue = isFahrenheit ? celsiusToFahrenheit(celsiusValue) : celsiusValue;
+  return Number.isFinite(displayValue) ? Math.round(displayValue) : '';
+}
+
+function formatDebugInputRoR(celsiusRoRValue) {
+  const displayValue = isFahrenheit ? celsiusRoRValue * 9 / 5 : celsiusRoRValue;
+  return Number.isFinite(displayValue) ? Math.round(displayValue) : '';
+}
+
+function refreshDebugConsoleSettings() {
+  const maxTempLabel = document.getElementById('maxTempLabel');
+  if (maxTempLabel) {
+    maxTempLabel.textContent = `Max Temperature(${getUnitTempLabel()}):`;
+  }
+  const maxRorLabel = document.getElementById('maxRorLabel');
+  if (maxRorLabel) {
+    maxRorLabel.textContent = `Max Ror(${getUnitRoRLabel()}):`;
+  }
+  const maxTempInput = document.getElementById('maxTempInput');
+  if (maxTempInput) {
+    const limits = getDebugTempInputLimits();
+    maxTempInput.min = Math.round(limits.min);
+    maxTempInput.max = Math.round(limits.max);
+    maxTempInput.value = formatDebugInputTemp(maxTemperature);
+  }
+  const maxRorInput = document.getElementById('MaxRorInput');
+  if (maxRorInput) {
+    const limits = getDebugRoRInputLimits();
+    maxRorInput.min = Math.round(limits.min);
+    maxRorInput.max = Math.round(limits.max);
+    maxRorInput.value = formatDebugInputRoR(MaxRor);
+  }
 }
 
 function toDisplayTemp(value) {
@@ -2344,6 +2397,7 @@ function updateChartUnitLabels() {
 
 function updateTemperatureUnitDisplay() {
   updateTemperatureUnitLabels();
+  refreshDebugConsoleSettings();
   if (profileTable) refreshProfileTableTemperatureDisplays();
   if (roastChart) {
     updateChartUnitLabels();
@@ -2359,7 +2413,7 @@ function toggleTemperatureUnit() {
   updateTemperatureUnitDisplay();
 }
 
-const UzuRoasterControllerVersionStr = "1.2.0";
+const UzuRoasterControllerVersionStr = "1.3.0";
 let roastChart = null;
 const PROFILE_TEMP = 0;
 const CURRENT_TEMP = 1;
@@ -2563,6 +2617,32 @@ function animateToElement(element) {
     });
 }
 
+function toggleFS() {
+  const btn = document.getElementById('fsBtn');
+  
+  if (!document.fullscreenElement) {
+    // フルスクリーンにする
+    document.documentElement.requestFullscreen().then(() => {
+      btn.classList.add('active'); // 凹ませる
+    }).catch(err => {
+      console.log(`エラー: ${err.message}`);
+    });
+  } else {
+    // フルスクリーンを解除する
+    document.exitFullscreen().then(() => {
+      btn.classList.remove('active'); // 凹みを戻す
+    });
+  }
+}
+
+// Escキーなどで戻った時も、ボタンの凹みを戻す「ぬかりない」設定
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fsBtn');
+  if (!document.fullscreenElement) {
+    btn.classList.remove('active');
+  }
+});
+
 ////////////////////////////////////////////////////////////////
 // グラフの高さをビューポートに合わせて調整
 ////////////////////////////////////////////////////////////////
@@ -2632,57 +2712,159 @@ function connectionSelect(){
 
 let USBPort = null;
 let USBWriter = null;
+let USBReader = null;
+let USBReadLoopActive = false;
+
+function updateUSBButtonState(isConnected) {
+  if (!usbButton) return;
+  usbButton.disabled = false;
+  usbButton.title = isConnected ? t('TOOLTIP_USB_DISCONNECT') : t('TOOLTIP_USB_CONNECT');
+  usbButton.style.background = isConnected ? 'rgba(95, 75, 78, 1)' : '';
+  usbButton.style.color = isConnected ? '#ffffff' : '';
+}
+
+async function disconnectUSB() {
+  // ループを停止
+  USBReadLoopActive = false;
+  
+  // リーダーをクローズ
+  if (USBReader) {
+    try {
+      USBReader.releaseLock();
+    } catch (e) {
+      console.warn('USBReader releaseLock failed', e);
+    }
+    USBReader = null;
+  }
+
+  // ライターをクローズ
+  if (USBWriter) {
+    try {
+      await USBWriter.close();
+    } catch (e) {
+      console.warn('USBWriter close failed', e);
+    }
+    USBWriter = null;
+  }
+
+  // ポートをクローズ
+  if (USBPort) {
+    try {
+      await USBPort.close();
+    } catch (e) {
+      console.warn('USBPort close failed', e);
+    }
+    USBPort = null;
+  }
+  
+  await new Promise(r => setTimeout(r, 200)); // ポート削放を待つ
+  updateConnectionStatus(false);
+  updateUSBButtonState(false);
+}
+
+async function connectUSB() {
+  if (!navigator.serial) {
+    alert('このブラウザはWeb Serialをサポートしていません。');
+    return;
+  }
+
+  // 前の接続が残っていれば切断
+  if (USBPort) {
+    await disconnectUSB();
+  }
+
+  try {
+    USBPort = await navigator.serial.requestPort();
+    await USBPort.open({ baudRate: 115200 });
+  } catch (error) {
+    console.error('ポートオープンエラー:', error);
+    USBPort = null;
+    throw error;
+  }
+
+  // ライターを取得
+  USBWriter = USBPort.writable.getWriter();
+  
+  // コマンド送信
+  const encoder = new TextEncoder();
+  await USBWriter.write(encoder.encode('usbserial on\n'));
+
+  // リーダーを取得（pipeTo不使用）
+  USBReader = USBPort.readable.getReader();
+
+  updateConnectionStatus(true);
+  updateUSBButtonState(true);
+
+  // 読み込みループを実行
+  USBReadLoopActive = true;
+  
+  (async () => {
+    const decoder = new TextDecoder();
+    let buffer = '';
+    try {
+      while (USBReadLoopActive && USBReader) {
+        const { value, done } = await USBReader.read();
+        if (done || !USBReadLoopActive) break;
+        
+        // テキストにデコード
+        const text = decoder.decode(value, { stream: true });
+        const debugArea = receiveMessageArea;
+        debugArea.value = (debugArea.value + text).slice(-5000);
+        buffer += text;
+        
+        if (buffer.includes('\n')) {
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          lines.forEach(line => {
+            if (line.includes('{') && line.includes('}')) {
+              updateFromPython(line);
+            } else {
+              console.log('USB受信:', line);
+            }
+          });
+        }
+      }
+    } catch (error) {
+      if (USBReadLoopActive) {
+        console.error('USB受信ループエラー:', error);
+      }
+    } finally {
+      USBReadLoopActive = false;
+    }
+  })();
+}
+
 function USBInitialize(){
   const connectBtn = usbButton;
   connectBtn.addEventListener('click', async () => {
-      connectBtn.disabled = true; // 連打防止
+      connectBtn.disabled = true;
       try {
-          // 1. ポートを選択して開く
-          USBPort = await navigator.serial.requestPort();
-          await USBPort.open({ baudRate: 115200 }); // ESP32のSerial.beginと同じ速度
-          const encoder = new TextEncoderStream();
-          const writableStreamClosed = encoder.readable.pipeTo(USBPort.writable);
-          USBWriter = encoder.writable.getWriter();
-          USBWrite("usbserial on\n");
-          // 2. 読み取りストリームの準備
-          const textDecoder = new TextDecoderStream();
-          const readableStreamClosed = USBPort.readable.pipeTo(textDecoder.writable);
-          const reader = textDecoder.readable.getReader();
-          let buffer = "";
-          // 3. 受信ループ
-          while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-              const debugArea = receiveMessageArea;
-              debugArea.value = (debugArea.value + value).slice(-5000);
-              buffer += value;
-              // 改行コードが来たら1行分として処理
-              if (buffer.includes('\n')) {
-                  const lines = buffer.split('\n');
-                  buffer = lines.pop(); // 最後の未完了行をバッファに戻す
-                  lines.forEach(line => {
-                    if (line.includes('{') && line.includes('}')) {
-                      updateFromPython(line); // Pythonからじゃないけど...
-                    }
-                    else {
-                      console.log("USB受信:", line);
-                    }
-                  });
-              }
+          if (USBPort) {
+              await disconnectUSB();
+          } else {
+              await connectUSB();
           }
       } catch (error) {
-          console.error("USBエラー:", error);
+          console.error('USB接続切断エラー:', error);
           alert(t('ALERT_USB_SERIAL_FAILED'));
-          connectBtn.disabled = false; // 再度クリック可能に
-          USBPort = null;
           updateConnectionStatus(false);
+          updateUSBButtonState(false);
+          // 強制リセット
+          USBPort = null;
+          USBWriter = null;
+          USBReader = null;
+          USBReadLoopActive = false;
+      } finally {
+          connectBtn.disabled = false;
       }
   });
+  updateUSBButtonState(false);
 }
 
 function USBWrite(text) {
-  if (USBWriter) {  
-      USBWriter.write(text);
+  if (USBWriter) {
+      const encoder = new TextEncoder();
+      USBWriter.write(encoder.encode(text));
   }
 }
 
@@ -3007,7 +3189,9 @@ function enableReceiveMessageTextBox(){
 
 function CloseOffsetDialogBox(){
   debugConsole.style.display = "none";
+  document.getElementById('config-button').classList.remove('active');
 }
+
 function sendDebugCommand() {
     const input = document.getElementById('cmdInput');
     const text = input.value.trim(); // 前後の空白を消す
@@ -3285,9 +3469,12 @@ function configButtonCommand() {
   const id = debugConsole;
   if (window.getComputedStyle(id).display === "none") {
     id.style.display = "block";
+    document.getElementById('config-button').classList.add('active');
+
   } 
   else {
     id.style.display = "none";
+    document.getElementById('config-button').classList.remove('active');
   }
 }
 
@@ -3512,21 +3699,21 @@ function ShowChartIndicators() {
 const UZU_PRESETS = {
   light: {
     "type": "roast_profile",
-    "title": "Lao's Light (浅煎り)",
-    "memo": "スコット・ラオ理論準拠。10分で210℃着地。酸味と香りを最大化します。",
-    "profile": [ /* 5秒刻みデータ（略式記載、実際はロジックで生成） */ ]
+    "title": "Rao's Light", 
+    "memo": "Based on Scott Rao's roasting theory. Reaches 210°C in 10 minutes to maximize acidity and aroma.",
+    "profile": [  ]
   },
   medium: {
     "type": "roast_profile",
-    "title": "Standard Medium (中煎り)",
-    "memo": "12分で225℃着地。甘みと苦みのバランスが良い黄金比プロファイルです。",
-    "profile": [ /* さっきの真・黄金比データ */ ]
+    "title": "Standard Medium",
+    "memo": "Reaches 225°C in 12 minutes. A golden ratio profile with a perfect balance of sweetness and bitterness.",
+    "profile": [ ]
   },
   dark: {
     "type": "roast_profile",
-    "title": "Deep & Rich (深煎り)",
-    "memo": "15分かけて240℃へ。後半のRoRを落とし、芯までじっくり火を通します。",
-    "profile": [ /* 5秒刻みの徐冷データ */ ]
+    "title": "Deep & Rich",
+    "memo": "Reaches 240°C over 15 minutes. Lowers the RoR in the second half to thoroughly roast deep into the core.",
+    "profile": [ ]
   }
 };
 
@@ -3546,8 +3733,9 @@ function applyPreset(key) {
     // データポイントは{x: time, y: temp}形式
     addRow(point.time, point.temp);
   });
+
   console.log("ガイドプロファイルでテーブルを上書きしました", selectedData.profile.length + "ポイント");
-  sendCurrentProfile();
+  applyCurrentProfile();
   closeProfModal();
 }
 
@@ -3566,7 +3754,7 @@ function generateCurveData(type) {
   return curve;
 }
 
-function sendCurrentProfile() {
+function applyCurrentProfile() {
   clearModifiedHighlights();
 
   sortTable();
@@ -3625,6 +3813,16 @@ if (document.readyState === 'loading') {
 // ======================================
 function applyAndConfirmGuideOffsets(offsetX, offsetY) {
     const table = profileTable;
+  // 現在のテーブルにあるイベントを取得して、オフセット分だけ時間/温度を移動させて保持
+  const prevEvents = getProfileEventsFromTable(false).map(ev => ({
+        time: (typeof ev.time === 'number') ? Math.round(ev.time + offsetX) : ev.time,
+        temp: (typeof ev.temp === 'number') ? parseFloat((ev.temp + offsetY).toFixed(1)) : ev.temp,
+        label: ev.label
+    })).filter(ev => typeof ev.time === 'number');
+        
+  // 範囲外のイベントは削除する
+  const validPrevEvents = prevEvents.filter(ev => ev.time >= 0 && ev.time < maxChartTime);
+
     const currentData = [];
     
     // テーブルから現在のデータを取得
@@ -3657,6 +3855,12 @@ function applyAndConfirmGuideOffsets(offsetX, offsetY) {
         addRow(newTime, newTemp);
     });
     
+    // 以前のイベントがあれば、オフセット済みの時刻でテーブルへマージ
+    if (validPrevEvents && validPrevEvents.length > 0) {
+      mergeProfileEventsIntoTable(validPrevEvents);
+      copyEventsToProfile();
+    }
+
     sortTable();
     
     // オフセット入力をリセット
@@ -3671,48 +3875,87 @@ function overwriteTableWithLastRoast() {
   }
   const realTimeData = roastChart.data.datasets[CURRENT_TEMP].data;
   const table = profileTable;
+
   while (table.rows.length > 1) {
     table.deleteRow(1);
   }
   realTimeData.forEach(point => {
     addRow(point.x, point.y);
   });
-  sendCurrentProfile();
+
+  // 焙煎データのイベント（PhaseManager.phases）を抽出してプロファイルにコピー
+  // DRYは除外、DE以降のイベントのみ
+  const roastEvents = [];
+  Object.keys(PhaseManager.phases).forEach(key => {
+    if (key === 'DRY') return; // DRYはスキップ
+    const phaseTime = PhaseManager.phases[key];
+    if (phaseTime !== null && typeof phaseTime === 'number') {
+      roastEvents.push({
+        time: phaseTime,
+        label: key
+      });
+    }
+  });
+
+  // テーブルに焙煎イベントをマージ
+  if (roastEvents && roastEvents.length > 0) {
+    roastEvents.forEach(ev => {
+      ensureProfileRowWithEvent(ev.time, ev.label);
+    });
+  }
+
+  // テーブルを並び替えしてイベントを確定
+  sortTable();
   copyEventsToProfile();
+
+  applyCurrentProfile();
 }
 
 /**
  * PhaseManager.phases オブジェクトから値を抽出してプロファイルにコピー
  */
-function copyEventsToProfile() {
-    saveProfileDataToGlobal();
+function getProfileEventsFromTable(applyOffset = true) {
+  const guideOffsetX = applyOffset ? parseFloat(offsetInputTime.value) || 0 : 0;
+  const guideOffsetY = applyOffset ? parseFloat(offsetInputTemp.value) || 0 : 0;
+  const recordedEvents = [];
+  const table = profileTable;
 
-    // 1. オブジェクトのキー(DRY, FC1等)をループして、値がnullでないものを抽出
-    const recordedEvents = [];
-    
-    const profileData = getProfileDataFromTable();
-    for (const key in PhaseManager.phases) {
-        const time = PhaseManager.phases[key];
-        
-        // 値が null でない（時間が記録されている）場合
-        if (time !== null && time !== 0) {
-            const profilePoint = profileData.find(d => d.time === time);
-            const temp = profilePoint
-                ? profilePoint.temp
-                : getInterpolatedProfileTemp(profileData, time) ?? 0;
-            
-            recordedEvents.push({
-                time: time,
-                temp: temp,
-                label: key // "DRY", "FC1" などのキー名をラベルにする
-            });
-        }
+  for (let i = 1; i < table.rows.length; i++) {
+    const row = table.rows[i];
+    const timeInput = row.cells[0]?.querySelector('input');
+    const tempInput = row.cells[1]?.querySelector('input');
+    const eventInput = row.cells[2]?.querySelector('input');
+
+    if (!timeInput || !tempInput) continue;
+
+    const time = getTimeInputSeconds(timeInput);
+    const temp = parseTableTemperatureValue(tempInput.value);
+    const eventLabel = eventInput?.value?.trim() || '';
+
+    if (isNaN(time) || isNaN(temp)) continue;
+
+    if (eventLabel) {
+      const events = eventLabel.split(',').map(e => e.trim()).filter(e => e);
+      events.forEach(eventName => {
+        const adjustedTime = time + guideOffsetX;
+        const adjustedTemp = temp + guideOffsetY;
+        if (applyOffset && (adjustedTime < 0 || adjustedTime >= maxChartTime)) return;
+        recordedEvents.push({
+          time: adjustedTime,
+          temp: adjustedTemp,
+          label: eventName
+        });
+      });
     }
-    mergeProfileEventsIntoTable(recordedEvents);
+  }
 
-    // グローバル変数に格納してチャート描画で利用
-    window.profileEvents = recordedEvents;
-    roastChart.update(); 
+  return recordedEvents;
+}
+
+function copyEventsToProfile() {
+  saveProfileDataToGlobal();
+  window.profileEvents = getProfileEventsFromTable(true);
+  roastChart.update();
 }
 
 /**
@@ -3727,10 +3970,30 @@ const profileEventPlugin = {
         if (!window.profileEvents || window.profileEvents.length === 0) return;
 
         ctx.save();
+        
+        // touchShield の位置を基準に、クリッピング領域の left/right を設定
+        const touchShield = document.getElementById('touchShield');
+        let clipLeft = left;
+        let clipRight = right;
+        
+        if (touchShield && chart.canvas.parentElement) {
+            const canvasRect = chart.canvas.getBoundingClientRect();
+            const shieldRect = touchShield.getBoundingClientRect();
+            // touchShield の left/right をキャンバス内部座標に変換
+            clipLeft = Math.max(left, shieldRect.left - canvasRect.left);
+            clipRight = Math.min(right, shieldRect.right - canvasRect.left);
+        }
+        
+        // クリッピング領域を設定：チャート表示エリア内のみに描画を制限
+        ctx.beginPath();
+        ctx.rect(clipLeft, top, clipRight - clipLeft, bottom - top);
+        ctx.clip();
+
         window.profileEvents.forEach(ev => {
             const xPos = x.getPixelForValue(ev.time);
             const yPos = y.getPixelForValue(ev.temp);
             if (xPos < left || xPos > right) return;
+            
             ctx.beginPath();
             ctx.arc(xPos, yPos, 6, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(0, 0, 0.2, 0.3)'; 
@@ -3739,16 +4002,16 @@ const profileEventPlugin = {
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(ev.label, xPos, yPos + 14); 
-            ctx.save(); // 念のため状態を保存
+            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
             ctx.textAlign = 'center';
-            let timeStr = ev.time;;
+            let timeStr = ev.time;
             if (isMinutesSecondsFormat) {
               timeStr = formatSecondsToMinutesSeconds(ev.time);
             }
             ctx.font = '10px sans-serif';
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-            ctx.fillText(timeStr, xPos, yPos + 24); 
+            ctx.fillText(timeStr, xPos, yPos + 24);
         });
         ctx.restore();
     }
@@ -3920,11 +4183,11 @@ function addRow(time = '', temp = '', eventLabel = '') {
   const tempMax = isFahrenheit ? celsiusToFahrenheit(maxTemperature) : maxTemperature;
   const timeSeconds = (time !== '' && !isNaN(parseFloat(time))) ? Math.round(parseFloat(time)) : '';
   const timeValue = timeSeconds !== '' ? formatTableTimeInputValue(timeSeconds) : '';
+  const eventValue = (eventLabel || '').substring(0, 25); // 25文字制限
 
   timeCell.innerHTML = `<input class="table_edit" type="text" value="${timeValue}" data-seconds="${timeSeconds !== '' ? timeSeconds : ''}" oninput="validateInput_time(this, 0, ${maxChartTime - 1})" onblur="formatTimeInputOnBlur(this)">`;
   tempCell.innerHTML = `<input class="table_edit" type="number" value="${tempValue}" min="0" max="${tempMax.toFixed(1)}" data-celsius="${!isNaN(parseFloat(temp)) ? parseFloat(temp) : ''}" oninput="validateInput_temperature(this, 0, ${tempMax.toFixed(1)}); onTemperatureCellInput(this)">`;
-  eventCell.textContent = eventLabel || '';
-  if (row.dataset) row.dataset.eventLabel = eventLabel || '';
+  eventCell.innerHTML = `<input class="table_edit event_input" type="text" value="${eventValue}" maxlength="25" oninput="validateInput_eventLabel(this)" placeholder="">`;
   deleteCell.innerHTML = `<button class="table_edit" onclick="this.parentNode.parentNode.remove()">🗑</button>`;
 }
 
@@ -3943,8 +4206,10 @@ function setProfileRowEventLabel(row, eventLabel = '') {
   if (!row) return;
   const eventCell = row.cells[2];
   if (!eventCell) return;
-  eventCell.textContent = eventLabel || '';
-  if (row.dataset) row.dataset.eventLabel = eventLabel || '';
+  const eventInput = eventCell.querySelector('input');
+  if (eventInput) {
+    eventInput.value = (eventLabel || '').substring(0, 25);
+  }
 }
 
 function ensureProfileRowWithEvent(time, eventLabel) {
@@ -3958,14 +4223,16 @@ function ensureProfileRowWithEvent(time, eventLabel) {
     addRow(normalizedTime, interpolatedTemp !== null ? interpolatedTemp : 0, eventLabel);
     row = profileTable.rows[profileTable.rows.length - 1];
   } else {
-    const existingEvent = row.cells[2]?.textContent?.trim() || '';
+    const eventInput = row.cells[2]?.querySelector('input');
+    const existingEvent = eventInput?.value?.trim() || '';
     const mergedEvent = existingEvent && existingEvent !== eventLabel
-      ? `${existingEvent}, ${eventLabel}`
+      ? `${existingEvent}, ${eventLabel}`.substring(0, 25)
       : eventLabel;
     setProfileRowEventLabel(row, mergedEvent);
   }
   return row;
 }
+
 
 function mergeProfileEventsIntoTable(events) {
   if (!events || events.length === 0) return;
@@ -4000,6 +4267,15 @@ function validateInput_temperature(input, min, max) {
     }
   }
 }
+
+function validateInput_eventLabel(input) {
+  // 最大25文字に制限
+  if (input.value.length > 25) {
+    input.value = input.value.substring(0, 25);
+  }
+  // 値が空の場合、テーブルのイベント欄を空にする
+  // 値がある場合、そのまま保持
+}
 function onTemperatureCellInput(input) {
   if (!input || !input.dataset) return;
   const value = parseFloat(input.value);
@@ -4032,6 +4308,7 @@ function validateInput_time(input, min, max) {
       const seconds = parseTimeInputValue(raw);
       if (!isNaN(seconds)) {
         setTimeInputValue(input, seconds);
+        input.dataset.edited = 'true';
       } else {
         input.dataset.seconds = '';
       }
@@ -4042,6 +4319,7 @@ function validateInput_time(input, min, max) {
       if (seconds > max) seconds = max;
       input.dataset.seconds = seconds;
       input.value = formatTableTimeInputValue(seconds);
+      input.dataset.edited = 'true';
       return;
     }
     input.dataset.seconds = '';
@@ -4057,6 +4335,7 @@ function validateInput_time(input, min, max) {
     }
     input.dataset.seconds = seconds;
     input.value = seconds.toString();
+    input.dataset.edited = 'true';
     return;
   }
 
@@ -4074,14 +4353,26 @@ function sortTable() {
   rows.forEach(row => {
     let time = getTimeInputSeconds(row.cells[0].firstChild);
     let temp = parseTableTemperatureValue(row.cells[1].firstChild.value);
-    const eventLabel = row.cells[2]?.textContent?.trim() || '';
-    if (time < 0) time = 0;
-    else if (time > maxChartTime - 1) time = maxChartTime - 1;
+    const eventInput = row.cells[2]?.querySelector('input');
+    const eventLabel = eventInput?.value?.trim() || '';
+    const isEdited = row.cells[0].querySelector('input')?.dataset.edited === 'true';
+
+    // 0秒以下や最大時間以上の行は削除対象とする
+    if (time < 0 || time > maxChartTime - 1) return;
     if (temp < 0) temp = 0;
     else if (temp > maxTemperature) temp = maxTemperature;
-    
+
     if (!isNaN(time) && !isNaN(temp)) {
-      latestEntries.set(time, { time, temp, eventLabel });
+      // 同じ時間がすでに存在する場合、編集された方を優先
+      if (latestEntries.has(time)) {
+        const existing = latestEntries.get(time);
+        // 現在の行が編集されていれば上書き（編集されていない場合は既存を保持）
+        if (isEdited) {
+          latestEntries.set(time, { time, temp, eventLabel });
+        }
+      } else {
+        latestEntries.set(time, { time, temp, eventLabel });
+      }
     }
   });
 
@@ -4092,7 +4383,6 @@ function sortTable() {
   while (table.rows.length > 1) {
     table.deleteRow(1);
   }
-
   // テーブル再描画（削除ボタン付き）
   sorted.forEach(({ time, temp, eventLabel }) => {
     addRow(time, temp, eventLabel);
@@ -4109,6 +4399,13 @@ function applyOffsetsToTable() {
     const inputTemp = offsetInputTemp;
     const timeOffset = parseInt(inputTime.value) || 0;
     const tempOffset = parseInt(inputTemp.value) || 0;
+
+    // 1.5. 現在のイベントを取得しておく（オフセットはまだ適用しない）
+    const prevEvents = getProfileEventsFromTable(false).map(ev => ({
+      time: (typeof ev.time === 'number') ? Math.round(ev.time + timeOffset) : ev.time,
+      temp: (typeof ev.temp === 'number') ? parseFloat((ev.temp + tempOffset).toFixed(1)) : ev.temp,
+      label: ev.label
+    })).filter(ev => typeof ev.time === 'number' && ev.time >= 0 && ev.time < maxChartTime);
 
     // 2. 現在のテーブルから全データを吸い出す（ここは変更なし）
     const currentData = [];
@@ -4138,6 +4435,12 @@ function applyOffsetsToTable() {
 
         addRow(newTime, newTemp);
     });
+
+    // 追加後、以前のイベントがあればマージしておく
+    if (prevEvents && prevEvents.length > 0) {
+      mergeProfileEventsIntoTable(prevEvents);
+    }
+
     //時間がゼロの点がなくなったら、0秒で一番近い時間の温度の点を追加する
     if (table.rows.length > 1 && getTimeInputSeconds(table.rows[1].cells[0].firstChild) !== 0) {
       let closestTemp = null;
@@ -4158,6 +4461,7 @@ function applyOffsetsToTable() {
     //  5. インプットフィールドをゼロに戻す！
     inputTime.value = 0;
     inputTemp.value = 0;
+    copyEventsToProfile();
 }
 
 //////////////////////////////////////////////////////
@@ -4182,6 +4486,22 @@ const phaseBackgroundPlugin = {
     beforeDraw: (chart) => {
         const { ctx, chartArea, scales } = chart;
         const x = scales.x;
+
+        ctx.save();
+        const touchShield = document.getElementById('touchShield');
+        let clipLeft = chartArea.left;
+        let clipRight = chartArea.right;
+        let clipTop = chartArea.top - 20; // ポッチとテキストのスペースを確保
+        let clipBottom = chartArea.bottom;
+        if (touchShield && chart.canvas) {
+            const canvasRect = chart.canvas.getBoundingClientRect();
+            const shieldRect = touchShield.getBoundingClientRect();
+            clipLeft = Math.max(chartArea.left, shieldRect.left - canvasRect.left);
+            clipRight = Math.min(chartArea.right, shieldRect.right - canvasRect.left);
+        }
+        ctx.beginPath();
+        ctx.rect(clipLeft, clipTop, clipRight - clipLeft, clipBottom - clipTop);
+        ctx.clip();
 
         PhaseManager.order.forEach((key, index) => {
             if (index === 0) return; // DRYは開始点
@@ -4236,6 +4556,8 @@ const phaseBackgroundPlugin = {
             
             ctx.restore();
         });
+
+        ctx.restore();
     }
 };
 
@@ -4280,11 +4602,10 @@ const PhaseManager = {
         }
     },
     getDTR(currentTime) {
-        const de = this.phases.DE;
         const fc = this.phases.FCS;
         const drop = this.phases.DROP || currentTime;
-        if (de === null || fc === null || drop <= fc) return null;
-        return (((drop - fc) / (drop - de)) * 100).toFixed(1);
+        if (fc === null || drop <= fc || drop <= 0) return null;
+        return (((drop - fc) / drop) * 100).toFixed(1);
     },
 // 3. スライド（ドラッグ）で時間を上書き
 updateTime(phaseKey, newTime) {
@@ -4643,6 +4964,7 @@ function handleGuideProfileDragMove(e) {
     offsetInputTime.value = Math.round(newOffsetX);
     offsetInputTemp.value = parseFloat(newOffsetY.toFixed(1));
     updateChartWithProfile(getProfileDataFromTable());
+    copyEventsToProfile();
 }
 
 // 5. チャートの値をテーブルのinputに書き戻す関数
@@ -4661,6 +4983,9 @@ function syncChartToTable(index, time, temp) {
             if (tempInput.dataset) tempInput.dataset.celsius = temp;
         }
     }
+
+    // 編集点を移動した際、テーブル上のイベント位置も同時に更新してチャート描画に反映
+    copyEventsToProfile();
 }
 
 // ======================================
@@ -4753,8 +5078,10 @@ function downloadJSON() {
   rows.forEach(row => {
     const time = getTimeInputSeconds(row.cells[0].firstChild);
     const temp = parseTableTemperatureValue(row.cells[1].firstChild.value);
+    const eventInput = row.cells[2]?.querySelector('input');
+    const eventLabel = eventInput?.value?.trim() || '';
     if (!isNaN(time) && !isNaN(temp)) {
-      latestEntries.set(time, temp);
+      latestEntries.set(time, { temp, eventLabel });
     }
   });
 
@@ -4765,7 +5092,7 @@ function downloadJSON() {
 
   const profile = Array.from(latestEntries.entries())
     .sort((a, b) => a[0] - b[0])
-    .map(([time, temp]) => ({ time, temp }));
+    .map(([time, { temp, eventLabel }]) => ({ time, temp, event: eventLabel || undefined }));
 
   const title = profileTitle?.value || "";
   const memo = profileMemo?.value || "";
@@ -5001,14 +5328,14 @@ function executeFileLoad(file, e){
     while (table.rows.length > 1) table.deleteRow(1);
 
     result.profile.forEach(entry => {
-      addRow(entry.time, entry.temp);
+      addRow(entry.time, entry.temp, entry.event || '');
     });
 
     if (window.event && window.event.target) {
       event.target.value = ""; // 同じファイルでもイベント発火させるため
     }
 
-    sendCurrentProfile();
+    applyCurrentProfile();
     roastMessage.textContent = t('ROAST_MESSAGE_PROFILE_LOADED');
 
     return true;
@@ -5251,7 +5578,7 @@ function initChart() {
                   type: 'linear', // 時間を数値として扱う
                   position: 'bottom',
                   title: {  display: true,
-                            text: `${t('CHART_X_AXIS_TITLE')} ${currentLanguage === 'en' ? '[sec]' : '[秒]'}`
+                            text: `${t('CHART_X_AXIS_TITLE')} ${t('UNIT_SEC')}`
                   },
                   min: 0,
                   max: currentChartMaxTime, // 30分
@@ -5330,8 +5657,8 @@ function initChart() {
           smartAIIndicatorPlugin, // スマートAIインジケータープラグイン
           phaseBackgroundPlugin, // フェーズ背景プラグイン 
           touchShieldAreaPlugin, // タッチシールドエリアプラグイン
-          chartAreaInfoPlugin,
-          profileEventPlugin
+          chartAreaInfoPlugin, // チャートエリア測定値情報表示プラグイン
+          profileEventPlugin  // プロファイルイベント表示プラグイン
       ]
   });
   
@@ -5404,6 +5731,7 @@ function chartAreaInitialize() {
       'currentRoR': 'currentRoR',
       'profileTemp': 'profileTemp',
       'profileRoR': 'profileRoR',
+      'currentDTR': 'currentDTR',
   };
   Object.entries(displayMappings).forEach(([id, value]) => {
       const el = document.getElementById(id);
@@ -6383,7 +6711,7 @@ async function shareProfileToCloud() {
         _cloudAllDocs = [];
         document.getElementById('cloudCommentInput').value = "";
         setTimeout(() => {
-            alert(t('ALERT_CLOUD_SHARE_SUCCESS') + title + (currentLanguage === 'en' ? '"' : '」') + "\n" + comment);
+            alert(t('ALERT_CLOUD_SHARE_SUCCESS') + title + t('QUOTE_END') + "\n" + comment);
         }, 300);
     } catch (e) {
         console.error(e);

@@ -1,0 +1,5 @@
+# 1. まず「index」で始まるすべてのHTMLファイルを管理外（無視）にする
+index*.html
+
+# 2. ただし「index.html」だけは例外として管理対象（追跡）に戻す
+!index.html
