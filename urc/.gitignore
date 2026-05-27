@@ -1,0 +1,7 @@
+# index系の制御
+index*.html
+!index.html
+
+# ロースターマニュアル系の制御（ここに追記！）
+uzu_roaster_manual_*.html
+!uzu_roaster_manual.html
