@@ -210,11 +210,6 @@
       filter: brightness(0.8) saturate(1.2); /* 明るさを落として、彩度を少し上げる */
       transform: scale(0.98); 
     }
-    #fsBtn {
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.0); /* 通常時の影 */
-      transition: all 1.0s;
-    }
-
     /* 凹んだ状態のスタイル */
     .active {
       box-shadow: inset 0px 0px 100px rgba(0,0,0,0.35); /* 内側に影（凹み） */
@@ -619,7 +614,6 @@
       margin-bottom: 6px;
       gap: 10px;
       flex-wrap: wrap;
-      box-shadow: var(--shadow);
       border: solid 1px var(--primary-active);
     }
 
@@ -699,7 +693,6 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       scrollbar-width: none;
@@ -855,7 +848,6 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 15px;
-      box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
       min-height: 300px;
@@ -1184,6 +1176,7 @@
       .button {
         font-size: 14px;
         min-width: 20px;
+        transition: all 1.0s;
       }
 
       .button-header {
@@ -1681,12 +1674,12 @@
         <b><span id="fullscreen-toggle-icon" style="display: block; transform: translateY(-2px); margin: 0 auto;">⛶</span></b>
       </button>
       <button id="edit-mode-button" title="プロファイル編集" data-i18n-title="TOOLTIP_PROFILE_EDIT" class="chart-control-button">
-        <b><span id="edit-mode-icon">
+      <span id="edit-mode-icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="23" height="23">
         <line x1="18" y1="50" x2="82" y2="50" stroke="white" stroke-width="10" stroke-linecap="round"/>
         <polygon points="95,50 78,38 78,62" fill="white"/> <polygon points="5,50 22,38 22,62" fill="white"/>  <line x1="50" y1="18" x2="50" y2="82" stroke="white" stroke-width="10" stroke-linecap="round"/>
         <polygon points="50,5 38,22 62,22" fill="white"/> <polygon points="50,95 38,78 62,78" fill="white"/> </svg>
-      </span></b>
+      </span>
       </button>
       <div id="chart-area-infos" style="transform-origin:100% 100%;">
         <div id="currentTime" class="chart-info-box">
@@ -1705,7 +1698,7 @@
           <span class="chart-info-label">P.RoR</span><span id="profileRoRInside">　</span>
         </div>
         <div id="currentDTR" class="chart-info-box">
-          <span class="chart-info-label">C.DTR</span><span id="currentDTRInside">　</span>
+          <span class="chart-info-label">DTR</span><span id="currentDTRInside">　</span>
         </div>
       </div>
     </div>
@@ -1902,7 +1895,7 @@ const i18n = {
     PROFILE_MANIPULATION_TITLE: ['プロファイル', 'Profile'],
     BUTTON_LOAD: ['読込', 'Load'],
     BUTTON_SAVE: ['保存', 'Save'],
-    BUTTON_COPY_FROM_ROAST: ['焙煎データ⇒', 'Roast data⇒'],
+    BUTTON_COPY_FROM_ROAST: ['⬅焙煎データ', '⬅Roast data'],
     BUTTON_COMPARE_PROFILE_SHOW: ['比較表示', 'Show comparison'],
     BUTTON_COMPARE_PROFILE_HIDE: ['比較非表示', 'Hide comparison'],
     BUTTON_STANDARD_CURVE: ['標準カーブ', 'Standard curve'],
@@ -2619,18 +2612,17 @@ function animateToElement(element) {
 
 function toggleFS() {
   const btn = document.getElementById('fsBtn');
-  
   if (!document.fullscreenElement) {
     // フルスクリーンにする
     document.documentElement.requestFullscreen().then(() => {
-      btn.classList.add('active'); // 凹ませる
+      btn.classList.add('active'); 
     }).catch(err => {
       console.log(`エラー: ${err.message}`);
     });
   } else {
     // フルスクリーンを解除する
     document.exitFullscreen().then(() => {
-      btn.classList.remove('active'); // 凹みを戻す
+      btn.classList.remove('active'); 
     });
   }
 }
@@ -4473,7 +4465,8 @@ function applyOffsetsToTable() {
 //////////////////////////////////////////////////////
 const ROAST_PHASES = {
     DRY:   { name: 'DRY START',   color: '#d4d4d4' },
-    DE:    { name: 'DRY END',   color: '#d4d4d4' },
+    CHARGE: { name: 'CHARGE',   color: '#d4d4d4' },
+    DE:    { name: 'DRY END',   color: '#ecd884' },
     FCS:    { name: 'FC START',  color: '#f1c40f' },
     FCE:    { name: 'FC END',  color: '#f1c40f' },
     SCS:    { name: 'SC START',  color: '#e67e22' },
@@ -4604,8 +4597,9 @@ const PhaseManager = {
     getDTR(currentTime) {
         const fc = this.phases.FCS;
         const drop = this.phases.DROP || currentTime;
+        const charge = this.phases.CHARGE || 0;
         if (fc === null || drop <= fc || drop <= 0) return null;
-        return (((drop - fc) / drop) * 100).toFixed(1);
+        return (((drop - fc) / (drop - charge)) * 100).toFixed(1);
     },
 // 3. スライド（ドラッグ）で時間を上書き
 updateTime(phaseKey, newTime) {
