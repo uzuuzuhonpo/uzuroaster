@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang='ja'>
+<head>
+  <meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>UZ-01 SYSTEM LOADER</title>
+  <style>
+    body {background:#000;color:#fff;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}
+    .container{width:85%; max-width:400px; border:1px solid #333; padding:20px 20px; text-align:center;}
+    .interpret{width:90%; text-align:left;line-height:1.4rem;margin:2rem auto;}
+    h2{font-size:1rem; letter-spacing:0.2rem; margin-bottom:10px;color:#aaa;}
+    a:link{color:#3182ce;}
+    a:visited{color:#805ad5;}
+    a:hover{color:#2b6cb0;}
+    a:active{color:#e53e3e;}
+    #mode-label{font-size:0.75rem; color:#555; margin-bottom:20px; letter-spacing:0.15rem; min-height:1rem;}
+    #mode-firmware{color:#ff6b35;}
+    #mode-fs{color:#00aaff;}
+    input[type=file]{color:#888; margin-bottom:30px; font-size:0.8rem;width:100%;}
+    #btn-submit{background:none;color:#fff;border:1px solid #fff;padding:10px 40px;cursor:pointer;font-family:monospace;transition:0.2s;}
+    #btn-submit:hover{background:#fff;color:#000;}
+    #prg-wrapper{display:none;}
+    .bar-frame{border:1px solid #444; height:10px;margin:20px 0;position:relative;}
+    .bar-fill{background:#fff; width:0%; height:100%;transition:width 0.1s;}
+    #status{font-size:0.8rem; color:#888; text-transform:uppercase;}
+    .success{color:#00ff00!important;}
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <h2 id='title'>SYSTEM UPDATE</h2>
+    <div class="interpret">
+    </div>
+    <div class="interpret">
+      <strong><u>HOW TO UPDATE:</u></strong><br>
+      Download these files from <a href='https://github.com/uzuuzuhonpo/uzuroaster' target='_blank'>GitHub</a> and upload them below :<br><br>
+      <table>
+        <tr><td>&nbsp;&nbsp;Artisan_sample.ino.bin</td><td>&nbsp;&nbsp;(UZ-01 Firmware)</td></tr>
+        <tr><td>&nbsp;&nbsp;index.html</td><td>&nbsp;&nbsp;(URC (WebUI))</td></tr>
+      </table>
+    </div>
+    <div id='mode-label'>SELECT FILE TO DETECT MODE</div>
+    <form id='upload-form' method='POST' action='/update' enctype='multipart/form-data'>
+      <input type='file' name='update' id='file-input' accept='.bin,.html,.js,.css,.png,.jpg,.json,.txt,.alog,.csv'>
+      <br>
+      <input type='submit' id='btn-submit' value='UPLOAD'>
+    </form>
+    <div id='prg-wrapper'>
+      <div class='bar-frame'><div id='bar' class='bar-fill'></div></div>
+      <div id='status'>LOADING: <span id='pct'>0</span>%</div>
+    </div>
+    <p style="margin-top:30px;"><a href="/">← BACK TO MAIN</a></p>
+  </div>
+  <script>
+    document.getElementById('file-input').addEventListener('change', function() {
+      const file = this.files[0];
+      const label = document.getElementById('mode-label');
+      if (!file) {
+        label.innerHTML = 'SELECT FILE TO DETECT MODE';
+        label.className = '';
+        return;
+      }
+      const isBin = file.name.toLowerCase().endsWith('.bin');
+      if (isBin) {
+        label.innerHTML = '<span id="mode-firmware">[ FIRMWARE UPDATE MODE ]</span>';
+      } else {
+        label.innerHTML = '<span id="mode-fs">[ LITTLEFS FILE MODE ]</span>';
+      }
+    });
+
+    const form = document.getElementById('upload-form');
+    form.onsubmit = () => {
+      const file = document.getElementById('file-input').files[0];
+      if (!file) return false;
+      form.style.display = 'none';
+      document.getElementById('prg-wrapper').style.display = 'block';
+      const isBin = file.name.toLowerCase().endsWith('.bin');
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const p = Math.round((e.loaded / e.total) * 100);
+          document.getElementById('bar').style.width = p + '%';
+          document.getElementById('pct').innerHTML = p;
+          if (p >= 100) {
+            document.getElementById('status').innerHTML = 'FLASHING... PLEASE WAIT';
+            document.getElementById('status').innerHTML = '<span class="success">UPDATE COMPLETED</span>';
+            if (isBin) {
+              document.getElementById('title').innerHTML = 'REBOOTING...';
+              setTimeout(() => { window.location.href = "/update"; }, 3000);
+            } else {
+              document.getElementById('title').innerHTML = 'FILE UPLOADED';
+              setTimeout(() => { window.location.href = "/update"; }, 2000);
+            }
+          }
+        }
+      });
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status !== 200 && xhr.status !== 0) {
+          document.getElementById('status').innerHTML = 'ERROR: UPDATE FAILED (' + xhr.status + ')';
+        }
+      };
+      xhr.open('POST', '/update', true);
+      xhr.send(new FormData(form));
+      return false;
+    };
+  </script>
+</body>
+</html>
