@@ -107,8 +107,13 @@ esptool.py --port /dev/ttyUSB0 write_flash 0x10000 Artisan_sample.ino.bin
 ---
 
 ## 📡 Artisan連携
+<<<<<<< Updated upstream
 
 Artisan の **デバイス設定** で以下を設定：
+=======
+ 
+Artisan の **ヘルプ ＞ 設定の読み込み** から以下を読み込み：
+>>>>>>> Stashed changes
 
 - **Device:** `WebSocket`
 - **Host:** `192.168.4.1`
