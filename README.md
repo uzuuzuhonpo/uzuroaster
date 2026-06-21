@@ -1,19 +1,25 @@
 # 🌀 UZU ROASTER (UZ-01)
 
-**ESP32ベースのオープンソース・コーヒー焙煎コントローラー**  
-USBシリアル通信 ✕ Web技術 ✕ WiFiで実現する、次世代の小型焙煎機コントローラー
+**ESP32ベースのオープンソース・コーヒー焙煎支援システム**  
+USBシリアル通信 ✕ Web技術 ✕ WiFiで実現する、次世代の小型焙煎支援環境
 
 ![UZU ROASTER](assets/uzuroaster.jpg)
 
 自家焙煎をもっと楽しく、もっと本格的に。  
 うずうずコーヒー焙煎工房のオープンソース自動焙煎プロジェクトです。
 
+## 用語の整理
+
+- **UZU ROASTER（うずロースター）**: 製品全体・システム名。UZ-01 と URC を含みます。
+- **UZ-01**: 温度計測とデータ送信を行う本体（ハードウェア）。
+- **URC（うずロースターコントローラー）**: UZ-01 から送られた温度データを表示・管理するコントローラーアプリです。
+
 ---
 
 ## 🌟 これは何？
 
-`UZU ROASTER` は、ESP32ベースの自作コーヒー焙煎機コントローラーです。  
-ブラウザUIやPCアプリからリアルタイムで温度を可視化・制御でき、Artisanとの連携も可能です。
+`UZU ROASTER` は、UZ-01（温度計測本体）と URC（コントローラーアプリ）から構成される、コーヒー焙煎支援システムです。  
+URC はブラウザUIまたはPCアプリとして動作し、温度の可視化・記録・管理を行えます。Artisan との連携も可能です。
 
 ---
 
@@ -97,27 +103,24 @@ esptool.py --port /dev/ttyUSB0 write_flash 0x10000 Artisan_sample.ino.bin
 
 **Arduino IDEでビルドする場合:**
 
-`Artisan_sample.ino` をArduino IDEで開いてビルド・書き込み。
+`uz_01/Artisan_sample.ino` をArduino IDEで開いてビルド・書き込み。
 
-### Webフロントエンドのアップロード
+### Webフロントエンド、メインファームウェアバイナリのアップロード
+ブラウザの `http://192.168.4.1/update` からOTAで直接アップロード可能です。
 
-`index.html` / `script.js` / `chart.js` / `favicon.ico` をLittleFSにアップロード。  
-起動後にブラウザの `http://192.168.4.1/upload` から直接アップロードできます。
+`urc/index.html` をLittleFSにアップロード。  
+`uz_01/Artisan_sample.ino.bin` をアップロード。  
 
 ---
 
 ## 📡 Artisan連携
-<<<<<<< Updated upstream
 
-Artisan の **デバイス設定** で以下を設定：
-=======
- 
 Artisan の **ヘルプ ＞ 設定の読み込み** から以下を読み込み：
->>>>>>> Stashed changes
 
-- **Device:** `WebSocket`
-- **Host:** `192.168.4.1`
-- **Port:** `81`
+- /artisan フォルダ以下の各設定ファイルをArtisanで読み込んで設定。
+`uz_01_behmor_settings.aset`  Behmor用（USBシリアル接続）
+`uz_01_tc4_settings.aset`     TC4用（USBシリアル接続）
+`uz_01_ws_settings.aset`      WebSocket用（WiFi接続）
 
 ---
 
@@ -138,7 +141,7 @@ python -m PyInstaller --noconsole --onefile --hidden-import=webview --add-data "
 
 ## ⌨️ シリアルコマンド
 
-USBまたはブラウザのコンソールから使えます：
+USBまたはブラウザのコンソールから使用可能です：
 
 | コマンド | 説明 |
 |---------|------|
@@ -152,21 +155,43 @@ USBまたはブラウザのコンソールから使えます：
 | `simulate on/off` | シミュレーションモード |
 | `ls` | LittleFS ファイル一覧 |
 
+その他コマンドは`urc/command_reference.html`を参照
+
 ---
 
 ## 📁 Repository Structure
 
 ```
 uzuroaster/
-├── Artisan_sample.ino        # メインファームウェア
-├── Artisan_sample.ino.bin    # ビルド済みバイナリ
-├── index.html                # ブラウザUI
-├── script.js                 # フロントエンドJS
-├── chart.js                  # グラフライブラリ
-├── sample_profile.json       # サンプル焙煎プロファイル
-├── uzuroaster.py             # PCアプリ版（PyWebView）
-├── uzuroaster.exe            # PCアプリ版（Windows実行ファイル）
-└── uzu_roaster_manual.html   # マニュアル
+├─ LICENSE              # MITライセンス
+├─ README.md            # このファイル
+│
+├─artisan
+│  ├─ uz_01_behmor_settings.aset  # Artisan設定ファイル（Behmor）
+│  ├─ uz_01_tc4_settings.aset     # Artisan設定ファイル（TC4）
+│  └─ uz_01_ws_settings.aset      # Artisan設定ファイル（WebSocket）
+│
+├─assets
+│  └─ uzuroaster.jpg
+│
+├─build
+│  └─ uzuroaster.exe         # PCアプリ版（Windows実行ファイル）
+│
+├─python
+│  └─ uzuroaster.py          # PCアプリ版（PyWebView）
+│
+├─urc
+│  ├─ chart.js
+│  ├─ command_reference.html       # コマンドリファレンス
+│  ├─ favicon.ico
+│  ├─ index.html                   # URC本体
+│  └─ uzu_roaster_manual.html      # マニュアル
+│
+└─uz_01
+   ├─ Artisan_sample.ino                  # ファームウェアソース
+   ├─ Artisan_sample.ino.bin              # ビルド済みメインバイナリ
+   └─ Artisan_sample.ino.bootloader.bin   # ビルド済みブートバイナリ
+
 ```
 
 ---
