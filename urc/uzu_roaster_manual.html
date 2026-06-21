@@ -344,6 +344,14 @@
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
         <div style="text-align: right;"><span>最終更新日: 2026年4月20日　Version 1.3.0</span></div><br>
+        <div style="background:#f7fafc; border:1px solid #cbd5e0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
+            <strong>用語の解説</strong><br>
+            <ul style="margin: 8px 0 0 20px;">
+                <li><strong>UZU ROASTER（うずロースター）</strong>：製品全体・システム名。UZ-01 と URC（うずロースターコントローラー） を含みます。</li>
+                <li><strong>UZ-01</strong>：温度計測とデータ送信を行う本体（ハードウェア）。</li>
+                <li><strong>URC（うずロースターコントローラー）</strong>：UZ-01 から送られた温度データを表示・管理するコントローラーアプリ（WebUI）です。</li>
+            </ul>
+        </div>
         <div class="table-of-contents">
             <h2>目次</h2>
             <ul>
@@ -353,7 +361,7 @@
                 <li><a href="#section-artisan-usb">☕ Artisanと連携する（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-artisan-requirements">🧰 必要なもの</a></li>
-                        <li><a href="#subsection-esp32-preparation">🔌 1. UZU ROASTER (ESP32) 側の準備</a></li> 
+                        <li><a href="#subsection-esp32-preparation">🔌 1. UZ-01側の仕様</a></li> 
                         <li><a href="#subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）</a></li>
                         <li><a href="#subsection-artisan-settings">⚙️ 3. Artisanの設定手順</a></li>
                         <li><a href="#subsection-artisan-test">✅ 接続テスト＆確認</a></li> <li><a href="#subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント</a></li> </ul>
@@ -364,30 +372,30 @@
                         <li><a href="#subsection-artisan-wifi-nodes">🔗 2. Nodes & Commands（通信経路）の設定</a></li>
                     </ul>
                 </li>
-                <li><a href="#uzuroaster-controller">🚀 うずロースターコントローラー（URC）を使用する</a>
+                <li><a href="#uzuroaster-controller">🚀 URC（うずロースターコントローラー）を使用する</a>
                     <ul>
-                        <li><a href="#connection-matrix">🚀 うずロースターコントローラー　端末・環境別接続マトリックス</a></li>
+                        <li><a href="#connection-matrix">🚀 URC　端末・環境別接続マトリックス</a></li>
                     </ul>
                 </li>
-                <li><a href="#section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>
+                <li><a href="#section-controller-wifi">🌐 URC（Web版）を使う（Wi-Fi接続編）</a>
                     <ul>
                         <li><a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a></li>
                         <li><a href="#subsection-sta-mode">🏠 STAモード（ルーター接続）の設定【Ver 1.1.0〜】</a></li>
                     </ul>
                 </li>
-                <li><a href="#section-controller-usbserial">🌐 うずロースターコントローラー（Webアプリ版）を使う（USB接続編）</a>
+                <li><a href="#section-controller-usbserial">🌐 URC（Web版）を使う（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-initial-setup-usbserial">🔧 初期設定と接続</a></li>
                     </ul>
                 </li>
-                <li><a href="#section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</a>
+                <li><a href="#section-controller-usb">🌐 URC（Python版）を使う（USB接続編）</a>
                     <ul>
                         <li><a href="#subsection-initial-setup-usb">🔧 初期設定と接続</a></li>
                     </ul>
                 </li>
-                <li><a href="#section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ版/Python版共通）の詳しい操作方法</a>
+                <li><a href="#section-web-app-operation">🌐 URC（Web版/Python版共通）の詳しい操作方法</a>
                     <ul>
-                        <li><a href="#subsection-web-app-overview">1. うずロースターコントローラーアプリ概要</a></li>
+                        <li><a href="#subsection-web-app-overview">1. URC（Webアプリ）概要</a></li>
                         <li><a href="#subsection-web-app-basic-screen">2. 基本画面と各エリアの説明</a></li>
                         <li><a href="#subsection-web-app-profile-edit">3. 焙煎プロファイルの作成・編集</a></li>
                         <li><a href="#subsection-web-app-profile-save-load">4. 焙煎プロファイルの保存・読み込み</a></li>
@@ -417,14 +425,15 @@
 
         <h2 id="section-product-overview">📦 製品概要</h2>
         <p>
-        <strong>UZU ROASTER（うずロースター）</strong>は、小型のコーヒー焙煎機や手鍋に接続して温度センサーのデータをリアルタイムで取得・送信・表示するシステムの総称です。構成は次の通りです。
+        <strong>UZU ROASTER（うずロースター）</strong>は、コーヒー焙煎を支援するための製品全体（システム名）です。以下の呼び方をこのマニュアルでは統一します。
         </p>
         <ul>
-        <li><strong>UZ-01：</strong>温度計測センサーとCPUを搭載した小型の温度データ送信デバイス。Wi-FiまたはUSB接続対応。</li>
-        <li><strong>うずロースターコントローラー（URC）：</strong>UZ-01からデータを受信し、PCやスマートフォンのブラウザ上で表示するWebUI。</li>
+        <li><strong>UZU ROASTER（うずロースター）</strong>：製品全体・システム名。UZ-01 と URC を含みます。</li>
+        <li><strong>UZ-01</strong>：温度計測とデータ送信を行う本体（ハードウェア）。</li>
+        <li><strong>URC（うずロースターコントローラー）</strong>：UZ-01 から送られた温度データを表示・管理するコントローラーアプリです。Web版とPython版があります。</li>
         </ul>
         <p>
-        UZ-01が取得した温度データは、PCソフト「Artisan」でも表示可能です。
+        UZ-01 が取得した温度データは、PCソフト「Artisan」でも表示および記録が可能です。
         </p>
         <br>
         <br>
@@ -500,7 +509,7 @@
             <text x="390" y="155" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.05)" text-anchor="end" font-style="italic" font-weight="bold">UZU ROASTER</text>
         </svg>
         <div style="text-align: center; margin: 10px auto; color: #000; font-size: 1.1em;">
-        図1: UZU ROASTER本体と各部名称
+        図1: UZ-01本体と各部名称
         </div>
         <div style="background: #f2f2f2; padding: 15px 20px; border: solid 1px #444; border-radius: 5px; margin: 40px;">
         <p><strong>① USB-TypeC</strong><br>
@@ -510,13 +519,13 @@
         短押し、長押し（3秒以上）でそれぞれ設定したコマンドを実行します。詳しくは<a href="#section-web-serial-commands">コマンド一覧</a>を参照してください。<br>
         デフォルトでは、短押しでステータスLEDの表示切り替え（ステータス表示⇔温度表示）、長押しでUZU ROASTERリセットに設定されています。</p>
         <p><strong>③ STATUS LED（ステータスLED）</strong><br>
-        UZU ROASTERの現在の状態を点灯パターンで表示します。<br>
+        UZ-01 と URC の接続状態を点灯パターンで表示します。<br>
         <ul>
-            <li>消灯：UZU ROASTERとうずロースターコントローラーが未接続です。</li>
-            <li>遅い点滅：UZU ROASTERとうずロースターコントローラーがWi-Fi、またはUSBで接続されています。</li>
+            <li>消灯：UZ-01 と URC が未接続です。</li>
+            <li>遅い点滅：UZ-01 と URC が Wi-Fi または USB で接続されています。</li>
             <li>速い点滅：焙煎中です。</li>
         </ul>
-        また、コマンドで温度表示モードに変更する事も可能です。</p>
+        また、コマンドで温度表示モードに変更することも可能です。</p>
         <p><strong>④ OP LED（オペレーションLED）</strong><br>
         電源が入ると点灯します。</p>
         <p><strong>⑤ THERMOCOUPLE（熱電対接続端子）</strong><br>
@@ -527,7 +536,7 @@
         <ol>
             <li>
                 <h3>K型熱電対の接続について</h3>
-                <p>K型熱電対をUZU ROASTER本体の接続端子に接続してください。プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
+                <p>K型熱電対をUZ-01本体の接続端子に接続してください。プラス（＋）とマイナス（−）を間違えないよう、特にご注意ください。常温でマイナス付近の値、またはゼロが表示されている場合、接続が逆になっている可能性があります。</p>
                 <ul>
                     <li><strong>接続可能な端子:</strong> オープンリード線（撚り線）</li>
                     <li><strong>U型の端子等、接続不能な端子形状の場合:</strong> お手数ですが追加工して形状を合わせてください。</li>
@@ -549,9 +558,9 @@
                     <h3>B. スマートフォン / USB-C搭載PC と接続する場合</h3>
                     <p>スマートフォン、USB-C搭載PC等をUZU ROASTERと接続する場合は、<strong>「OTG変換アダプタ」</strong>、<strong>「USBハブ」</strong>を必ずご使用ください。（スターターキットに同梱されています）</p>
                     <div class="connection-diagram">
-                        [スマホ] ── <span class="diagram-highlight">OTGアダプタ[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
+                        [スマートフォン] ── <span class="diagram-highlight">OTGアダプタ[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
                     </div>
-                    <p class="warning-text">※変換アダプタは必ず「スマートフォン/PC」側に接続してください。UZU ROASTER本体側に接続すると給電されません。</p>
+                    <p class="warning-text">※変換アダプタは必ず「スマートフォン/PC」側に接続してください。UZ-01本体側に接続すると給電されません。</p>
                     <div class="connection-diagram">
                         [USB-C搭載PC] ── <span class="diagram-highlight">USB-HUB[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
                     </div>
@@ -573,26 +582,26 @@
         <p>UZU ROASTERはコーヒー焙煎をサポートする以下の4つの主要な機能を提供します。</p>
         <ol>
             <li>Artisan連携（USBシリアル/Wi-Fi接続）: PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
-            <li>うずロースターコントローラー（Webアプリ版）: UZU ROASTER本体に内蔵されたWebサーバーにWi-FiでAP接続/STA接続、またはUSB接続（USBシリアル）で、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
-            <li>うずロースターコントローラー（Python版）: Windowsアプリとなっており、USBシリアルでUZU ROASTERに接続して使用します。Web版とは異なり、プロファイルのファイルへの保存、読み込みが可能です。</li>
+            <li>URC（Web版）: UZ-01に内蔵されたWebサーバーにWi-FiでAP接続/STA接続、またはUSB接続（USBシリアル）で、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
+            <li>URC（Python版）: Windowsアプリとなっており、USBシリアルでUZ-01に接続して使用します。Web版とは異なり、プロファイルのファイルへの保存、読み込みが可能です。</li>
             <li>カスタムWebサーバー機能: ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
         </ol>
         <hr>
 
         <h2 id="section-artisan-usb">☕ Artisanと連携する（USB接続編）</h2>
-        <p>このセクションでは、UZU ROASTER (ESP32) をPCにUSB接続し、Artisanの温度ロガーとして利用する手順を説明します。温度の表示・記録・プロファイルの作成など、焙煎ログ管理が飛躍的に快適になります。</p>
+        <p>このセクションでは、UZ-01（ESP32搭載）をPCにUSB接続し、Artisan の温度ロガーとして利用する手順を説明します。温度の表示・記録・プロファイルの作成など、焙煎ログ管理が飛躍的に快適になります。</p>
 
         <h3 id="subsection-artisan-requirements">🧰 必要なもの:</h3>
         <ul>
-            <li>UZU ROASTER本体（焙煎用温度センサーモジュール MAX31855K搭載）</li>
+            <li>UZ-01本体（焙煎用温度センサーモジュール MAX31855K搭載）</li>
             <li>焙煎用温度センサー K型熱電対</li>
             <li>PC（Windows/macOS/Linux）</li>
             <li>Artisan（最新版推奨） 👉 <a href="https://artisan-scope.org/" target="_blank">Artisan公式サイト</a></li>
             <li>USB Type-Cケーブル（UZU ROASTERとPCを接続するため）</li>
         </ul>
 
-        <h3 id="subsection-esp32-preparation">🔌 1. UZU ROASTER側の仕様:</h3>
-        <p>UZU ROASTER には、以下の機能が実装されています。</p>
+        <h3 id="subsection-esp32-preparation">🔌 1. UZ-01 側の仕様</h3>
+        <p>UZ-01 には、以下の機能が実装されています。</p>
         <ul>
             <li>USBシリアル通信で温度を定期的に出力する機能。
                 <ul>
@@ -601,7 +610,7 @@
             </li>
         </ul>
         <h3 id="subsection-pc-preparation">💻 2. PC側の準備（USBシリアルドライバのインストール）:</h3>
-        <p>UZU ROASTERをUSBでPCに接続するために、USBシリアルドライバのインストールが必要です。</p>
+        <p>UZ-01をUSBでPCに接続するために、USBシリアルドライバのインストールが必要です。</p>
         <ul>
             <li><strong>Windowsの場合:</strong><br>
                 <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank">https://www.wch.cn/downloads/CH341SER_ZIP.html</a> から「CH340 USBシリアルドライバ」をダウンロードし、PCにインストールしてください。</li>
@@ -1034,7 +1043,7 @@
 
 <div class="note">
     <strong>⚠️ 事前準備：</strong> PCをUZU ROASTERのWi-Fi（デフォルトSSID: <code>UZU-ROASTER</code>）に接続（APモード）しておくか、STAモードで同一ネットワーク内に配置しておいてください。
-    必要に応じて<a href="#section-controller-wifi">うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</a>の<a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a>セクションを参照してください。
+    必要に応じて<a href="#section-controller-wifi">URC（Web版）を使う（Wi-Fi接続編）</a>の<a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a>セクションを参照してください。
 </div>
 
 <h3 id="subsection-artisan-wifi-settings">⚙️ 1. ArtisanのWebSocket設定手順</h3>
@@ -1985,13 +1994,13 @@
     </div>
 
         <h2 id="uzuroaster-controller">
-            🚀 うずロースターコントローラー（URC）を使用する
+            🚀 URC（うずロースターコントローラー）を使用する
         </h2>
-        <p>このセクションでは、UZU ROASTERをPC、スマートフォンに接続し、Webアプリであるうずロースターコントローラー上で温度管理を行う手順を説明します。
+        <p>このセクションでは、UZ-01をPC、スマートフォンに接続し、WebアプリであるURC上で温度管理を行う手順を説明します。
             スマートフォンによる焙煎管理が行えたり、滑らかなアニメーションで初心者でも簡単、直感的にコーヒー焙煎が行えます。</p>
 
         <h3 id="connection-matrix">
-            🚀 うずロースターコントローラー　端末・環境別接続マトリックス
+            🚀 URC　端末・環境別接続マトリックス
         </h3>
         <p>
             使用する端末/機種によって、UZU ROASTERとの接続方法、使用アプリは異なります。以下の表は端末別に利用可能なアプリ/アクセス先/UZU ROASTERとの接続方式の一覧です。
@@ -2087,8 +2096,8 @@
             </ul>
         </div>
 
-        <h2 id="section-controller-wifi">🌐 うずロースターコントローラー（Webアプリ版）を使う（Wi-Fi接続編）</h2>
-        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイント（APモード）として起動します。
+        <h2 id="section-controller-wifi">🌐 URC（Webアプリ版）を使う（Wi-Fi接続編）</h2>
+        <p>UZ-01をUSB電源に接続すると、自動でWi-Fiアクセスポイント（APモード）として起動します。
             PCやスマートフォンのブラウザから直接アクセスし、焙煎をコントロール可能です。STAモード（ルーター接続）に関しては<a href="#subsection-sta-mode">STAモードの設定</a>を参照してください。</p>
 
         <h3 id="subsection-initial-setup-wifi">🔧 初期設定と接続:</h3>
@@ -2096,29 +2105,29 @@
             <li>
                 <h4>起動とWi-Fi接続:</h4>
                 <ul>
-                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。USB Type-Cで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
+                    <li>UZ-01本体をUSB電源（5V/500mA）に接続します。USB Type-Cで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
                     <li>お使いのPCまたはスマートフォンのWi-Fi設定を開き、Wi-Fi接続先（SSID）として <code>UZU-ROASTER</code>（デフォルトSSID） を選択します。</li>
                     <li>デフォルトのパスワードは未設定です。（SSIDとパスワードはコマンドで変更可能です）</li>
-                    <li>（※）接続すると、Wi-Fiネットワークは『インターネット未接続』と表示されることがありますが、そのままUZU ROASTERとの接続を維持してください。</li>
+                    <li>（※）接続すると、Wi-Fiネットワークは『インターネット未接続』と表示されることがありますが、そのままUZ-01との接続を維持してください。</li>
                 </ul>
             </li>
             <li>
-                <h4>うずロースターコントローラーへのアクセス:</h4>
+                <h4>URC（Webアプリ）へのアクセス:</h4>
                 <ul>
-                    <li>通常、Wi-Fi接続後、キャプティブポータル機能により、自動的にデフォルトのブラウザにうずロースターコントローラーの画面が表示されます。</li>
+                    <li>通常、Wi-Fi接続後、キャプティブポータル機能により、自動的にデフォルトのブラウザにURC（Webアプリ）の画面が表示されます。</li>
                     <li>もし自動で表示されない場合は、Chrome、Edgeなどの任意のブラウザで、以下のURLアドレスに直接アクセスしてください。<br>
                         URLアドレス: <code>http://192.168.4.1</code>（デフォルトIPアドレス）</li>
                 </ul>
             </li>
             <li>
                 <h4>WebSocket通信の開始:</h4>
-                <p>ホストデバイス（PC/スマートフォン）とUZU ROASTERはWebSocket機能を使って接続されます。Webページを開くと、自動的にUZU ROASTER本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
+                <p>ホストデバイス（PC/スマートフォン）とUZ-01はWebSocket機能を使って接続されます。Webページを開くと、自動的にUZ-01本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
                 （※）Wi-Fiが正常に接続されていても接続状態にならない場合は、しばらく待ってから再度ページを更新するか、異なるブラウザで再度アクセスしてみてください。
                 （※）スリープ状態（画面消灯）になるとUZU ROASTERとの接続が切れるため、焙煎中はスマートフォンの画面を常時点灯に設定してご使用ください。
             </li>
         </ol>
         <div class="tip"><h4>ヒント:</h4>
-        <p>Webアプリ版のうずロースターコントローラーは、UZU ROASTERに接続可能な端末数を1つに制限しています。Wi-FiでUZU ROASTERに接続できない場合は、既にUZU ROASTERに接続している端末がないか確認してください。</p> 
+        <p>URC（Web版）は、UZ-01に接続可能な端末数を1つに制限しています。Wi-FiでUZ-01に接続できない場合は、既にUZ-01に接続している端末がないか確認してください。</p> 
         </div>
         <br><br>
         <hr>
@@ -2176,7 +2185,7 @@
 
         <br><br>
         <hr>
-        <h2 id="section-controller-usbserial">🔌 うずロースターコントローラー（Webアプリ版）を使う（USB接続編）</h2>
+        <h2 id="section-controller-usbserial">🔌 URC（Webアプリ版）を使う（USB接続編）</h2>
         <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動しますが、USB接続するにはWi-Fiアクセスポイントに接続せずに使用します。</p>
 
         <h3 id="subsection-initial-setup-usbserial">🔧 初期設定と接続:</h3>
@@ -2185,18 +2194,18 @@
                 <h4>起動とUSB接続:</h4>
                 <ul>
                     <li><a href="#subsection-pc-preparation">PC側の準備（USBシリアルドライバのインストール）</a>を参照してUSBドライバをインストールします。</li>
-                    <li>UZU ROASTER本体をUSB電源（5V/500mA）に接続します。USB Type-Cで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
-                    <li>ブラウザでうずロースターコントローラーページを読み込み、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>
+                    <li>UZ-01本体をUSB電源（5V/500mA）に接続します。USB Type-Cで他のデバイスに給電可能なスマートフォンからは、直接接続して給電が可能です。</li>
+                    <li>ブラウザでURC（Webアプリ）ページを読み込み、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>
                         ボタンを押してUSBシリアルのCOMポートを選択してUSB接続を開始します。</li>
-                    （※）他のアプリで既にCOMポートを使用している時は、うずロースターコントローラーからそのCOMポートでUZU ROASTERに接続することができません。<br>
-                    （※）UZU ROASTERにWi-Fiで接続して、Webサーバーに入っているうずロースターコントローラーを起動した場合、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>ボタンは表示されません。
-                        PC等のローカルディスク上のHTMLファイルを開いたり、<a href="https://uzuuzu.shop/uzuroastery/demo/">UZU ROASTERスペシャルサイトのURL</a>をアクセスしてうずロースターコントローラーを起動した場合に<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>
+                    （※）他のアプリで既にCOMポートを使用している時は、URC（Webアプリ）からそのCOMポートでUZ-01に接続することができません。<br>
+                    （※）UZ-01にWi-Fiで接続して、Webサーバーに入っているURC（Webアプリ）を起動した場合、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>ボタンは表示されません。
+                        PC等のローカルディスク上のHTMLファイルを開いたり、<a href="https://uzuuzu.shop/uzuroastery/demo/">UZU ROASTERスペシャルサイトのURL</a>をアクセスしてURC（Webアプリ）を起動した場合に<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>
                     ボタンが表示されます。
                 </ul>
             </li>
         </ol>
         <div class="tip"><h4>ヒント:</h4>
-        <p>Webアプリ版のうずロースターコントローラーを起動すると、優先的にWi-FiコネクションでUZU ROASTERに接続を試みます。</p> 
+        <p>URC（Web版）を起動すると、優先的にWi-FiコネクションでUZ-01に接続を試みます。</p> 
         <p>USB接続を優先させたい場合は、PCやスマートフォンのWi-Fi設定で一時的にUZU ROASTERのWi-Fiアクセスポイントへの接続を解除し、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>ボタンを押してUSB接続を行ってください。</p>
         </div>
 
@@ -2204,8 +2213,8 @@
         <hr>
 
         
-        <h2 id="section-controller-usb">🌐 うずロースターコントローラー（Python版）を使う（USB接続編）</h2>
-        <p>うずロースターコントローラー（Python版）はWi-Fiを使用せずにUSB接続でPCとUZU ROASTERと接続します。Webアプリ版との違いは、焙煎プロファイルを直接ファイルに保存、読み込みができるようになっていることです。</p>
+        <h2 id="section-controller-usb">🌐 URC（Python版）を使う（USB接続編）</h2>
+        <p>URC（Python版）はWi-Fiを使用せずにUSB接続でPCとUZ-01と接続します。Web版との違いは、焙煎プロファイルを直接ファイルに保存、読み込みができるようになっていることです。</p>
         <p>uzuroaster.exeファイルを<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>のリリースページからダウンロードし、PC（Windows）で実行してください。</p>  
         <h3 id="subsection-initial-setup-usb">🔧 初期設定と接続:</h3>
         <ol>
@@ -2214,14 +2223,14 @@
                 <ul>
                     <li><a href="#subsection-pc-preparation">PC側の準備（USBシリアルドライバのインストール）</a>を参照してUSBドライバをインストールします。</li>
                     <li>UZU ROASTERとPC（Windows）をUSBで接続します。</li>
-                    <li>うずロースターコントローラー（Python版）を起動するとUZU ROASTERを自動で認識します。</li>
+                    <li>URC（Python版）を起動するとUZ-01を自動で認識します。</li>
                 </ul>
             </li>
         </ol>
         <br><br>
         <hr>
 
-        <h2 id="section-web-app-operation">🌐 うずロースターコントローラー（Webアプリ版/Python版共通）の詳しい操作方法</h2>
+        <h2 id="section-web-app-operation">🌐 URC（Web版/Python版共通）の詳しい操作方法</h2>
 
 <div style="text-align: center; margin: 10px 0; position: relative;"">
  <iframe 
@@ -2229,7 +2238,7 @@
     loading="lazy">
   </iframe>
 <div style="position: absolute; top: 0; left: 0; width: 100%; height:100%; z-index: 10;"></div>
-  <p style="font-size: 1em; text-align: center; margin-bottom: 30px;">図2: うずロースターコントローラー操作画面</p>
+  <p style="font-size: 1em; text-align: center; margin-bottom: 30px;">図2: URC（Web版）操作画面</p>
 </div>
 
 <style>
@@ -2247,10 +2256,10 @@
     }
 </style>
 
-        <p>「うずロースターコントローラー」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、焙煎プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
+        <p>「URC」は、コーヒー焙煎のプロファイル作成・編集・管理、そして実機連携による焙煎支援を行うWebアプリケーションです。リアルタイム温度表示、RoR（温度上昇速度）表示、焙煎プロファイルの保存・読み込み機能などを活用し、焙煎を成功に導きます。</p>
 
-        <h3 id="subsection-web-app-overview">1. うずロースターコントローラーアプリ概要:</h3>
-        <p>うずロースターコントローラーアプリは、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をチャートで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
+        <h3 id="subsection-web-app-overview">1. URC（Webアプリ）概要:</h3>
+        <p>URC（Webアプリ）は、リアルタイムで温度データを取得し、現在の温度とRoR（Rate of Rise）を画面に表示します。さらに、リアルタイムの温度変化をチャートで可視化するチャート機能のほか、目標となるコーヒー焙煎プロファイルを作成・読み込みし、そのプロファイルカーブに沿って焙煎温度をアシストする機能を提供します。</p>
 
         <h3 id="subsection-web-app-basic-screen">2. 基本画面と各エリアの説明:</h3>
         <ul>
@@ -2613,7 +2622,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>保存したはずの焙煎データが消えてしまった</td>
-                    <td>うずロースターコントローラーのWebアプリ版は、ローカルストレージに焙煎データ（最大50件）を保存しています。ローカルストレージはURL（<code>192.168.4.1</code> <code>172.20.10.2</code>など）によって管理されています。
+                    <td>URC（Web版）のローカルストレージに焙煎データ（最大50件）を保存しています。ローカルストレージはURL（<code>192.168.4.1</code> <code>172.20.10.2</code>など）によって管理されています。
                         ローカルストレージに保存した時とは異なるURLでアクセスした場合は、ローカルストレージが切り替わるので一見消えたように見えますが、元のURLに戻ればデータが復元できます。
                         また、ブラウザのキャッシュを削除した場合は、保存された焙煎データが消えてしまう可能性があります。<br>
                         重要な焙煎データは、定期的にプロファイルデータをJSON形式でテキスト保存（コピー＆ペースト）しておくことを推奨します。
@@ -2721,7 +2730,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
             <li><strong>平均化処理:</strong> 移動平均（20点、最大最小4点ずつ除外）により、安定した温度値を提供します。</li>
             <li><strong>表示桁数:</strong> 小数第1位まで表示されます。（設定変更可能）</li>
             <li><strong>更新間隔:</strong> USBシリアルのデフォルトは500ms（0.5秒）更新です。Web/USBシリアルコマンドで変更可能です。（最小200ms）<br>
-            うずロースターコントローラー使用時（Wi-Fi経由、またはUSBシリアル）は1秒更新です。</li>
+            URC（Web版）使用時（Wi-Fi経由、またはUSBシリアル）は1秒更新です。</li>
             <li><strong>RoR演算:</strong> 20秒の移動平均演算でフィルタリングしています。移動平均窓数はWeb/USBシリアルコマンドで変更可能です。</li>
             <li><strong>温度校正:</strong> 1次関数 y = ax + b （x:補正前の温度値）による温度補正機能が利用できます。
             センサーの個体差や設置環境による温度の偏差を、傾きa（Gain）と切片b（Offset）の調整・設定によって補正可能です。
@@ -2780,7 +2789,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <br>
 
         <h4>ブラウザ側（URC）のアップデート方法</h4>
-        うずロースターコントローラーをアップデートするには、UZU ROASTER内部の<code>index.html</code>ファイルを更新する必要があります。<br>
+        <p>URC（Webアプリ）をアップデートするには、UZ-01内部の<code>index.html</code>ファイルを更新する必要があります。<br>
         以下の2通りの更新方法がありますので、お好きな方を選択してください。（機能は制限されますが、UZU ROASTERファイル更新機能を使ってアップデートする方が簡単です）
         <h5 id="admin-file-uploader">①UZU ROASTERファイル更新機能を使ってアップデートする場合</h5>
         <p><code>192.168.4.1/update/</code>ページ（デフォルトIPアドレス + "/update/"）にアクセスするとUZU ROASTERファイル更新機能が使用できます。<br>
@@ -2793,19 +2802,19 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <ul>
         <li><a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>から<code>index.html</code>をダウンロードします。</li>
         <li>Arduino IDEから<a href="#section-custom-webserver-fs"><b>Web画面（LittleFS）の構成と更新</b></a>を参照し、LittleFSに<code>index.html</code>をアップロードします。
-        （LittleFSにアップロードしなくても、ホストPCでindex.htmlファイルをブラウザに表示することでうずロースターコントローラーが利用可能です）</li>
+        （LittleFSにアップロードしなくても、ホストPCでindex.htmlファイルをブラウザに表示することでURC（Webアプリ）が利用可能です）</li>
         </ul>
         <div class="tip">
-        <p>ESP32側ファームウェア（Artisan_sample.ino | Artisan_sample.ino.bin）とうずロースターコントローラーファイル（index.html）のバージョンは必ず合わせてください。<br>
-        どちらか一方だけをアップデートしてバージョンが異なる状態で使用すると、うずロースターコントローラーの一部機能が正常に動作しない可能性があります。<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>のリリースページで、対応するバージョンのファームウェアとうずロースターコントローラーファイルをダウンロードしてください。</p>
-        <p>Version1.2.0以前のうずロースターコントローラーファイルをアップロードする場合は、<code>index.html</code><code>script.js</code>両方のファイルをアップロードしてください。</p>
+        <p>ESP32側ファームウェア（Artisan_sample.ino | Artisan_sample.ino.bin）とURC（Webアプリ）ファイル（index.html）のバージョンは必ず合わせてください。<br>
+        どちらか一方だけをアップデートしてバージョンが異なる状態で使用すると、URC（Webアプリ）の一部機能が正常に動作しない可能性があります。<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>のリリースページで、対応するバージョンのファームウェアとURC（Webアプリ）ファイルをダウンロードしてください。</p>
+        <p>Version1.2.0以前のURC（Webアプリ）ファイルをアップロードする場合は、<code>index.html</code><code>script.js</code>両方のファイルをアップロードしてください。</p>
         </div>
 
        <hr>
         <h3 id="section-loadmap">🧪 開発ロードマップ</h3>
         <h4>Version 1.x Antigua</h4>
         <ul>
-            <li><strong>Version 1.0:</strong> Artisan、うずロースターコントローラー対応温度表示機能</li>
+            <li><strong>Version 1.0:</strong> Artisan、URC（Webアプリ）対応温度表示機能</li>
             <li><strong>Version 1.1:</strong> STA接続（ルーター接続）機能追加</li>
             <li><strong>Version 1.2:</strong> ArtisanのWi-Fi接続機能追加、クラウドへの焙煎プロファイルアップロード機能追加（β版）</li>
             <li><strong>Version 1.3:</strong> 温度校正機能追加、チャート編集機能、イベント追加・DTR表示機能、英語対応（UI変更）、RoRフィルタリング強度設定機能、温度上限・RoR上限設定機能、華氏・摂氏切替機能</li>
