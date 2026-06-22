@@ -115,12 +115,13 @@ esptool.py --port /dev/ttyUSB0 write_flash 0x10000 Artisan_sample.ino.bin
 
 ## 📡 Artisan連携
 
-Artisan の **ヘルプ ＞ 設定の読み込み** から以下を読み込み：
+Artisan の **ヘルプ ＞ 設定の読み込み** から /artisan フォルダ以下の各設定ファイルをArtisanで読み込んで設定:
 
-- /artisan フォルダ以下の各設定ファイルをArtisanで読み込んで設定。
-`uz_01_behmor_settings.aset`  Behmor用（USBシリアル接続）
-`uz_01_tc4_settings.aset`     TC4用（USBシリアル接続）
-`uz_01_ws_settings.aset`      WebSocket用（WiFi接続）
+`uz_01_behmor_settings.aset`  -- Behmor用（USBシリアル接続）
+
+`uz_01_tc4_settings.aset`     -- TC4用（USBシリアル接続）
+
+`uz_01_ws_settings.aset`      -- WebSocket用（WiFi接続）
 
 ---
 

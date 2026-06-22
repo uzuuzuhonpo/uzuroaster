@@ -517,7 +517,7 @@
 
         <p><strong>② OPTION BUTTON（オプションボタン）</strong><br>
         短押し、長押し（3秒以上）でそれぞれ設定したコマンドを実行します。詳しくは<a href="#section-web-serial-commands">コマンド一覧</a>を参照してください。<br>
-        デフォルトでは、短押しでステータスLEDの表示切り替え（ステータス表示⇔温度表示）、長押しでUZU ROASTERリセットに設定されています。</p>
+        デフォルトでは、短押しでステータスLEDの表示切り替え（ステータス表示⇔温度表示）、長押しでUZ-01リセットに設定されています。</p>
         <p><strong>③ STATUS LED（ステータスLED）</strong><br>
         UZ-01 と URC の接続状態を点灯パターンで表示します。<br>
         <ul>
@@ -545,24 +545,24 @@
             </li>
             <li>
                 <h3>USB接続方法と電源について</h3>
-                <p>UZU ROASTERは、多様なデバイスとの接続に対応していますが、USB-Cの規格上、接続方法に一部制限があります。以下のガイドを確認し、正しく接続してください。</p>
+                <p>UZ-01は、多様なデバイスとの接続に対応していますが、USB-Cの規格上、接続方法に一部制限があります。以下のガイドを確認し、正しく接続してください。</p>
 
                 <div class="connection-box">
                     <h4>A. パソコン（USB-Aポート）と接続する場合 <span style="font-size: 0.7em; background: #48bb78; color: white; padding: 2px 8px; border-radius: 4px;">推奨</span></h4>
                     <p>最も安定した接続方法です。データの読み取りおよびプログラムの書き込みが可能です。</p>
                     <div class="connection-diagram">
-                        [PC USB-A] ── <span class="diagram-highlight">A to C ケーブル</span> ── [UZU ROASTER]
+                        [PC USB-A] ── <span class="diagram-highlight">A to C ケーブル</span> ── [UZ-01]
                     </div>
                 </div>
                 <div class="connection-box">
                     <h3>B. スマートフォン / USB-C搭載PC と接続する場合</h3>
-                    <p>スマートフォン、USB-C搭載PC等をUZU ROASTERと接続する場合は、<strong>「OTG変換アダプタ」</strong>、<strong>「USBハブ」</strong>を必ずご使用ください。（スターターキットに同梱されています）</p>
+                    <p>スマートフォン、USB-C搭載PC等をUZ-01と接続する場合は、<strong>「OTG変換アダプタ」</strong>、<strong>「USBハブ」</strong>を必ずご使用ください。（スターターキットに同梱されています）</p>
                     <div class="connection-diagram">
-                        [スマートフォン] ── <span class="diagram-highlight">OTGアダプタ[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
+                        [スマートフォン] ── <span class="diagram-highlight">OTGアダプタ[C to A]</span> ── [A to C ケーブル] ── [UZ-01]
                     </div>
                     <p class="warning-text">※変換アダプタは必ず「スマートフォン/PC」側に接続してください。UZ-01本体側に接続すると給電されません。</p>
                     <div class="connection-diagram">
-                        [USB-C搭載PC] ── <span class="diagram-highlight">USB-HUB[C to A]</span> ── [A to C ケーブル] ── [UZU ROASTER]
+                        [USB-C搭載PC] ── <span class="diagram-highlight">USB-HUB[C to A]</span> ── [A to C ケーブル] ── [UZ-01]
                     </div>
                     <p class="warning-text">※ホスト側がUSB-Cでデバイス側がUSB-AタイプのUSBハブをご使用ください。</p>
                 </div>
@@ -584,7 +584,7 @@
             <li>Artisan連携（USBシリアル/Wi-Fi接続）: PCに温度情報を転送し、高機能な焙煎ソフトウェアArtisanで詳細な焙煎プロファイルを管理・表示可能です。</li>
             <li>URC（Web版）: UZ-01に内蔵されたWebサーバーにWi-FiでAP接続/STA接続、またはUSB接続（USBシリアル）で、PCやスマートフォンのブラウザでリアルタイム温度やRoR（温度上昇速度）を表示し、焙煎をアシストします。</li>
             <li>URC（Python版）: Windowsアプリとなっており、USBシリアルでUZ-01に接続して使用します。Web版とは異なり、プロファイルのファイルへの保存、読み込みが可能です。</li>
-            <li>カスタムWebサーバー機能: ユーザーが自由に作成したカスタムWebページを、UZU ROASTERのWi-Fiスポット経由で表示・利用可能です。</li>
+            <li>カスタムWebサーバー機能: ユーザーが自由に作成したカスタムWebページを、UZ-01のWi-Fiスポット経由で表示・利用可能です。</li>
         </ol>
         <hr>
 
@@ -597,7 +597,7 @@
             <li>焙煎用温度センサー K型熱電対</li>
             <li>PC（Windows/macOS/Linux）</li>
             <li>Artisan（最新版推奨） 👉 <a href="https://artisan-scope.org/" target="_blank">Artisan公式サイト</a></li>
-            <li>USB Type-Cケーブル（UZU ROASTERとPCを接続するため）</li>
+            <li>USB Type-Cケーブル（UZ-01とPCを接続するため）</li>
         </ul>
 
         <h3 id="subsection-esp32-preparation">🔌 1. UZ-01 側の仕様</h3>
@@ -628,7 +628,7 @@
         設定ファイルはArtisan Version4.0.2を対象に作成されています。それ以外のバージョンでは動作しない可能性がありますので、動作しない場合は設定画面から設定してください。</p>
         <h4>【Artisanの設定ファイルを使用する方法】</h4>
         <ol>
-            <li>UZU ROASTERとPCをUSBケーブルで接続します。</li>
+            <li>UZ-01とPCをUSBケーブルで接続します。</li>
             <li>Artisanを起動します。（ArtisanはすでにPCにインストールされているものとします）</li>
             <li><a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からArtisanのシリアル通信用設定ファイル（<code>uz_01_behmor_settings.aset</code>）をダウンロードします。<br>
                 上部プルダウンメニューの「ヘルプ」→「設定の読み込み」から<code>uz_01_behmor_settings.aset</code>を読み込むと、必要な設定が自動で反映されます。</li>
@@ -636,7 +636,7 @@
         </ol>
         <h4>【Artisanの設定画面から手動で設定する方法】</h4>
         <ol>
-            <li>UZU ROASTERとPCをUSBケーブルで接続します。</li>
+            <li>UZ-01とPCをUSBケーブルで接続します。</li>
             <li>Artisanを起動します。（ArtisanはすでにPCにインストールされているものとします）</li>
             <li>Artisanのメニューから「構成」→「デバイス」を開いて、デバイス情報を設定します。<span style="color: #f00;">（「構成」→「機械」メニューは使用しません）</span></li>
             <li>Artisanのメニューから「構成」→「シリアルポート」を開いて、シリアルポート通信を設定します。</li>
@@ -987,9 +987,9 @@
         </div>
    
         <ul>
-            <li><code>ポート</code>: UZU ROASTERが接続されているCOMポートを指定します。<br>
+            <li><code>ポート</code>: UZ-01が接続されているCOMポートを指定します。<br>
                 （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code>、<code>/dev/cu.usbserial-XXXX</code> など）</li>
-            <li><code>通信速度</code>: <code>115200</code> （UZU ROASTER設定に合わせます）</li>
+            <li><code>通信速度</code>: <code>115200</code> （UZ-01設定に合わせます）</li>
             <li><code>データ長</code>: <code>8</code></li>
             <li><code>パリティビット</code>: <code>N</code></li>
             <li><code>ストップビット</code>: <code>1</code></li>
@@ -1006,7 +1006,7 @@
 
         <h3 id="subsection-artisan-test">✅ 接続テスト＆確認:</h3>
         <p>設定画面を閉じたら、Artisanの上部ツールバーにある【START】ボタンをクリックしてください。チャートに温度がリアルタイムで表示されます。</p>
-        <p>UZU ROASTERからは、デフォルトで温度データが約0.5秒（500ms）ごとに送信されます。Artisanではサンプリング周期1秒以上が推奨されているため、必要に応じてUZU ROASTERまたはArtisanの設定で送信間隔を調整してください。</p>
+        <p>UZ-01からは、デフォルトで温度データが約0.5秒（500ms）ごとに送信されます。Artisanではサンプリング周期1秒以上が推奨されているため、必要に応じてUZ-01またはArtisanの設定で送信間隔を調整してください。</p>
 
         <h3 id="subsection-troubleshooting-artisan">🌡️ Artisanで温度が表示されない場合のチェックポイント:</h3>
         <table>
@@ -1031,7 +1031,7 @@
                 </tr>
                 <tr>
                     <td>データが読み取れない・エラーになる</td>
-                    <td>UZU ROASTERからのデータ出力形式（特に改行<code>\n</code>の有無）がArtisanの設定（スクリプト）と一致しているか確認してください。</td>
+                    <td>UZ-01からのデータ出力形式（特に改行<code>\n</code>の有無）がArtisanの設定（スクリプト）と一致しているか確認してください。</td>
                 </tr>
             </tbody>
         </table>
@@ -1039,10 +1039,10 @@
 
 
 <h2 id="section-artisan-wifi">☕ Artisanと連携する（Wi-Fi接続編）</h2>
-<p>UZU ROASTERは、USBケーブルを使わずにWi-Fi（WebSocket）経由でArtisanと通信することが可能です。配線の煩わしさから解放され、スマートな焙煎環境を構築できます。</p>
+<p>UZ-01は、USBケーブルを使わずにWi-Fi（WebSocket）経由でArtisanと通信することが可能です。配線の煩わしさから解放され、スマートな焙煎環境を構築できます。</p>
 
 <div class="note">
-    <strong>⚠️ 事前準備：</strong> PCをUZU ROASTERのWi-Fi（デフォルトSSID: <code>UZU-ROASTER</code>）に接続（APモード）しておくか、STAモードで同一ネットワーク内に配置しておいてください。
+    <strong>⚠️ 事前準備：</strong> PCをUZ-01のWi-Fi（デフォルトSSID: <code>UZU-ROASTER</code>）に接続（APモード）しておくか、STAモードで同一ネットワーク内に配置しておいてください。
     必要に応じて<a href="#section-controller-wifi">URC（Web版）を使う（Wi-Fi接続編）</a>の<a href="#subsection-initial-setup-wifi">🔧 初期設定と接続</a>セクションを参照してください。
 </div>
 
@@ -1964,7 +1964,7 @@
 </table>
 
     <h4>【Nodes & Commands（通信経路）の設定】</h4>
-    <p>UZU ROASTER独自のデータ構造をArtisanに教え込むための、最も重要な設定です。</p>
+    <p>UZ-01独自のデータ構造をArtisanに教え込むための、最も重要な設定です。</p>
 
     <div class="connection-box" style="background: #edf2f7;">
         <h4>設定エリア：Nodes & Commands</h4>
@@ -1989,7 +1989,7 @@
     <div class="tip">
         <p>
             設定後、Artisanのメイン画面で「START」を押すと、WebSocket通信が始まります。<br>
-            画面にUZU ROASTERから送信された温度が表示されているか確認してください。
+            画面にUZ-01から送信された温度が表示されているか確認してください。
         </p>
     </div>
 
@@ -2003,7 +2003,7 @@
             🚀 URC　端末・環境別接続マトリックス
         </h3>
         <p>
-            使用する端末/機種によって、UZU ROASTERとの接続方法、使用アプリは異なります。以下の表は端末別に利用可能なアプリ/アクセス先/UZU ROASTERとの接続方式の一覧です。
+            使用する端末/機種によって、UZ-01との接続方法、使用アプリは異なります。以下の表は端末別に利用可能なアプリ/アクセス先/UZ-01との接続方式の一覧です。
         </p>
 
         <div style="overflow-x: auto;">
@@ -2021,21 +2021,21 @@
                     <tr style="background: #fffaf0;">
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold;">iPhone/iPad</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">Safari</td>
-                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZU ROASTER (192.168.4.1)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZ-01 (192.168.4.1)</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold; color: #dd6b20;">Wi-Fi</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
                     </tr>
                     <tr style="background: #f0fff4;">
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold;">Android</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome</td>
-                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZU ROASTER (192.168.4.1)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZ-01 (192.168.4.1)</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold; color: #dd6b20;">Wi-Fi</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
                     </tr>
                     <tr style="background: #ebf8ff;">
                         <td rowspan="5" style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold;">Windows PC</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome/Edge</td>
-                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZU ROASTER (192.168.4.1)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZ-01 (192.168.4.1)</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold; color: #dd6b20;">Wi-Fi</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
                     </tr>
@@ -2073,7 +2073,7 @@
                     <tr style="background: #fdf0f6;">
                         <td rowspan="2" style="padding: 8px; border: 1px solid #e0a7c2; font-weight: bold;">macOS PC</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0;">Chrome/Safari</td>
-                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZU ROASTER (192.168.4.1)</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e0;">UZ-01 (192.168.4.1)</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; font-weight: bold; color: #dd6b20;">Wi-Fi</td>
                         <td style="padding: 8px; border: 1px solid #cbd5e0; text-align: center;">○</td>
                     </tr>
@@ -2089,7 +2089,7 @@
         <div style="background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 15px; font-size: 0.9em;">
             <strong>🔗 アクセス先URLリファレンス：</strong><br>
             <ul>
-                <li><strong>UZU ROASTER：</strong>ブラウザで 192.168.4.1 （本体AP接続時のデフォルトIP）に接続します。</li>
+                <li><strong>UZ-01：</strong>ブラウザで 192.168.4.1 （本体AP接続時のデフォルトIP）に接続します。</li>
                 <li><strong>公式Web：</strong> <a href="https://uzuuzu.shop/uzuroastery/demo/index.html" target="_blank">https://uzuuzu.shop/uzuroastery/demo/index.html</a></li>
                 <li><strong>ローカルファイル：</strong> ローカルディスクに保存した <code>index.html</code> をブラウザへ読み込ませます。</li>
                 <li><strong>ローカルホスト：</strong> 127.0.0.1 （Pythonアプリ起動時）</li>
@@ -2123,7 +2123,7 @@
                 <h4>WebSocket通信の開始:</h4>
                 <p>ホストデバイス（PC/スマートフォン）とUZ-01はWebSocket機能を使って接続されます。Webページを開くと、自動的にUZ-01本体とのWebSocket通信が開始されます。接続状態は、画面上部の「接続中/未接続」のインジケーターで確認可能です。</p>
                 （※）Wi-Fiが正常に接続されていても接続状態にならない場合は、しばらく待ってから再度ページを更新するか、異なるブラウザで再度アクセスしてみてください。
-                （※）スリープ状態（画面消灯）になるとUZU ROASTERとの接続が切れるため、焙煎中はスマートフォンの画面を常時点灯に設定してご使用ください。
+                （※）スリープ状態（画面消灯）になるとUZ-01との接続が切れるため、焙煎中はスマートフォンの画面を常時点灯に設定してご使用ください。
             </li>
         </ol>
         <div class="tip"><h4>ヒント:</h4>
@@ -2132,12 +2132,12 @@
         <br><br>
         <hr>
        <h3 id="subsection-sta-mode">🏠 STAモード（ルーター接続）の設定【Ver 1.1.0〜】</h3>
-        <p>通常のAPモードでは、スマートフォンやPCをUZU ROASTERのWi-Fiに直接接続するため、その間はインターネットが使えなくなります。<br>
-        <strong>STAモード</strong>を使うと、UZU ROASTERをご自宅のWi-Fiルーターに接続させることができます。スマートフォンやPCも同じルーターに繋いだまま使えるため、インターネットを使いながら焙煎のモニタリングが可能になります。</p>
+        <p>通常のAPモードでは、スマートフォンやPCをUZ-01のWi-Fiに直接接続するため、その間はインターネットが使えなくなります。<br>
+        <strong>STAモード</strong>を使うと、UZ-01をご自宅のWi-Fiルーターに接続させることができます。スマートフォンやPCも同じルーターに繋いだまま使えるため、インターネットを使いながら焙煎のモニタリングが可能になります。</p>
 
         <div class="warning">
             <strong>⚠️ STAモードとAPモードは排他動作です</strong><br>
-            STAモードに切り替えると、UZU ROASTER自身のWi-Fiアクセスポイント（UZU-ROASTER）は停止します。スマートフォンやPCは、UZU ROASTERのWi-Fiではなく、ご自宅のルーターのWi-Fiに接続してください。
+            STAモードに切り替えると、UZ-01自身のWi-Fiアクセスポイント（UZU-ROASTER）は停止します。スマートフォンやPCは、UZ-01のWi-Fiではなく、ご自宅のルーターのWi-Fiに接続してください。
         </div>
 
         <h4>設定手順:</h4>
@@ -2152,7 +2152,7 @@
             <li>
                 <strong>STAモードに切り替えて再起動する</strong><br>
                 <pre><code>wifimode sta</code></pre>
-                UZU ROASTERが自動的に再起動し、ルーターへの接続を開始します。
+                UZ-01が自動的に再起動し、ルーターへの接続を開始します。
             </li>
             <li>
                 <strong>割り当てられたIPアドレスを確認する</strong><br>
@@ -2186,7 +2186,7 @@
         <br><br>
         <hr>
         <h2 id="section-controller-usbserial">🔌 URC（Webアプリ版）を使う（USB接続編）</h2>
-        <p>UZU ROASTERをUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動しますが、USB接続するにはWi-Fiアクセスポイントに接続せずに使用します。</p>
+        <p>UZ-01をUSB電源に接続すると、自動でWi-Fiアクセスポイントとして起動しますが、USB接続するにはWi-Fiアクセスポイントに接続せずに使用します。</p>
 
         <h3 id="subsection-initial-setup-usbserial">🔧 初期設定と接続:</h3>
         <ol>
@@ -2206,7 +2206,7 @@
         </ol>
         <div class="tip"><h4>ヒント:</h4>
         <p>URC（Web版）を起動すると、優先的にWi-FiコネクションでUZ-01に接続を試みます。</p> 
-        <p>USB接続を優先させたい場合は、PCやスマートフォンのWi-Fi設定で一時的にUZU ROASTERのWi-Fiアクセスポイントへの接続を解除し、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>ボタンを押してUSB接続を行ってください。</p>
+        <p>USB接続を優先させたい場合は、PCやスマートフォンのWi-Fi設定で一時的にUZ-01のWi-Fiアクセスポイントへの接続を解除し、<span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>ボタンを押してUSB接続を行ってください。</p>
         </div>
 
         <br><br>
@@ -2222,7 +2222,7 @@
                 <h4>起動とUSB接続:</h4>
                 <ul>
                     <li><a href="#subsection-pc-preparation">PC側の準備（USBシリアルドライバのインストール）</a>を参照してUSBドライバをインストールします。</li>
-                    <li>UZU ROASTERとPC（Windows）をUSBで接続します。</li>
+                    <li>UZ-01とPC（Windows）をUSBで接続します。</li>
                     <li>URC（Python版）を起動するとUZ-01を自動で認識します。</li>
                 </ul>
             </li>
@@ -2274,9 +2274,9 @@
                 <ul>
                     <li><span style="background:#2e8b57; border:1px solid #2e8b57;" class="icon-button">▶</span>： チャートへの記録を開始します。</li>
                     <li><span style=" background:#C62828; border:1px solid #C62828;" class="icon-button">■</span>： チャートへの記録を停止します。</li>
-                    <li><span style="background:#C62828; color:#fff; border:1px solid #ac1f1f; font-size:0.85em;" class="icon-button">💀</span>： 現在のプロファイルやチャート、UZU ROASTERをリセットします。（UZU ROASTERとの接続が解除されることがあります）</li>
-                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-reload"/></svg></span>： 画面を再読み込みします。UZU ROASTERと接続・再接続する場合に使用します。</li>
-                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>： Pythonアプリ、または、ローカルファイル、uzuuzu.shopのURC使用時に、Wi-FiではなくUSB接続でUZU ROASTERに接続します。</li>
+                    <li><span style="background:#C62828; color:#fff; border:1px solid #ac1f1f; font-size:0.85em;" class="icon-button">💀</span>： 現在のプロファイルやチャート、UZ-01をリセットします。（UZ-01との接続が解除されることがあります）</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-reload"/></svg></span>： 画面を再読み込みします。UZ-01と接続・再接続する場合に使用します。</li>
+                    <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-usb"/></svg></span>： Pythonアプリ、または、ローカルファイル、uzuuzu.shopのURC使用時に、Wi-FiではなくUSB接続でUZ-01に接続します。</li>
                     <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-config"/></svg></span>： 設定ポップアップの表示/非表示を切り替えます。言語選択（英語/日本語）の切り替え、シリアルコマンド入力、温度調整、画面色調調整、温度上限、RoR上限、RoRフィルタ設定が可能です。</li>
                     <li><span class="icon-button"><svg width="16" height="16" style="display:block;"><use href="#icon-manual"/></svg></span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
                     <li><span class="icon-button"><span style="color:rgba(255,255,255, 1); font-size:12px;font-weight: bold; transform: translateY(-2.4px);">⛶</span></span>： UZU ROASTERのオンラインマニュアルを開きます。</li>
@@ -2583,13 +2583,13 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 </tr>
                 <tr>
                     <td>設定をすべて初期化したい</td>
-                    <td>Web/USBシリアルから <code>reset all</code> コマンドを送信してください。UZU ROASTERが再起動し、設定が初期化されます。</td>
+                    <td>Web/USBシリアルから <code>reset all</code> コマンドを送信してください。UZ-01が再起動し、設定が初期化されます。</td>
                 </tr>
                 <tr>
-                    <td>Wi-Fi接続後にUZU ROASTERのIPアドレスを見失った場合</td>
-                    <td>・USBシリアルモニタで<code>ip</code>コマンドを送信し、UZU ROASTERの現在のIPアドレスを確認してください。（デフォルトは192.168.4.1です）<br>
+                    <td>Wi-Fi接続後にUZ-01のIPアドレスを見失った場合</td>
+                    <td>・USBシリアルモニタで<code>ip</code>コマンドを送信し、UZ-01の現在のIPアドレスを確認してください。（デフォルトは192.168.4.1です）<br>
                         ・もう一度Wi-Fiを切断⇒接続してキャプティブポータル機能をお試しください。<br>
-                        ・STAモードでUZU ROASTERのIPアドレスが分からなくなった場合は、USBシリアルモニタで<code>staip</code>コマンドを送信し、UZU ROASTERの現在のIPアドレスを確認してください。<br>
+                        ・STAモードでUZ-01のIPアドレスが分からなくなった場合は、USBシリアルモニタで<code>staip</code>コマンドを送信し、UZ-01の現在のIPアドレスを確認してください。<br>
                         ボタン長押しコマンドで <code>wifimode ap</code>を登録しておくと、コマンドなしでAPモードに復帰できます。また、ステータスLEDの点滅パターンでSTAモードのIPアドレスを確認できます。
                     </td>
                 </tr>
@@ -2602,21 +2602,21 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                         </td>
                 </tr>
                 <tr>
-                    <td>UZU ROASTERが動作しない</td>
-                    <td>・ブラウザによってはセキュリティの関係上、ネットワークからUZU ROASTERにアクセスできない可能性があります。<br>
+                    <td>UZ-01が動作しない</td>
+                    <td>・ブラウザによってはセキュリティの関係上、ネットワークからUZ-01にアクセスできない可能性があります。<br>
                         Chromeであれば<a href="chrome://flags/#local-network-access-check">chrome://flags/#local-network-access-check</a>にアクセスして、"Local Network Access Check"を無効にしてください。<br>
                         ・同時に接続できる機器の数に上限があります。UZU ROASTERは1台での運用を想定しているので、接続している機器が複数ある場合は接続を解除してください。<br>
                         ・ブラウザのタブを複数開いた状態でWebSocketが繋がらない場合は、すべてのタブを閉じてから1つだけ開いてください。数秒待つと接続できるようになります。<br>
                         ・電源供給用のUSBケーブル、電源供給源を確認 してください。5V 500mA以上を供給できるケーブル・バッテリーをお使いください。<br>
-                        ・それでも解決しない場合は、UZU ROASTERをリセットしてみてください。USBシリアルから <code>reset all</code> コマンドを送信するか、電源を一度切って再度入れてみてください。<br>
-                        ・それでも解決しない場合は、最新のUZU ROASTERのファームウェアとHTMLファイル、JavaScriptファイルをダウンロードして、再度書き込んでみてください。Arduino IDEを使用している場合は、スケッチの「書き込み」ボタンをクリックして、ファームウェアを書き込んでください。<br>
-                        ・それでも解決しない場合は、UZU ROASTERのサポートまでお問い合わせください。（USBシリアルモニタでUZU ROASTERの動作状況をご確認頂くとスムーズです）
+                        ・それでも解決しない場合は、UZ-01をリセットしてみてください。USBシリアルから <code>reset all</code> コマンドを送信するか、電源を一度切って再度入れてみてください。<br>
+                        ・それでも解決しない場合は、最新のUZ-01のファームウェアとHTMLファイル、JavaScriptファイルをダウンロードして、再度書き込んでみてください。Arduino IDEを使用している場合は、スケッチの「書き込み」ボタンをクリックして、ファームウェアを書き込んでください。<br>
+                        ・それでも解決しない場合は、UZU ROASTERのサポートまでお問い合わせください。（USBシリアルモニタでUZ-01の動作状況をご確認頂くとスムーズです）
                     </td>
                 </tr>
                 <tr>
                     <td>ブートローダーを誤って消してしまった</td>
-                    <td><a href="https://adafruit.github.io/Adafruit_WebSerial_ESPTool/">Adafruit WebSerial ESPTool</a>等で誤ってUZU ROASTERのブートローダーを消してしまったり、間違ったファイルで上書きしてしまった場合は、
-                        オプションボタンを押しながらUZU ROASTERを起動してください。書き込みモードで起動します。<br>
+                    <td><a href="https://adafruit.github.io/Adafruit_WebSerial_ESPTool/">Adafruit WebSerial ESPTool</a>等で誤ってUZ-01のブートローダーを消してしまったり、間違ったファイルで上書きしてしまった場合は、
+                        オプションボタンを押しながらUZ-01を起動してください。書き込みモードで起動します。<br>
                         それ以降は<a href="#section-firmware-update">手順通り</a>に書き込みを行ってください。
                     </td>
                 </tr>
@@ -2634,7 +2634,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <hr>
         <h2 id="section-product-specs">📋 製品仕様</h2>
         <table>
-            <caption>UZU ROASTER ハードウェア仕様</caption>
+            <caption>UZ-01 ハードウェア仕様</caption>
             <thead>
                 <tr>
                     <th>項目</th>
@@ -2711,7 +2711,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
   
         <h2 id="section-attachment">🎁付録</h2>
         <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド</h3>
-        <p>デバッグコンソールのコマンドプロンプトまたはUSBシリアル通信経由で、UZU ROASTERに対してコマンドを送信し、設定変更や操作を行うことが可能です。<br>
+        <p>デバッグコンソールのコマンドプロンプトまたはUSBシリアル通信経由で、UZ-01に対してコマンドを送信し、設定変更や操作を行うことが可能です。<br>
         </p>
         <p>全ての利用可能なコマンドの詳細は<a href="command_reference.html">コマンドリファレンス</a>をご参照ください。</p>
                     <div class="tip"><h4>ヒント: イベントの操作について</h4>
@@ -2738,13 +2738,13 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         </ul>
         <div class="tip">
             <h4>ヒント:</h4>
-            <p>UZU ROASTER起動直後の4秒間は移動平均計算のサンプル数が不足しているため一時的に数値が変動する場合がありますが、データ蓄積完了後は安定した計測へと移行します。</p>
+            <p>UZ-01起動直後の4秒間は移動平均計算のサンプル数が不足しているため一時的に数値が変動する場合がありますが、データ蓄積完了後は安定した計測へと移行します。</p>
         </div>
         <hr>
         <h3 id="section-firmware-update">🗃️ ファームウェアアップデート</h3>
         <h4>ファームウェアアップデートの概要</h4>
         スマートフォンやPCからインターネット回線を使ってGitHubから指定の2つのファイル（index.html, Artisan_sample.ino.bin）をダウンロードし、UZ-01にアップロードする事でバージョンアップが可能です。
-        <p>UZU ROASTERのファームウェアは、各種アップデートツールを使用して簡単にアップデート可能です。<br>
+        <p>UZ-01のファームウェアは、各種アップデートツールを使用して簡単にアップデート可能です。<br>
         （※）ファームウェアアップデートは、USBシリアル接続、Version1.1.0からはWi-Fi接続でも可能です。</p>
         <p>以下の手順で、ESP32側のファームウェア（UZ-01・Artisan_sample.ino.bin）とブラウザ側のWeb画面（URC・index.html）をアップデート可能です。
         <br></p>
@@ -2759,7 +2759,7 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
         <h4>Arduino IDEを使ったESP32側のファームウェアアップデート方法</h4>
         <ul>
         <li>ホストPCにArduino IDE最新版をダウンロードしてインストールします。（<a href="https://www.arduino.cc/en/software/">Arduino公式サイト</a>）</li>
-        <li>UZU ROASTERの最新版ソースコード（Artisan_sample.inoファイル）は<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からダウンロードします。</li>
+        <li>UZ-01の最新版ソースコード（Artisan_sample.inoファイル）は<a href="https://github.com/uzuuzuhonpo/uzuroaster">GitHub</a>からダウンロードします。</li>
         <li>*.inoファイルを適宜コンパイルし、ファームウェアをダウンロードします。</li>
         </ul>
         <div class="tip">
