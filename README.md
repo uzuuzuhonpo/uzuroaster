@@ -99,7 +99,7 @@ Arduino IDE に以下のライブラリをインストールしてください�
 esptool.py --port /dev/ttyUSB0 write_flash 0x10000 Artisan_sample.ino.bin
 ```
 
-または [ESP Flash Download Tool](https://www.espressif.com/en/support/download/flash-download-tools) を使用。
+または [ESP Flash Download Tool](https://adafruit.github.io/Adafruit_WebSerial_ESPTool/) を使用。
 
 **Arduino IDEでビルドする場合:**
 
