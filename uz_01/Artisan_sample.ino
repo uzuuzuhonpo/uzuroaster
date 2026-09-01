@@ -166,6 +166,7 @@ double lastValidTemp = MIN_TEMPERATURE; // 前回の正常値を保存
 int tempDeviationCount = 0;
 int tempErrorCount = 0;
 const double DEVIATION_TEMP = 10.0;
+double rawDebug = MIN_TEMPERATURE;
 
 int TemperatureInterval = 500; // [ms]
 int TemperatureDigit = 1; // 小数桁
@@ -307,8 +308,8 @@ public:
     double addValue(double value) {
         window.push_back(value);
 
-        // ウィンドウがオーバーしたら最古の値を削除
-        if (window.size() > windowSize) {
+        // ウィンドウがオーバーしたら最古の値を削除（20個に保つ）
+        while (window.size() > windowSize) {
             window.pop_front();
         }
 
@@ -329,6 +330,19 @@ public:
 
         int count = sorted.size() - trimSize * 2;
         return sum / count;
+    }
+
+    // 全ウィンドウを同じ値で埋める
+    void setImmediateData(double temp_data) {
+        // 現在のウィンドウのサイズを維持したまま、全てtemp_dataで上書きする
+        window.assign(windowSize, temp_data);
+
+        // for (const auto& val : window) {
+        //   MySerial.print(val);
+        //   MySerial.print(" ");
+        // }
+        // MySerial.println("");
+
     }
 };
 
@@ -418,7 +432,7 @@ void LEDDisplayTask(void *pvParameters) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-void WiFiInstectionTask(void *pvParameters) {
+void WiFiInspectionTask(void *pvParameters) {
   while(true) {
     // if (!wifiConnected) {
     //   webSocket.disconnect(); 
@@ -428,6 +442,8 @@ void WiFiInstectionTask(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
+
+MovingAverage ma(MOVING_WINDOW_SIZE, REMOVE_COUNT);  // 10個の値で移動平均を計算
 
 //////////////////////////////////////////////////////////////////////////
 void ReadTempTask(void *pvParameters) {
@@ -445,7 +461,6 @@ void ReadTempTask(void *pvParameters) {
   ThermoMeterType thermo = Behmor;
 
   double avg;
-  MovingAverage ma(MOVING_WINDOW_SIZE, REMOVE_COUNT);  // 10個の値で移動平均を計算
   int count = 0;
   int temp_send_interval_count = 0;
 
@@ -464,11 +479,18 @@ void ReadTempTask(void *pvParameters) {
     if (AverageTemperature > MAX_TEMPERATURE) {AverageTemperature = MAX_TEMPERATURE;}
     else 
     if (AverageTemperature < MIN_TEMPERATURE) {AverageTemperature = MIN_TEMPERATURE;} 
+    
+    //#define __DEBUG
+    // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+    #ifdef __DEBUG
+    String d_text = String(rawDebug, TemperatureDigit) + " : ";
+    MySerial.print(d_text);
+    #endif
+    // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
     if (++count >= (TemperatureInterval / CYCLE_PERIOD)) {
       count = 0;
       text = String(AverageTemperature, TemperatureDigit);
-
       if (TempDisplay) {
         if (UsbSerial) {
           // USB SerialがONの時はJSONタイプ以外の温度データは送信しない
@@ -1703,7 +1725,7 @@ void TaskSetup()
   );
 
   xTaskCreateUniversal(LEDDisplayTask, "TEMPERATURE_LED", 4096, NULL, 5, NULL, 0);
-  xTaskCreateUniversal(WiFiInstectionTask, "WIFI_INSPECTION", 4096, NULL, 6, NULL, 0);
+  xTaskCreateUniversal(WiFiInspectionTask, "WIFI_INSPECTION", 4096, NULL, 6, NULL, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1941,11 +1963,24 @@ double ReadThermoCouple() {
 //////////////////////////////////////////////////////////////////////////
 double ReadThermoCoupleWithGuard() {
     double raw = ReadThermoCouple();
+    rawDebug = raw;
+
+    if (tempErrorCount > MOVING_WINDOW_SIZE && raw > MIN_TEMPERATURE) {
+      ma.setImmediateData(raw); // すぐにエラーから復帰
+      lastValidTemp = raw;
+      tempErrorCount = 0;
+      tempDeviationCount = 0;
+    }
 
     if (raw <= MIN_TEMPERATURE) {
-      tempErrorCount++;
+        tempErrorCount++;
         if (tempErrorCount <= MOVING_WINDOW_SIZE) { // 20回までは前値を返して様子見
-            return lastValidTemp;
+          return lastValidTemp;
+        }
+        else {
+          ma.setImmediateData(raw); // すぐにエラー
+          lastValidTemp = raw;
+          return raw;
         }
     }
     tempErrorCount = 0; // 正常ならリセット
