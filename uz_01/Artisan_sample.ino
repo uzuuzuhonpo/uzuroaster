@@ -1,16 +1,17 @@
 #define WEBSOCKETS_SERVER_CLIENT_MAX 16  // デフォルト4　ゾンビ対策で保険として
 #define MAX_ROAST_TIME  1800
-#define MAX_TEMPERATURE 1000  // 260
-#define MIN_TEMPERATURE -20
+#define MAX_TEMPERATURE 999.9
+#define MIN_TEMPERATURE -99.9
 #define MAX_WIFI_CONNECTION   1 //10  //デフォルト。複数繋げると切断時にWebSocketゴースト？が残って処理が重くなるため当面1個だけ接続許可(温度を送信するところをコメントアウトで問題なく動く)
 #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1 // OTAアップデート用(実際はElegantoTA.hのdefineを書き換える必要あり)
+#define MOVING_WINDOW_SIZE 20 // 最大データ移動窓サイズ
+#define REMOVE_COUNT 4
 
 #define IP_LED_OFF 0
 #define IP_LED_AP  1
 #define IP_LED_STA 2
 
 #include <WiFi.h>
-//#include <ElegantOTA.h>
 #include <ESP32Servo.h>  
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
@@ -19,7 +20,6 @@
 #include "Adafruit_MAX31855.h"
 #include "esp_pm.h"
 #include <Preferences.h> 
-//#include <WebSerial.h>
 #include <ArduinoJson.h>
 //#include "Freenove_WS2812_Lib_for_ESP32.h"
 #include <Update.h>
@@ -33,7 +33,7 @@ void BroadcastMessage(String &message);
 // Global Variables
 //////////////////////////////////////////////////////////////////////////
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-const String version = "1.3.0";
+const String version = "1.3.1";
 const String CodeName ="Antigua";
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 TaskHandle_t taskHandle;
@@ -162,9 +162,11 @@ const int SerialBaudRate = 115200;
 const int bootButtonPin = 0;  // BOOTボタンはGPIO0
 std::vector<std::pair<double, double>> roastProfile;
 
-double lastValidTemp = 20.0; // 前回の正常値を保存
+double lastValidTemp = MIN_TEMPERATURE; // 前回の正常値を保存
+int tempDeviationCount = 0;
 int tempErrorCount = 0;
 const double DEVIATION_TEMP = 10.0;
+double rawDebug = MIN_TEMPERATURE;
 
 int TemperatureInterval = 500; // [ms]
 int TemperatureDigit = 1; // 小数桁
@@ -306,8 +308,8 @@ public:
     double addValue(double value) {
         window.push_back(value);
 
-        // ウィンドウがオーバーしたら最古の値を削除
-        if (window.size() > windowSize) {
+        // ウィンドウがオーバーしたら最古の値を削除（20個に保つ）
+        while (window.size() > windowSize) {
             window.pop_front();
         }
 
@@ -328,6 +330,19 @@ public:
 
         int count = sorted.size() - trimSize * 2;
         return sum / count;
+    }
+
+    // 全ウィンドウを同じ値で埋める
+    void setImmediateData(double temp_data) {
+        // 現在のウィンドウのサイズを維持したまま、全てtemp_dataで上書きする
+        window.assign(windowSize, temp_data);
+
+        // for (const auto& val : window) {
+        //   MySerial.print(val);
+        //   MySerial.print(" ");
+        // }
+        // MySerial.println("");
+
     }
 };
 
@@ -417,7 +432,7 @@ void LEDDisplayTask(void *pvParameters) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-void WiFiInstectionTask(void *pvParameters) {
+void WiFiInspectionTask(void *pvParameters) {
   while(true) {
     // if (!wifiConnected) {
     //   webSocket.disconnect(); 
@@ -428,10 +443,12 @@ void WiFiInstectionTask(void *pvParameters) {
   }
 }
 
+MovingAverage MovingAverageObject(MOVING_WINDOW_SIZE, REMOVE_COUNT);  // 最大ウィンドウサイズまで移動平均を計算
+
 //////////////////////////////////////////////////////////////////////////
 void ReadTempTask(void *pvParameters) {
   String text;
-  const int CYCLE_PERIOD = 200; // 200ms
+  const int CYCLE_PERIOD = 250; // サンプリング周期 250ms
   const TickType_t delay = pdMS_TO_TICKS(CYCLE_PERIOD); 
   int ss = 1;
   int mm = 0; 
@@ -444,13 +461,12 @@ void ReadTempTask(void *pvParameters) {
   ThermoMeterType thermo = Behmor;
 
   double avg;
-  MovingAverage ma(20, 4);  // 10個の値で移動平均を計算
   int count = 0;
   int temp_send_interval_count = 0;
 
   while (true) {
-    bt = ReadThermoCoupleWithGuard(); // ReadThermoCouple();
-    avg = ma.addValue(bt);
+    bt = ReadThermoCoupleWithGuard();
+    avg = MovingAverageObject.addValue(bt);
     String msg;
 
     if (SimulateCount > 0.5) {
@@ -458,15 +474,23 @@ void ReadTempTask(void *pvParameters) {
       SimulateCount += 0.1;
       if (SimulateCount > 240.0) SimulateCount = 1.0;
     }
-    RawTemperature = avg; // 移動平均化処理された温度をグローバルに保存
+    RawTemperature = avg; // 移動平均化処理された温度
     AverageTemperature = TempGain * RawTemperature + TempOffset; 
     if (AverageTemperature > MAX_TEMPERATURE) {AverageTemperature = MAX_TEMPERATURE;}
-    else if (AverageTemperature < MIN_TEMPERATURE) {AverageTemperature = MIN_TEMPERATURE;}  // 2026.4.17 -20 minimum
+    else 
+    if (AverageTemperature < MIN_TEMPERATURE) {AverageTemperature = MIN_TEMPERATURE;} 
+    
+    //#define __DEBUG
+    // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+    #ifdef __DEBUG
+    String d_text = String(rawDebug, TemperatureDigit) + " : ";
+    MySerial.print(d_text);
+    #endif
+    // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
     if (++count >= (TemperatureInterval / CYCLE_PERIOD)) {
       count = 0;
       text = String(AverageTemperature, TemperatureDigit);
-
       if (TempDisplay) {
         if (UsbSerial) {
           // USB SerialがONの時はJSONタイプ以外の温度データは送信しない
@@ -1404,6 +1428,11 @@ void CommandProcess(String& command, const uint8_t* params) {
     }
     WiFi.scanDelete();
   }
+  else if (command == "format") {
+    MySerial.println("Formatting LittleFS ...");
+    LittleFS.format();
+    MySerial.println("Done.");
+  }
   else if (command == "status") {
     String led_disp = (LEDIPDisplay == IP_LED_STA) ? "STA" : ((LEDIPDisplay == IP_LED_AP) ? "AP" : "off");
     preferences.begin("wifi", true);
@@ -1540,7 +1569,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     MySerial.println("  Raw temp      : " + String(thermocouple.readCelsius()));
     MySerial.println("  Internal temp : " + String(thermocouple.readInternal()));
     MySerial.println("  Sensor error  : " + String(thermocouple.readError()));
-    MySerial.println("  Error count   : " + String(tempErrorCount));
+    MySerial.println("  Error count   : " + String(tempDeviationCount));
     MySerial.println("  Last valid    : " + String(lastValidTemp));
     MySerial.println("[WebSocket]");
     MySerial.println("  Connected clients : " + String(webSocket.connectedClients()));
@@ -1610,6 +1639,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     MySerial.println("toffset reset     - Resets temperture offset to 0.");
     MySerial.println("tcalc <t1> <T1>   - Caluculates and sets temperture Offset by using t1(ideal temp) and T1(display temp).");
     MySerial.println("tcalc <t1> <T1> <t2> <T2> - Caluculates and sets temperture offset and gain by using t1,t2(ideal temp) and T1,T2(display temp).");
+    MySerial.println("format            - Formats LittleFS (File System).");
     MySerial.println("help              - Displays this help menu.");
   }
   else if (command == "getData" || command == "get_data") {  // Artisan command {"command":"getData","id":82225} ⇒response {"id":82225,"data":{"bt":20.3}}
@@ -1634,7 +1664,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     response += "\n";
     BroadcastMessage(response);
   }
-  else if (command == "READ") { // Artisan TC4用
+  else if (command == "READ") { // Artisan TC4用 （この設定にする時は"temp off"コマンドを実行してシリアルデータは何も送らない状態にする必要がある）
     // フォーマット: "0.00,BT,ET,0.00"
     String temptxt = String(AverageTemperature, TemperatureDigit);
     Serial.print("0.00,");
@@ -1695,7 +1725,7 @@ void TaskSetup()
   );
 
   xTaskCreateUniversal(LEDDisplayTask, "TEMPERATURE_LED", 4096, NULL, 5, NULL, 0);
-  xTaskCreateUniversal(WiFiInstectionTask, "WIFI_INSPECTION", 4096, NULL, 6, NULL, 0);
+  xTaskCreateUniversal(WiFiInspectionTask, "WIFI_INSPECTION", 4096, NULL, 6, NULL, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1916,14 +1946,15 @@ void ThermoCoupleSetup() {
 
 //////////////////////////////////////////////////////////////////////////
 double ReadThermoCouple() {
-   if (thermocouple.readError()) {
+  if (thermocouple.readError()) {
     //MySerial.println("Thermocouple error!");
-    return 0.0;
+    return MIN_TEMPERATURE; // Error 熱電対が繋がっていない可能性がる
   }
 
   double temp = thermocouple.readCelsius();
   if (isnan(temp)) {
     //MySerial.println("Fail to read sensor.");
+    return -100.0; // readErrorではじいてるのでここに来ることはない
   }
   
   return temp;
@@ -1932,14 +1963,37 @@ double ReadThermoCouple() {
 //////////////////////////////////////////////////////////////////////////
 double ReadThermoCoupleWithGuard() {
     double raw = ReadThermoCouple();
-    if (abs(raw - lastValidTemp) > DEVIATION_TEMP) {
+    rawDebug = raw;
+
+    if (tempErrorCount > MOVING_WINDOW_SIZE && raw > MIN_TEMPERATURE) {
+      MovingAverageObject.setImmediateData(raw); // すぐにエラーから復帰
+      lastValidTemp = raw;
+      tempErrorCount = 0;
+      tempDeviationCount = 0;
+    }
+
+    if (raw <= MIN_TEMPERATURE) {
         tempErrorCount++;
-        if (tempErrorCount < 3) { // 2回までは前値を返して様子見
-            return lastValidTemp;
+        if (tempErrorCount <= MOVING_WINDOW_SIZE) { // 最大ウィンドウサイズまでは前値を返して様子見
+          return lastValidTemp;
         }
-        // 3回連続なら「これが真実！」と受け入れる
+        else {
+          MovingAverageObject.setImmediateData(raw); // すぐにエラー
+          lastValidTemp = raw;
+          return raw;
+        }
     }
     tempErrorCount = 0; // 正常ならリセット
+
+    if (abs(raw - lastValidTemp) > DEVIATION_TEMP) {
+        tempDeviationCount++;
+        if (tempDeviationCount < 3) { // 2回までは前値を返して様子見
+            return lastValidTemp;
+        }
+        // 3回連続なら真の値
+    }
+
+    tempDeviationCount = 0; // 正常ならリセット
     lastValidTemp = raw;
     return raw;
 }
