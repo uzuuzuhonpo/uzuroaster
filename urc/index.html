@@ -1295,7 +1295,9 @@
     // ログイン状態の監視
     window._firebaseAuth.onAuthStateChanged(user => {
       window._currentUser = user;
-      updateAuthUI(user);
+      if (typeof updateAuthUI === 'function') {
+        updateAuthUI(user);
+      }
     });
   </script>
 </head>
@@ -1950,6 +1952,8 @@ const profileTemperatureDisplay = document.getElementById('profile_temperature')
 const profileRoRDisplay = document.getElementById('profile_ror');
 const roastRoRDisplay = document.getElementById('roast_ror');
 const roastDTRDisplay = document.getElementById('roast_dtr');
+const roastDTRArea = document.getElementById('dtr_area');
+const roastDTRLabel = roastDTRArea ? roastDTRArea.querySelector('.display-label') : null;
 const roastTemperatureDisplay = document.getElementById('roast_temperature');
 const roastTimeDisplay = document.getElementById('roast_time');
 const offsetInputTime = document.getElementById('offset-input-time');
@@ -2008,6 +2012,8 @@ const i18n = {
     DISPLAY_LABEL_PROFILE_TEMP: ['プロファイル温度', 'Profile temp'],
     DISPLAY_LABEL_PROFILE_ROR: ['RoR(プロファイル温度)', 'RoR (profile temp)'],
     DISPLAY_LABEL_DTR: ['DTR', 'DTR'],
+    DISPLAY_LABEL_DT: ['DT', 'DT'],
+    TOOLTIP_TOGGLE_DTR_DT: ['クリックでDTR/DT表示切替', 'Click to toggle DTR/DT'],
     DISPLAY_LABEL_SCORE: ['評価', 'Score'],
     ROAST_MESSAGE_WAITING: ['焙煎待機中', 'Ready to roast'],
     PROFILE_MANIPULATION_TITLE: ['プロファイル', 'Profile'],
@@ -2089,6 +2095,7 @@ const i18n = {
     DEBUG_MODE_LABEL: ['SETTINGS', 'SETTINGS'],
     UNIT_ROR_PER: ['/分', '/min'],
     UNIT_SEC: ['[秒]', '[sec]'],
+    UNIT_PERCENT: ['[%]', '[%]'],
     UNIT_MIN: ['[分]', '[min]'],
     QUOTE_END: ['」', '"'],
     CLOUD_PROFILE_LIST_HINT: ['「更新」を押してクラウドのプロファイルを取得', 'Press refresh to load cloud profiles'],
@@ -2147,7 +2154,8 @@ function updateUnitLabels() {
   document.querySelectorAll('.unit_sec').forEach(el => el.textContent = t('UNIT_SEC'));
   document.querySelectorAll('.unit_temp').forEach(el => el.textContent = getUnitTempLabel());
   document.querySelectorAll('.unit_ror').forEach(el => el.textContent = getUnitRoRLabel());
-  document.querySelectorAll('.unit_dtr').forEach(el => el.textContent = '[%]');
+  document.querySelectorAll('.unit_dtr').forEach(el => el.textContent = t('UNIT_PERCENT'));
+  updateDTRDisplay();
   updateChartTexts();
   updateProfileTableTimeHeader();
 }
@@ -2295,8 +2303,28 @@ async function toggleAuth() {
 
 const TEMPERATURE_UNIT_KEY = 'uzu_temperature_unit';
 let isFahrenheit = localStorage.getItem(TEMPERATURE_UNIT_KEY) === 'F';
+let isDevelopmentTimeRatio = true;
 const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
 const unit_dtr = "<span class='unit_dtr unit_generic'>[%]</span>";
+const unit_td = "<span class='unit_td unit_generic'>[秒]</span>";
+
+function updateDTRDisplay() {
+  if (!roastDTRDisplay) return;
+  if (!roastChart || !roastChart.data?.datasets?.[CURRENT_TEMP]) return;
+
+  const currentTime = getCurrentTime();
+  const fc = PhaseManager.phases.FCS;
+  const drop = PhaseManager.phases.DROP || currentTime;
+  const value = (fc !== null && drop !== null && drop > fc && drop > 0)
+    ? (isDevelopmentTimeRatio ? PhaseManager.getDTR(currentTime) : (drop - fc).toFixed(1))
+    : null;
+
+  if (roastDTRLabel) {
+    roastDTRLabel.textContent = t(isDevelopmentTimeRatio ? 'DISPLAY_LABEL_DTR' : 'DISPLAY_LABEL_DT');
+  }
+  const unit = isDevelopmentTimeRatio ? t('UNIT_PERCENT') : t('UNIT_SEC');
+  roastDTRDisplay.innerHTML = `${value !== null ? value : '--'}<span class="unit_generic">${unit}</span>`;
+}
 
 function celsiusToFahrenheit(value) {
   return value * 9 / 5 + 32;
@@ -2523,7 +2551,7 @@ function toggleTemperatureUnit() {
   updateTemperatureUnitDisplay();
 }
 
-const URCVersionStr = "1.3.0";
+const URCVersionStr = "1.3.3";
 const URCVersionCodeNameStr = "Antigua";
 let roastChart = null;
 const PROFILE_TEMP = 0;
@@ -2797,15 +2825,22 @@ function isMobile() {
 ////////////////////////////////////////////////////////////////
 // --- ページ読み込み時処理 ---
 ////////////////////////////////////////////////////////////////
-window.addEventListener('DOMContentLoaded', () => {
-    chartAreaInitialize();
-    updateProfileList();
-    initColorMode();
-    connectionSelect();
-    initializeGuideProfileUI();
-    initializeStatsModeUI();
-    displaySecondsOrMinutes();
-});
+function initApp() {
+    try {
+        chartAreaInitialize();
+        updateProfileList();
+        initColorMode();
+        connectionSelect();
+        initializeGuideProfileUI();
+        initializeStatsModeUI();
+        displaySecondsOrMinutes();
+        if (typeof updateAuthUI === 'function' && window._currentUser !== undefined) {
+            updateAuthUI(window._currentUser);
+        }
+    } catch (e) {
+        console.error("App initialization error:", e);
+    }
+}
 
 function connectionSelect(){
     const host = window.location.hostname;
@@ -3240,8 +3275,7 @@ function receiveWebMessage(data) {
         }
       }
       setDisplayRoRValue(roastRoRDisplay, current_ror.y);
-      const dtr = PhaseManager.getDTR(getCurrentTime());
-      roastDTRDisplay.innerHTML = (dtr !== null) ? dtr + unit_dtr : '--' + unit_dtr;
+      updateDTRDisplay();
     }
     else {
       setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
@@ -4833,10 +4867,8 @@ function updatePhaseUI() {
         phasePrevButton.disabled = isAtStart;
     }
 
-    // --- 3. DTR更新（ここもインデックスで動的に！） ---
-    const dtr = PhaseManager.getDTR(getCurrentTime());
-    const dtrElem = roastDTRDisplay;
-    if (dtrElem) dtrElem.innerHTML = (dtr !== null) ? dtr + unit_dtr : '--' + unit_dtr;
+    // --- 3. DTR/DT更新 ---
+    updateDTRDisplay();
 }
 
 function getCurrentTime() {
@@ -5946,6 +5978,15 @@ function chartAreaInitialize() {
       roastChart.update();
     });
   }
+  if (roastDTRArea) {
+    roastDTRArea.style.cursor = 'pointer';
+    roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
+    roastDTRArea.addEventListener('click', () => {
+      isDevelopmentTimeRatio = !isDevelopmentTimeRatio;
+      roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
+      updateDTRDisplay();
+    });
+  }
   if (document.getElementById('roast_temperature_area')) {
     const roastTempArea = document.getElementById('roast_temperature_area');
     roastTempArea.style.cursor = 'pointer';
@@ -6963,6 +7004,15 @@ async function shareProfileToCloud() {
         console.error(e);
         setTimeout(() => { alert(t('ALERT_CLOUD_SHARE_FAILED') + e.message); }, 300);
     }
+}
+
+// -----------------------------------------------
+// 全スクリプト・依存関係読み込み完了後の確実な初期化
+// -----------------------------------------------
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    setTimeout(initApp, 0);
 }
 
 </script>
