@@ -162,7 +162,7 @@ USBまたはブラウザのコンソールから使用可能です：
 
 ## 📁 Repository Structure
 
-```
+```text
 uzuroaster/
 ├─ LICENSE              # MITライセンス
 ├─ README.md            # このファイル
