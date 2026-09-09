@@ -135,8 +135,8 @@ python uzuroaster.py
 **exe化する場合:**
 
 ```bash
-python -m PyInstaller --noconsole --onefile --hidden-import=webview --add-data "index.html;." uzuroaster.py
-```
+python -m PyInstaller --noconsole --onefile --hidden-import=webview --add-data "index.html;." --add-data "script.js;." --add-data "uzu_roaster_manual.html;." --add-data "command_reference.html;." --add-data "favicon.ico;." --add-data "chart.js;." --add-data "analytics.html;." uzuroaster.py
+
 
 ---
 
