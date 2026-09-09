@@ -1422,6 +1422,7 @@
     <div class="modal-actions">
       <button class="modal-button" onclick="closeJSONSaveModal()" data-i18n="BUTTON_CLOSE">閉じる</button>
       <button class="modal-button modal-button-primary" onclick="applyJSONAllCopyModal()" data-i18n="BUTTON_PROFILE_COPY">プロファイルコピー</button>
+      <button class="modal-button" style="background:linear-gradient(135deg, #aa3b3f, #c45a1a); color:#fff8f0; font-weight:bold; border:1px solid #b35b38;" onclick="openAnalyticsFromSave()" data-i18n="BUTTON_ANALYTICS">📊 分析</button>
     </div>
   </div>
 </div>
@@ -1739,6 +1740,7 @@
             <polygon points="50,5 38,22 62,22" fill="white"/> <polygon points="50,95 38,78 62,78" fill="white"/> </svg>
           </span>
         </button>
+        <!--  とりあえず統計ボタンはこのバージョンでは非表示にする
         <button id="stats-mode-button" title="統計・分析データ" data-i18n-title="TOOLTIP_STATS_VIEW" class="chart-control-button">
             <span id="stats-mode-icon" style="display: flex; align-items: center;">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="22" height="22">
@@ -1748,6 +1750,7 @@
               </svg>
             </span>
           </button>
+        -->
       </div>
 
     <!-- ========================================
@@ -2071,6 +2074,7 @@ const i18n = {
     BUTTON_PROFILE_COPY: ['プロファイルコピー', 'Copy profile'],
     BUTTON_OPEN_CLOUD_BROWSER: ['☁️ クラウドのプロファイルを見る', '☁️ View cloud profiles'],
     BUTTON_DELETE_PROFILE: ['削除', 'Delete'],
+    BUTTON_ANALYTICS: ['📊 分析', '📊 Analytics'],
     ALERT_PROFILE_DELETE_CONFIRM: ['プロファイル「{title}」を完全に削除してもいいですか？', 'Delete profile "{title}" permanently?'],
     MODAL_PROFILE_INPUT_TITLE: ['プロファイル入力', 'Profile input'],
     MODAL_PROFILE_INPUT_DESC: ['JSONデータをペースト、記述、またはリストから選択してください', 'Paste, write, or select JSON data from the list'],
@@ -2215,6 +2219,7 @@ function translatePage() {
     if (key) el.textContent = t(key, el.textContent);
   });
   updateUnitLabels();
+  updateConnectionStatus(connectionStatusState, connectionStatusMode);
   document.title = t('PAGE_TITLE', document.title);
   document.documentElement.lang = currentLanguage;
   const select = document.getElementById('language-select');
@@ -2304,9 +2309,22 @@ async function toggleAuth() {
 const TEMPERATURE_UNIT_KEY = 'uzu_temperature_unit';
 let isFahrenheit = localStorage.getItem(TEMPERATURE_UNIT_KEY) === 'F';
 let isDevelopmentTimeRatio = true;
-const unit_sec = "<span class='unit_sec unit_generic'>[秒]</span>";
-const unit_dtr = "<span class='unit_dtr unit_generic'>[%]</span>";
-const unit_td = "<span class='unit_td unit_generic'>[秒]</span>";
+
+function getTimeUnitHtml() {
+  return `<span class="unit_sec unit_generic">${t('UNIT_SEC')}</span>`;
+}
+
+function getDTRUnitHtml() {
+  return `<span class="unit_dtr unit_generic">${t('UNIT_PERCENT')}</span>`;
+}
+
+function getDTRLabelText() {
+  return t(isDevelopmentTimeRatio ? 'DISPLAY_LABEL_DTR' : 'DISPLAY_LABEL_DT');
+}
+
+function getDTRUnitHtml() {
+  return `<span class="unit_dtr unit_generic">${isDevelopmentTimeRatio ? t('UNIT_PERCENT') : t('UNIT_SEC')}</span>`;
+}
 
 function updateDTRDisplay() {
   if (!roastDTRDisplay) return;
@@ -2320,10 +2338,9 @@ function updateDTRDisplay() {
     : null;
 
   if (roastDTRLabel) {
-    roastDTRLabel.textContent = t(isDevelopmentTimeRatio ? 'DISPLAY_LABEL_DTR' : 'DISPLAY_LABEL_DT');
+    roastDTRLabel.textContent = getDTRLabelText();
   }
-  const unit = isDevelopmentTimeRatio ? t('UNIT_PERCENT') : t('UNIT_SEC');
-  roastDTRDisplay.innerHTML = `${value !== null ? value : '--'}<span class="unit_generic">${unit}</span>`;
+  roastDTRDisplay.innerHTML = `${value !== null ? value : '--'}${getDTRUnitHtml()}`;
 }
 
 function celsiusToFahrenheit(value) {
@@ -3291,7 +3308,7 @@ function receiveWebMessage(data) {
 function displaySecondsOrMinutes(second = null){
   if (isRoasting == false || second === null) {
     if (!isMinutesSecondsFormat) {
-      roastTimeDisplay.innerHTML = "--" + unit_sec;
+      roastTimeDisplay.innerHTML = `--${getTimeUnitHtml()}`;
     }
     else {
       roastTimeDisplay.innerHTML = "--:--"; 
@@ -4185,7 +4202,7 @@ function hideUploadOverlay() {
  */
 function formatSecondsToMinutesSeconds(totalSeconds) {
     if (!isMinutesSecondsFormat) {
-      return totalSeconds + unit_sec; // 秒表示
+      return `${totalSeconds}${getTimeUnitHtml()}`; // 秒表示
     }
     if (totalSeconds < 0) totalSeconds = 0; // 負の値は0として扱う
 
@@ -5314,20 +5331,25 @@ function createDeleteButton() {
 }
 
 let isUSBConnected = false;
+let connectionStatusState = false;
+let connectionStatusMode = 'wifi';
 /**
      * WebSocket接続状態の表示を更新
      */
-function updateConnectionStatus(isConnected) {
+function updateConnectionStatus(isConnected, mode = null) {
+  connectionStatusState = isConnected;
+  if (mode) connectionStatusMode = mode;
   isUSBConnected = isConnected;
   const statusIndicator = document.getElementById('socket-status');
   const connectionLabel = document.getElementById('connection-label');
   
   if (isConnected) {
     statusIndicator.style.backgroundColor = '#1ecc32';
-    if (USBPort) {
+    const resolvedMode = mode || (USBPort ? 'usb' : (window.pywebview ? 'python' : 'wifi'));
+    if (resolvedMode === 'usb') {
       connectionLabel.innerHTML = `<span class="usb status_text">${t('CONNECTION_STATUS_USB')}</span>`;
     } 
-    else if (window.pywebview){
+    else if (resolvedMode === 'python') {
       connectionLabel.innerHTML = `<span class="python status_text">${t('CONNECTION_STATUS_PYTHON')}</span>`;
     } 
     else {
@@ -6970,6 +6992,37 @@ function getSortedDocs() {
 // -----------------------------------------------
 // クラウドにプロファイルを共有する
 // -----------------------------------------------
+
+// -----------------------------------------------
+// Analyticsへ遷移 (GETパラメータでJSONを渡す)
+// -----------------------------------------------
+function openAnalyticsFromSave(){
+    var ta=document.getElementById('jsonSave');
+    if(!ta){ alert('JSONが見つかりません'); return; }
+    var jsonStr=ta.value.trim();
+    if(!jsonStr){ alert('JSONが空です'); return; }
+    try{ JSON.parse(jsonStr); }catch(e){ alert('JSONが不正です: '+e.message); return; }
+    // Base64URLエンコードでURLを短く安全に
+    try{
+        var b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        var b64url = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        // 長すぎる場合は通常のencodeURIComponentにフォールバック (ESP32ではURL長制限に注意)
+        var param;
+        if(b64url.length < 7000){
+            param = b64url;
+        }else{
+            // 大きすぎる場合はそのままURIエンコード (ブラウザの限界 ~2000-8000文字だが、とりあえず試す)
+            param = encodeURIComponent(jsonStr);
+        }
+        var url = 'analytics.html?data=' + param;
+        // ESP32では同一オリジンで開く
+        window.open(url, '_blank');
+    }catch(e){
+        console.error(e);
+        alert('エンコード失敗: '+e.message);
+    }
+}
+
 async function shareProfileToCloud() {
     const jsonStr = document.getElementById('jsonSave').value;
     const title = profileTitleInput.value.trim();

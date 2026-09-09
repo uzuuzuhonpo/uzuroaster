@@ -396,7 +396,7 @@
         <header>
             <h1>UZU ROASTER コマンドリファレンスガイド</h1>
             <p class="subtitle">コマンド一覧表</p>
-            <div width=100% style="text-align:right"><p>Version 1.3.0</p>
+            <div width=100% style="text-align:right"><p>Version 1.3.3</p>
         </header>
 
         <div class="intro">
@@ -793,6 +793,11 @@
                             <td><code class="cmd-example">rm /oldfile.txt</code></td>
                             <td class="cmd-desc">指定したファイルを削除します。削除したファイルは復元できませんのでご注意ください。</td>
                         </tr>
+                        <tr>
+                            <td><span class="cmd-name">format</span></td>
+                            <td><code class="cmd-example">format</code></td>
+                            <td class="cmd-desc">LittleFSファイルシステムをフォーマットします。ファイルはすべて削除されますのでご注意ください。</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -826,6 +831,15 @@
                             <td class="cmd-desc">OPTIONボタンを長押し（3秒以上）したときに実行するコマンドを登録します。<br>
                                 短押し同様、「#」を使って最大5個までのコマンドを順番に実行するローテーション設定が可能です
                             </td>
+                        </tr>
+                        <tr>
+                            <td><span class="cmd-name">morsemode &lt;on/off&gt;</span></td>
+                            <td><code class="cmd-example">morsemode on</code><br>
+                                <code class="cmd-example">morsemode off</code></td>
+                            <td class="cmd-desc">モールス信号モードを有効または無効にします。<br>
+                                有効時は、オプションボタンでモールス信号を入力する事ことで文字を入力し、コマンドを実行します。<br>
+                                モールス信号モード時は、コマンドの応答がモールス信号形式でステータスLEDに出力されます。（このモードでもシリアルモニターからのコマンドが入力可能で、レスポンスも出力されます）<br>
+                                既存の <code>templed</code> や <code>ipled</code> と同様に排他動作であり、モールス信号モード時は通常のLED表示は一時的に制御されません。</td>
                         </tr>
                         <tr>
                             <td><span class="cmd-name">templed &lt;on/off&gt;</span></td>
@@ -875,6 +889,27 @@
                     → 長い点滅1回 → 短い区切り → 長い点滅1回 → 短い区切り → 短い点滅1回（001）→ 長い区切り<br>
                     → 短い点滅1回 → 短い区切り → 長い点滅1回 → 短い区切り → 短い点滅3回（103）<br>
                     → 3秒休止 → 繰り返し<br>
+                </div>
+            </div>
+
+            <div class="led-patterns" style="margin-top:30px;">
+                <h3>💡 モールス信号入力仕様</h3>
+                <ul>
+                    <li><strong>短押し</strong> = 1点（<code>.</code>、約200ms）</li>
+                    <li><strong>長押し</strong> = 1ダッシュ（<code>-</code>、約600ms）</li>
+                    <li><strong>信号間の休止</strong> = 約200ms</li>
+                    <li><strong>文字間の休止</strong> &lt;&nbsp; 約600ms</li>
+                    <li><strong>コマンドキャンセル</strong> &gt;&nbsp; 1400ms</li>
+                    <li><strong>コマンド確定</strong> = 1200ms（ボタン長押しが1200msを超えると送信対象として確定）</li>
+                </ul>
+                <div class="led-example">
+                    <strong>【対応文字】</strong> a〜z、0〜9、記号 <code>.</code> <code>,</code> <code>-</code> <code>#</code> を入力できます。<br>
+                    例：<code>a = .-</code> / <code>s = ...</code> / <code>z = --..</code> / <code>5 = .....</code> / <code>.</code> = <code>.-.-.-</code><br>
+                    大文字・小文字はどちらでも同じように扱われ、入力中に未定義の記号は無視されます。<br>
+                    ※ 短押しが200ms未満の連続入力は、1点として認識されます。<br>
+                    ※ 文字が確定するまでは、無音時間（200ms～600ms）が必要です。
+                    ※ 長押し中でも、1200ms経過時点でコマンドは確定し送信されます。<br>
+                    ※ スペースの入力は無入力期間（600ms～1400ms）経過で確定します。1400ms以上の無入力期間が続くと、コマンドはキャンセルされます。
                 </div>
             </div>
         </section>

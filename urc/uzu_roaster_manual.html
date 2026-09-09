@@ -343,7 +343,7 @@
 
     <div class="container">
         <h1>UZU ROASTER（うずロースター・UZ-01）取扱説明書</h1>
-        <div style="text-align: right;"><span>最終更新日: 2026年4月20日　Version 1.3.0</span></div><br>
+        <div style="text-align: right;"><span>最終更新日: 2026年9月8日　Version 1.3.3</span></div><br>
         <div style="background:#f7fafc; border:1px solid #cbd5e0; border-radius:8px; padding:14px 16px; margin-bottom:18px;">
             <strong>用語の解説</strong><br>
             <ul style="margin: 8px 0 0 20px;">
@@ -989,7 +989,7 @@
         <ul>
             <li><code>ポート</code>: UZ-01が接続されているCOMポートを指定します。<br>
                 （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code>、<code>/dev/cu.usbserial-XXXX</code> など）</li>
-            <li><code>通信速度</code>: <code>115200</code> （UZ-01設定に合わせます）</li>
+            <li><code>通信速度</code>: <code>115200</code> </li>
             <li><code>データ長</code>: <code>8</code></li>
             <li><code>パリティビット</code>: <code>N</code></li>
             <li><code>ストップビット</code>: <code>1</code></li>
@@ -2547,13 +2547,16 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
 </li>
 </ul>
             <h3 id="section-custom-webserver-fs">📁 Web画面（LittleFS）の構成と更新</h3>
-        <p>UZU ROASTERのWeb画面は、ESP32内のファイルシステム「LittleFS」に配置されたHTML/CSS/JSファイルで構成されています。</p>
+        <p>UZU ROASTERのWeb画面は、ESP32内のファイルシステム「LittleFS」に配置されたHTML、JS、アイコンファイルで構成されています。</p>
         <ul>
             <li><strong>ファイル構成例:</strong>
                 <ul>
                     <li><code>/index.html</code></li>
-                    <li><code>/script.js</code></li>
-                    <li><code>/style.css</code></li>
+                    <li><code>/chart.js</code></li>
+                    <li><code>/uzu_roaster_manual.html</code></li>
+                    <li><code>/command_reference.html</code></li>
+                    <li><code>/favicon.ico</code></li>
+                    <li><code>/favicon-96x96.png</code></li>
                 </ul>
             </li>
         </ul>
@@ -2711,10 +2714,22 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
   
         <h2 id="section-attachment">🎁付録</h2>
         <h3 id="section-web-serial-commands">💬 Web/USBシリアルコマンド</h3>
-        <p>デバッグコンソールのコマンドプロンプトまたはUSBシリアル通信経由で、UZ-01に対してコマンドを送信し、設定変更や操作を行うことが可能です。<br>
+        <p>URCのデバッグコンソールのコマンドプロンプトまたはUSBシリアル通信経由で、UZ-01に対してコマンドを送信し、設定変更や操作を行うことが可能です。（上級者向き）<br>
         </p>
         <p>全ての利用可能なコマンドの詳細は<a href="command_reference.html">コマンドリファレンス</a>をご参照ください。</p>
-                    <div class="tip"><h4>ヒント: イベントの操作について</h4>
+        <h4>USBシリアル通信時の設定</h4>
+        <ul>
+            <li><code>ポート</code>: UZ-01が接続されているCOMポートを指定します。<br>
+                （例: Windowsなら <code>COM3</code>、macOS/Linuxなら <code>/dev/ttyUSB0</code>、<code>/dev/cu.usbserial-XXXX</code> など）</li>
+            <li><code>通信速度</code>: <code>115200</code></li>
+            <li><code>データ長</code>: <code>8</code></li>
+            <li><code>パリティビット</code>: <code>N</code></li>
+            <li><code>ストップビット</code>: <code>1</code></li>
+            <li><code>タイムアウト</code>: <code>0.7</code></li>
+        </ul>
+        （※）ターミナルソフト等で通信を行う場合、ローカルエコー等を適宜ONにしてください。
+
+        <div class="tip"><h4>ヒント: コマンドについて</h4>
             <ul>
                 <li>これらのコマンドは予告なく変更・追加される可能性があります。最新のコマンドは "help" コマンドで確認してください。</li>
                 <li>送信するコマンドによっては、内部設定が恒久的に書き換わってしまう場合があります。コマンドの取り扱いには細心の注意を払ってください。</li>
@@ -2779,10 +2794,16 @@ Webサーバー機能も内蔵し、簡易的なウェブページをホスト�
                 <br>
                 <div style="text-align:center;">
                 Version1.3.0 アップデート画面<br>
-                <div style="width:75%; min-width:350px; margin:0 auto; overflow:hidden; height:400px;">
-                    <iframe width="100%" height="500" src="update" title="Update" frameborder="0"
-                    style="transform:scale(0.8); transform-origin:top center; border:none;"></iframe>
-                </div>
+                    <div style="width:75%; min-width:350px; margin:0 auto; overflow:hidden; height:400px;">
+                        <iframe id="updateFrame" width="100%" height="500" src="update" title="Update" frameborder="0"
+                        style="transform:scale(0.8); transform-origin:top center; border:none;"></iframe>
+                    </div>
+                    <script>
+                        const updateFrame = document.getElementById('updateFrame');
+                        if (window.location.protocol === 'file:') {     // ローカルファイルから開いた場合、iframeのsrcを相対パスに変更
+                            updateFrame.src = './update/index.html';
+                        }
+                    </script>
                 </div>
             </li>
         </ol>

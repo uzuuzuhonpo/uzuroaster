@@ -28,12 +28,14 @@
 // Prototype
 void CommandProcess(String& command, const uint8_t* params = NULL);
 void BroadcastMessage(String &message);
+void AppendMorseFeedback(const String& message);
+void QueueMorseFeedback(const String& message);
 
 //////////////////////////////////////////////////////////////////////////
 // Global Variables
 //////////////////////////////////////////////////////////////////////////
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-const String version = "1.3.1";
+const String version = "1.3.3";
 const String CodeName ="Antigua";
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 TaskHandle_t taskHandle;
@@ -194,6 +196,13 @@ const IPAddress SubNet(255, 255, 255, 0);
 bool UsbSerial = false;
 bool LEDTemperatureDisplay = false;
 int LEDIPDisplay = IP_LED_OFF;  // IPアドレスをLEDで表示するモード
+volatile bool morseMode = false;
+volatile bool morseButtonPressed = false;
+volatile bool morseOutputActive = false;
+volatile bool morseOutputPending = false;
+char morseOutputText[128] = "";
+String morseFeedbackBuffer = "";
+bool morseCaptureOutput = false;
 
 const String StaSsid = "";  // デフォルト
 const String StaPass = "";  // デフォルト
@@ -241,10 +250,11 @@ template<typename T>
     if (whereTo == CONSOLE_USB) {
       Serial.print(value);
     } else {
-      // どんな型が来ても String にキャストして送るのが安全や
+      // どんな型が来ても String にキャストして送る
       String msg = String(value);
       BroadcastMessage(msg);
     }
+    AppendMorseFeedback(String(value));
   }
 
   // 小数点桁数指定付きの print
@@ -256,6 +266,7 @@ template<typename T>
       String msg = String(value, digits);
       BroadcastMessage(msg);
     }
+    AppendMorseFeedback(String(value, digits));
   }
 
   // --- println系 ---
@@ -267,6 +278,7 @@ template<typename T>
       String nl = "\n";
       BroadcastMessage(nl);
     }
+    AppendMorseFeedback("\n");
   }
 
   // 引数ありの println
@@ -278,6 +290,7 @@ template<typename T>
       String msg = String(value) + "\n";
       BroadcastMessage(msg);
     }
+    AppendMorseFeedback(String(value) + "\n");
   }
 
   // 小数点桁数指定付きの println
@@ -289,6 +302,7 @@ template<typename T>
       String msg = String(value, digits) + "\n";
       BroadcastMessage(msg);
     }
+    AppendMorseFeedback(String(value, digits) + "\n");
   }
 };
 
@@ -347,7 +361,20 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-//【1. タイミングとピンの設定】
+// モールス信号モードの時間設定 [ms]
+#define MORSE_DOT_MS 200
+#define MORSE_DASH_MS (MORSE_DOT_MS * 3)
+#define MORSE_SYMBOL_GAP_MS 200
+#define MORSE_CHARACTER_GAP_MS (MORSE_SYMBOL_GAP_MS * 3)
+#define MORSE_SPACE_GAP_MS 1400
+#define MORSE_SHORT_PRESS_MAX_MS 200
+#define MORSE_CHARACTER_COMMIT_MS 200
+#define MORSE_SPACE_COMMIT_MS 700
+#define MORSE_COMMAND_HOLD_MS 1200
+#define MORSE_CANCEL_MS 2000
+
+//////////////////////////////////////////////////////////////////////////
+//【1. タイミング設定】
 #define T_ZERO 800   // 0
 #define T_I 120     // 1秒単位ON期間
 #define T_V 400     // 5秒単位のON期間
@@ -375,6 +402,7 @@ const int romanTable[10][6] = {
 void displayThreeDigitsOnLED(int value, int brightness = 255) {
   int dgs[3] = { (value / 100) % 10, (value / 10) % 10, value % 10 };
   for (int i = 0; i < 3; i++) {
+    if (morseMode) return;
     int bright = 0;
     switch (i) {
       case 0: bright = 255; break;  // 桁によって明るさ変える
@@ -383,6 +411,7 @@ void displayThreeDigitsOnLED(int value, int brightness = 255) {
       case 3: bright = 90;  break;  
     }
     for (int p = 0; p < 6; p++) {
+      if (morseMode) return;
       int d = romanTable[dgs[i]][p];
       if (d == 0) break;
       ledcWrite_(2, bright);
@@ -399,10 +428,78 @@ void displayThreeDigitsOnLED(int value, int brightness = 255) {
 // オクテットは最大3桁なのでdisplayThreeDigitsOnLEDをそのまま流用
 void displayIPOnLED(IPAddress ip) {
   for (int octet = 0; octet < 4; octet++) {
+    if (morseMode) return;
     displayThreeDigitsOnLED(ip[octet]);
-    if (LEDIPDisplay == IP_LED_OFF) break; // モードが変わったらキャンセルしてすぐに温度表示に変更
+    if (LEDIPDisplay == IP_LED_OFF || morseMode) break; // モードが変わったらキャンセル
   }
   vTaskDelay(pdMS_TO_TICKS(T_STAIP));
+}
+
+const char* morseCodeForChar(char c) {
+  static const char* letters[] = {
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---",
+    "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-",
+    "..-", "...-", ".--", "-..-", "-.--", "--.."
+  };
+  static const char* digits[] = {
+    "-----", ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----."
+  };
+  static const char* punctuation[] = { ".-.-.-", "--..--", "-....-", "-.-.--" };
+
+  if (c >= 'a' && c <= 'z') return letters[c - 'a'];
+  if (c >= '0' && c <= '9') return digits[c - '0'];
+  if (c == '.') return punctuation[0];
+  if (c == ',') return punctuation[1];
+  if (c == '-') return punctuation[2];
+  if (c == '#') return punctuation[3];
+  return NULL;
+}
+
+char charForMorseCode(const String& code) {
+  for (char c = 'a'; c <= 'z'; c++) {
+    if (code == morseCodeForChar(c)) return c;
+  }
+  for (char c = '0'; c <= '9'; c++) {
+    if (code == morseCodeForChar(c)) return c;
+  }
+  const char punctuation[] = { '.', ',', '-', '#' };
+  for (char c : punctuation) {
+    if (code == morseCodeForChar(c)) return c;
+  }
+  return 0;
+}
+
+bool morseWait(uint32_t milliseconds) {
+  const uint32_t started = millis();
+  while (millis() - started < milliseconds) {
+    if (morseButtonPressed || !morseMode) {
+      ledcWrite_(2, 0);
+      return false;
+    }
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
+  return true;
+}
+
+void playMorseOutput() {
+  for (size_t i = 0; i < sizeof(morseOutputText) && morseOutputText[i] != '\0'; i++) {
+    char c = morseOutputText[i];
+    if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+    if (c == ' ') {
+      if (!morseWait(MORSE_SPACE_GAP_MS)) return;
+      continue;
+    }
+    const char* code = morseCodeForChar(c);
+    if (!code) continue;
+    for (size_t symbol = 0; code[symbol] != '\0'; symbol++) {
+      ledcWrite_(2, 255);
+      if (!morseWait(code[symbol] == '.' ? MORSE_DOT_MS : MORSE_DASH_MS)) return;
+      ledcWrite_(2, 0);
+      if (code[symbol + 1] != '\0' && !morseWait(MORSE_SYMBOL_GAP_MS)) return;
+    }
+    if (morseOutputText[i + 1] != '\0' && !morseWait(MORSE_CHARACTER_GAP_MS)) return;
+  }
+  ledcWrite_(2, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -410,7 +507,24 @@ void LEDDisplayTask(void *pvParameters) {
   IPAddress ip;
 
   while (true) {
-    if (LEDIPDisplay) {
+    if (morseMode) {
+      if (morseButtonPressed) {
+        morseOutputActive = false;
+        ledcWrite_(2, 255);
+        vTaskDelay(pdMS_TO_TICKS(10));
+      }
+      else if (morseOutputActive || morseOutputPending) {
+        morseOutputPending = false;
+        morseOutputActive = true;
+        playMorseOutput();
+        morseOutputActive = false;
+      }
+      else {
+        ledcWrite_(2, 0);
+        vTaskDelay(pdMS_TO_TICKS(20));
+      }
+    }
+    else if (LEDIPDisplay != IP_LED_OFF) {
       // IPアドレス表示モード
       if (LEDIPDisplay == IP_LED_STA) {
         ip = WiFi.localIP();  // STAのIP
@@ -620,6 +734,7 @@ void setup() {
   preferences.begin("function", true);
   LEDTemperatureDisplay = preferences.getBool("ledtemp", false);
   LEDIPDisplay = preferences.getInt("ledip", IP_LED_OFF);
+  morseMode = preferences.getBool("morsemode", false);
   bool wifiLog = preferences.getBool("wifi_log", false);  // デフォルトでWiFiエラー出さない
   preferences.end();
   if (wifiLog) {
@@ -694,7 +809,164 @@ void parseCommands(String str, String* targetArray, int& targetCount, int& targe
   }
 }
 
+void AppendMorseFeedback(const String& message) {
+  if (!morseCaptureOutput || morseFeedbackBuffer.length() >= 120) return;
+  morseFeedbackBuffer += message.substring(0, 120 - morseFeedbackBuffer.length());
+}
+
+void QueueMorseFeedback(const String& message) {
+  size_t length = message.length();
+  if (length >= sizeof(morseOutputText)) length = sizeof(morseOutputText) - 1;
+  memcpy(morseOutputText, message.c_str(), length);
+  morseOutputText[length] = '\0';
+  morseOutputPending = length > 0;
+  morseOutputActive = false;
+}
+
+void ExecuteMorseCommand(String command) {
+  command.trim();
+  if (command.length() == 0) return;
+
+  morseFeedbackBuffer = "";
+  morseCaptureOutput = true;
+  CommandProcess(command);
+  morseCaptureOutput = false;
+
+  QueueMorseFeedback(morseFeedbackBuffer);
+}
+
+struct MorseCommandFeedbackScope {
+  bool active;
+
+  MorseCommandFeedbackScope(const String&) : active(morseMode && !morseCaptureOutput) {
+    if (active) {
+      morseFeedbackBuffer = "";
+      morseCaptureOutput = true;
+    }
+  }
+
+  ~MorseCommandFeedbackScope() {
+    if (!active) return;
+    morseCaptureOutput = false;
+    QueueMorseFeedback(morseFeedbackBuffer);
+  }
+};
+
+void MorseInputLogic() {
+  static bool wasPressed = false;
+  static bool commandSent = false;
+  static bool commandSendPending = false;
+  static bool releasePending = false;
+  static bool characterCommitted = false;
+  static bool spaceAdded = false;
+  static unsigned long pressStarted = 0;
+  static unsigned long lastRelease = 0;
+  static uint8_t shortPressStreak = 0;
+  static String symbolBuffer = "";
+  static String commandBuffer = "";
+
+  const unsigned long now = millis();
+  const bool pressed = digitalRead(bootButtonPin) == LOW;
+  morseButtonPressed = pressed;
+
+  if (pressed) {
+    morseOutputActive = false;
+    if (!wasPressed) {
+      pressStarted = now;
+      commandSent = false;
+      commandSendPending = false;
+      releasePending = false;
+      characterCommitted = false;
+      spaceAdded = false;
+      morseOutputPending = false;
+      morseOutputActive = false;
+    }
+    if (!commandSent && now - pressStarted >= MORSE_COMMAND_HOLD_MS) {
+      if (symbolBuffer.length() == 0) {
+        ExecuteMorseCommand(commandBuffer);
+        commandBuffer = "";
+        commandSent = true;
+        releasePending = false;
+      }
+      else {
+        // 現在の長押しが長点の途中なら、離して長点を確定してから送信する
+        commandSendPending = true;
+      }
+    }
+    wasPressed = true;
+    return;
+  }
+
+  if (wasPressed) {
+    const unsigned long pressDuration = now - pressStarted;
+    if (commandSent) {
+      if (morseOutputPending) morseOutputActive = true;
+      morseOutputPending = false;
+      commandSent = false;
+      releasePending = false;
+      wasPressed = false;
+      return;
+    }
+    if (!commandSent) {
+      if (pressDuration < MORSE_SHORT_PRESS_MAX_MS) {
+        symbolBuffer += ".";
+        shortPressStreak++;
+        if (shortPressStreak >= 6) {
+          if (commandBuffer.length() > 0) commandBuffer.remove(commandBuffer.length() - 1);
+          symbolBuffer = "";
+          shortPressStreak = 0;
+          characterCommitted = true;
+        }
+      }
+      else {
+        symbolBuffer += "-";
+        shortPressStreak = 0;
+      }
+      lastRelease = now;
+      releasePending = true;
+      characterCommitted = false;
+      spaceAdded = false;
+    }
+    wasPressed = false;
+  }
+
+  if (!releasePending) return;
+
+  const unsigned long silence = now - lastRelease;
+  if (!characterCommitted && silence >= MORSE_CHARACTER_COMMIT_MS) {
+    const char decoded = charForMorseCode(symbolBuffer);
+    if (decoded != 0) commandBuffer += decoded;
+    symbolBuffer = "";
+    characterCommitted = true;
+    if (commandSendPending) {
+      ExecuteMorseCommand(commandBuffer);
+      commandBuffer = "";
+      commandSendPending = false;
+      releasePending = false;
+      return;
+    }
+  }
+  if (characterCommitted && !spaceAdded && silence >= MORSE_SPACE_COMMIT_MS) {
+    commandBuffer += " ";
+    spaceAdded = true;
+  }
+  if (silence >= MORSE_CANCEL_MS) {
+    commandBuffer = "";
+    symbolBuffer = "";
+    releasePending = false;
+    characterCommitted = false;
+    spaceAdded = false;
+    shortPressStreak = 0;
+  }
+}
+
 void readBootButton() {
+  if (morseMode) {
+    MorseInputLogic();
+    return;
+  }
+
+  morseButtonPressed = false;
   bool State = digitalRead(bootButtonPin); // false: ON / true: OFF
   if (State == false) {
     LongButtonTimerCount++;
@@ -731,6 +1003,9 @@ void ledcWrite_(int pin, int brightness) {
 
 //////////////////////////////////////////////////////////////////////////
 void statusLEDProc() {
+  if (morseMode) {
+    return;
+  }
   if (LEDTemperatureDisplay || LEDIPDisplay){
     //  LEDDisplayTaskでLEDを制御する
     return;
@@ -788,6 +1063,7 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
 
 //////////////////////////////////////////////////////////////////////////
 void CommandProcess(String& command, const uint8_t* params) {
+  MorseCommandFeedbackScope morseFeedbackScope(command);
   String str;
   int value;
 
@@ -844,6 +1120,7 @@ void CommandProcess(String& command, const uint8_t* params) {
       preferences.putString("blpress", "reset");
       preferences.putBool("ledtemp", false);
       preferences.putInt("ledip", IP_LED_OFF);
+      preferences.putBool("morsemode", false);
       preferences.getInt("lowpowermode", false);
       preferences.end();
       delay(100);     
@@ -851,6 +1128,44 @@ void CommandProcess(String& command, const uint8_t* params) {
     roasting = false;
     MySerial.println("Resetting UZU ROASTER System...");
     ESP.restart();
+  }
+  else if (command == "morsemode on") {
+    morseMode = true;
+    preferences.begin("function", false);
+    preferences.putBool("morsemode", true);
+    preferences.end();
+    MySerial.println("Morse mode on.");
+  }
+  else if (command == "morsemode off") {
+    morseMode = false;
+    morseButtonPressed = false;
+    morseOutputActive = false;
+    morseOutputPending = false;
+    preferences.begin("function", false);
+    preferences.putBool("morsemode", false);
+    preferences.end();
+    MySerial.println("Morse mode off.");
+  }
+  else if (command == "morsemode") {
+    MySerial.println(String("Morse mode: ") + (morseMode ? "ON" : "OFF"));
+  }
+  else if (command == "serialnumber") {
+    preferences.begin("system", true);
+    String serial = preferences.getString("serialnumber", "");
+    preferences.end();
+    if (serial.length() == 0) {
+      MySerial.println("Serial number: (not set)");
+    } else {
+      MySerial.println("Serial number: " + serial);
+    }
+  }
+  else if (command.startsWith("serialnumber ")) {
+    str = command.substring(13);
+    str.trim();
+    preferences.begin("system", false);
+    preferences.putString("serialnumber", str);
+    preferences.end();
+    MySerial.println("Serial number set: " + str);
   }
   else if (command == "wifi on") {
       WiFiSetup();
@@ -1633,6 +1948,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     MySerial.println("wifimode <ap/sta> - changes WiFi mode(AP or STA) and restarts.");
     MySerial.println("maxwifi <number>  - Sets maximum WiFi connection(AP mode).");
     MySerial.println("lowenergy <on/off>- Sets low energy mode.");
+    MySerial.println("morsemode <on/off> - Enables or disables Morse signal UI mode.");
     MySerial.println("tgain <number>    - Calculates and sets temperture gain - a as [y = ax + b] or displays a if <number> is empty.");
     MySerial.println("tgain reset       - Resets temperture gain to 1.");
     MySerial.println("toffset <number>  - Calculates and sets temperture offset - b as [y = ax + b] or displays b if <number> is empty.");
@@ -1703,6 +2019,14 @@ void PollSerial() {
       command.trim();
       CommandProcess(command);
       command = ""; // クリア
+    }
+    else if (c == '\r') {
+      // CR (\r) は無視 (LF \n 側で一括処理するため)
+    }
+    else if (c == '\b' || c == 0x7F) { // バックスペース(ASCII 8) または DEL(ASCII 127)
+      if (command.length() > 0) {
+        command.remove(command.length() - 1); // command文字列の末尾を1文字削除
+      }
     }
     else {
       command += c;
@@ -2145,10 +2469,5 @@ void ControlServo() {
   {
     myservo.write(0);   // サーボを0度に設定
     delay(500);        // 1秒待機
-    myservo.write(90);  // サーボを90度に設定
-    delay(500);        // 1秒待機
-    myservo.write(180); // サーボを180度に設定
-    delay(1000);        // 1秒待機
-
   }
 }

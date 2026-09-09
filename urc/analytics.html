@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UZU ROASTER - Analytics</title>
+<style>
+:root{--bg:#0b0d0c;--card:#151816;--card2:#1d221f;--card3:#252b27;--accent:#a8d86e;--accent2:#ff8c42;--accent3:#8d6e63;--cyan:#4ecdc4;--text:#e8e6e1;--muted:#8a8885;--line:#2a2e2b}
+:root.light{--bg:#faf8f5;--card:#ffffff;--card2:#f5f2ee;--card3:#ebe7e1;--accent:#5a8a2a;--accent2:#c45a1a;--accent3:#7a5a4a;--cyan:#2a8a82;--text:#1a1a18;--muted:#8a8580;--line:#e0ddd8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);padding:16px;transition:background 0.2s,color 0.2s}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+h1{font-size:18px;letter-spacing:0.18em} h1 span{color:var(--accent)}
+.mono{font-size:12px;color:var(--muted);line-height:1.6}
+.toggle{display:flex;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:3px;gap:2px}
+.toggle button{border:none;background:transparent;color:var(--muted);padding:7px 16px;border-radius:16px;font-family:inherit;font-size:13px;cursor:pointer;transition:0.15s}
+.toggle button.active{background:var(--card3);color:var(--text);border:1px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.card.simple{border-color:var(--accent)}
+h2{font-size:12px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:1100px){.grid6{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.grid6,.grid4,.grid3,.grid2{grid-template-columns:1fr}}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.stat .k{font-size:10px;color:var(--muted);letter-spacing:0.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v{font-size:15px;font-weight:800;margin-top:3px}
+.stat .v small{font-size:11px;color:var(--muted);font-weight:400}
+.line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.line b{color:var(--accent)}
+canvas.chart-main{width:100%;aspect-ratio:16/9;height:auto;max-height:520px;background:var(--card2);border-radius:12px;border:1px solid var(--line);display:block}
+canvas.radar{width:100%;aspect-ratio:1/1;height:auto;max-width:380px;background:var(--card2);border-radius:12px;border:1px solid var(--line);display:block;margin:0 auto}
+.modern-stats{display:flex;flex-direction:column;gap:10px}
+.ms-group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ms-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card3);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px}
+.ms-pill b{font-size:13px;color:var(--text)}
+.ms-pill .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ms-label{font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.phase-modern{display:flex;height:36px;border-radius:10px;overflow:hidden;margin:0;border:1px solid var(--line);background:var(--card2)}
+.phase-seg{display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;font-size:13px;letter-spacing:0.04em}
+.phase-seg.dry{background:#a8d86e}
+.phase-seg.maill{background:#ffad4a}
+.phase-seg.dev{background:#c45a3c;color:#fff}
+.phase-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.phase-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.phase-legend-item b{color:var(--text)}
+.phase-legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+.phase{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:10px 0}
+.badge{font-size:11px;padding:2px 6px;border-radius:12px;background:var(--card3);border:1px solid var(--line)}
+.manual{display:none}
+body.mode-manual .manual{display:block}
+body.mode-manual .basic-view{display:none}
+.advanced{display:none;margin-top:12px}
+.advanced.open{display:block}
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .header,.toggle,#drop,button{display:none!important}
+  .card{border:1px solid #ccc!important;break-inside:avoid}
+  canvas{background:#fff!important;border:1px solid #ccc!important}
+  .advanced{display:block!important}
+}
+</style>
+</head>
+<body class="mode-basic">
+<div class="header">
+<div>
+<h1>UZU <span>ROASTER</span> / ANALYTICS</h1>
+<div style="margin-top:6px"><button onclick="toggleTheme()" id="themeBtn" style="background:var(--card);border:1px solid var(--line);padding:4px 10px;border-radius:12px;font-size:12px;cursor:pointer">☀️ / 🌙</button></div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<div class="toggle">
+<button id="btnBasic" class="active" onclick="setMode('basic')">BASIC</button>
+<button id="btnManual" onclick="setMode('manual')">MANUAL</button>
+</div>
+<button onclick="document.getElementById('file').click()" style="background:var(--card);border:1px solid var(--line);color:var(--text);padding:6px 10px;border-radius:8px;font-family:inherit;font-size:11px;cursor:pointer">JSON</button>
+</div>
+</div>
+<div id="drop" style="border:1px dashed var(--line);border-radius:10px;padding:10px;text-align:center;background:var(--card);margin-bottom:12px;font-size:11px;color:var(--muted)"><span id="dropText">JSONドロップ</span><input type="file" id="file" accept=".json" hidden></div>
+<div class="basic-view">
+<div class="grid2">
+<div>
+<div class="card simple">
+<h2>【 STATISTICS 】</h2>
+<div id="simpleStats" style="background:var(--card2);padding:12px;border-radius:10px;border:1px solid var(--line)"></div>
+<div id="phaseBarSimple" style="margin-top:12px"></div>
+</div>
+<div class="card"><h2>【 MEMO 】</h2><div id="memoSimple" class="mono"></div><div style="margin-top:8px"><span class="badge" id="titleSimple">No Profile</span></div></div>
+</div>
+<div class="card"><h2>【 CHART 】</h2><canvas id="chartSimple" class="chart-main" width="800" height="450"></canvas></div>
+</div>
+<div style="text-align:center;margin:12px 0">
+<button id="advToggleBtn" onclick="toggleAdvanced()" style="background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px 18px;border-radius:20px;font-family:inherit;font-size:13px;cursor:pointer">▼ ADVANCED を表示</button>
+</div>
+<div class="advanced" id="advancedSection">
+<div class="grid2">
+<div>
+<div class="card"><h2>【 BASIC 】</h2><div class="grid4" id="basic"></div><div id="events" style="margin-top:10px"></div></div>
+<div class="card"><h2>【 PHASE 】</h2><div class="grid4" id="phaseStats"></div><div class="grid4" id="phaseExtra" style="margin-top:8px"></div></div>
+<div class="card"><h2>【 ENERGY 】</h2><div class="grid4" id="energy"></div></div>
+<div class="card"><h2>【 SLOPE 】</h2><div class="grid4" id="slope"></div></div>
+</div>
+<div>
+<div class="card"><h2>【 RoR 】</h2><div class="grid6" id="ror"></div><div class="grid3" id="rorAccel" style="margin-top:8px"></div></div>
+<div class="card"><h2>【 DEVELOPMENT 】</h2><div class="grid4" id="dev"></div></div>
+<div class="card"><h2>【 RISK / FLAVOR / ADV 】</h2><div class="grid3" id="risk"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px"><div><div class="grid3" id="flavor"></div><div class="grid4" id="advanced" style="margin-top:8px"></div></div><div><canvas id="flavorRadar" class="radar" width="400" height="400"></canvas></div></div></div>
+<div class="card"><h2>【 EXTRA 】</h2><div class="grid4" id="extra"></div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="manual">
+<div class="card"><h2>【 MANUAL 】</h2><div style="font-size:13px;line-height:1.8"><p>BASIC — 最小表示。ADVANCED — 108項目+レーダー。</p><p>内部は全て秒に正規化。レーダーは1:1固定。</p></div></div>
+</div>
+<script>
+
+
+function getDataFromURL(){
+  try{
+    var p = new URLSearchParams(location.search);
+    var d = p.get('data') || p.get('p') || p.get('json');
+    if(!d) return null;
+    // Try base64url first if it looks like base64
+    var trimmed = d.trim();
+    // If it starts with { or [, it's plain JSON (already decoded by URLSearchParams)
+    if(trimmed.charAt(0) === '{' || trimmed.charAt(0) === '['){
+      return JSON.parse(trimmed);
+    }
+    // Try to decode as URI component (in case it was %7B... encoded and not yet decoded)
+    try{
+      var maybeJson = decodeURIComponent(d);
+      if(maybeJson.trim().charAt(0) === '{' || maybeJson.trim().charAt(0) === '['){
+        return JSON.parse(maybeJson);
+      }
+    }catch(e){}
+    // Otherwise assume Base64URL
+    try{
+      var b64 = d.replace(/-/g, '+').replace(/_/g, '/');
+      while(b64.length % 4) b64 += '=';
+      var jsonStr = decodeURIComponent(escape(atob(b64)));
+      return JSON.parse(jsonStr);
+    }catch(e){
+      return null;
+    }
+  }catch(e){
+    console.error(e);
+    return null;
+  }
+}
+
+const SAMPLE={"type":"roast_profile","title":"Ethiopia Natural - Demo","memo":"150g / 1st 8:30 @195C / DTR 22%","profile":[{"time":0,"temp":95,"event":"CHARGE 95C"},{"time":15,"temp":78.2},{"time":30,"temp":76.5,"event":"TP"},{"time":90,"temp":112},{"time":150,"temp":148,"event":"DE"},{"time":270,"temp":191,"event":"FCS"},{"time":300,"temp":195,"event":"FCE"},{"time":360,"temp":204,"event":"DROP"}]};
+function parse(data){
+  let raw=(data.profile||[]).slice().sort((a,b)=>a.time-b.time); if(!raw.length) throw 'empty';
+  function calcStats(asSec){
+    let vals=[];
+    for(let i=1;i<raw.length;i++){
+      let dt=raw[i].time-raw[i-1].time; if(dt===0) continue;
+      let dT=raw[i].temp-raw[i-1].temp;
+      let ror=asSec? dT/dt*60 : dT/dt;
+      if(isFinite(ror)) vals.push(ror);
+    }
+    if(!vals.length) return {inRange:0, median:999};
+    let median=[...vals].sort((a,b)=>a-b)[Math.floor(vals.length/2)];
+    let inRange=vals.filter(v=>v>=1 && v<=40).length / vals.length;
+    return {inRange, median};
+  }
+  let secStats=calcStats(true);
+  let minStats=calcStats(false);
+  let isMinUnit;
+  if(secStats.inRange===0 && minStats.inRange===0){ isMinUnit = raw[raw.length-1].time <= 30; }
+  else {
+    if(Math.abs(secStats.median) > 80 && Math.abs(minStats.median) <= 40) isMinUnit = true;
+    else if(Math.abs(minStats.median) > 80 && Math.abs(secStats.median) <= 40) isMinUnit = false;
+    else isMinUnit = minStats.inRange >= secStats.inRange;
+  }
+  if(raw[raw.length-1].time < 60 && secStats.inRange > 0.3) isMinUnit = false;
+  let p = raw.map(x=> ({...x, time: isMinUnit ? x.time*60 : x.time}));
+  let originalUnit = isMinUnit ? 'min' : 'sec';
+  const find=(names)=>{ const up=names.map(s=>s.toUpperCase()); return p.find(x=>x.event&&up.some(k=>x.event.toUpperCase().includes(k))); };
+  const charge=find(['CHARGE'])||p[0];
+  const tp=(()=>{ let ci=p.indexOf(charge),min=Infinity,idx=ci; for(let i=ci;i<Math.min(p.length,ci+30);i++){ if(p[i].temp<min){min=p[i].temp; idx=i;}} return p[idx];})();
+  const de=find(['DRY','DE','YELLOW'])||null; const fcs=find(['FCS','FC START','1ST','1C START'])||null; const fce=find(['FCE','FC END'])||null; const scs=find(['SCS','SC START','2ND'])||null; const drop=p[p.length-1];
+  let rors=[]; for(let i=1;i<p.length;i++){ let dt=p[i].time-p[i-1].time; if(dt===0)continue; let dT=p[i].temp-p[i-1].temp; let ror=dT/dt*60; rors.push({time:p[i].time,value:ror}); }
+  let vals=rors.map(r=>r.value).filter(isFinite); let maxRoR=vals.length?Math.max(...vals):0,minRoR=vals.length?Math.min(...vals):0; let avgRoR=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0; let medianRoR=vals.length?[...vals].sort((a,b)=>a-b)[Math.floor(vals.length/2)]:0; let stdRoR=vals.length?Math.sqrt(vals.reduce((a,b)=>a+(b-avgRoR)**2,0)/vals.length):0;
+  const t=(ev)=>ev?ev.time:null; const dur=(a,b)=> (a!=null&&b!=null)?b-a:null;
+  let cT=t(charge), deT=t(de), fcsT=t(fcs), dropT=t(drop); let dryDur=dur(cT,deT), maillDur=dur(deT,fcsT), devDur=dur(fcsT,dropT), total=dur(cT,dropT); let DTR=devDur&&total?devDur/total*100:null;
+  let temps=p.map(x=>x.temp); let maxBT=Math.max(...temps), minBT=Math.min(...temps);
+  let auc=0, aucAbove100=0; for(let i=1;i<p.length;i++){ let dt=(p[i].time-p[i-1].time)/60; let avgT=(p[i].temp+p[i-1].temp)/2; auc+=avgT*dt; if(avgT>100)aucAbove100+=(avgT-100)*dt; }
+  const rorAt=(ev)=>{ if(!ev)return null; let best=rors.reduce((b,c)=>Math.abs(c.time-ev.time)<Math.abs(b.time-ev.time)?c:b, rors[0]); return best?.value??null; };
+  let crash=null,flick=null; if(fcs){ let dev=rors.filter(r=>r.time>=fcs.time); for(let i=1;i<dev.length;i++){ let d=dev[i-1].value-dev[i].value; if(d>5){crash=d;break;}} let last=rors.filter(r=>r.time>dropT-60); if(last.length>=2){ let d=last[last.length-1].value-last[0].value; if(d>1.5)flick=d; } }
+  const slope=(a,b)=>{ if(!a||!b)return null; let dt=(b.time-a.time)/60; if(dt===0)return null; return (b.temp-a.temp)/dt; };
+  let accels=[]; for(let i=1;i<rors.length;i++){ let dt=(rors[i].time-rors[i-1].time)/60; let dv=rors[i].value-rors[i-1].value; accels.push(dv/(dt||1)); } let maxAccel=accels.length?Math.max(...accels):0, minAccel=accels.length?Math.min(...accels):0;
+  return {p, originalUnit, charge,tp,de,fcs,fce,scs,drop,rors,vals,maxRoR,minRoR,avgRoR,medianRoR,stdRoR,dryDur,maillDur,devDur,total,DTR,maxBT,minBT,auc,aucAbove100,rorAt,crash,flick,slope,accels,maxAccel,minAccel,title:data.title||'Untitled',memo:data.memo||''}
+}
+function fmt(sec){ if(sec==null||!isFinite(sec))return '--:--'; let m=Math.floor(sec/60), s=Math.floor(sec%60); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function fmtDur(sec){ return sec==null?'--:--':fmt(sec); }
+function pct(a,b){ if(a==null||!b)return '--.-%'; return (a/b*100).toFixed(1)+'%'; }
+function S(k,v,sub=''){ return `<div class="stat"><div class="k">${k}</div><div class="v">${v} ${sub?`<small>${sub}</small>`:''}</div></div>`; }
+function setupCanvas(canvas){
+  if(!canvas) return null;
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  if(rect.width===0 || rect.height===0) return null;
+  const w=Math.round(rect.width*dpr);
+  const h=Math.round(rect.height*dpr);
+  if(canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
+  const ctx=canvas.getContext('2d');
+  if(!ctx) return null;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, W:rect.width, H:rect.height};
+}
+function drawFlavorRadar(canvas, s){
+  const sc=setupCanvas(canvas);
+  if(!sc) return;
+  const {ctx, W, H}=sc;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2+8, R=Math.min(W,H)*0.36;
+  const axes=[
+    {label:'ACID', val:s.radar.acid},
+    {label:'SWEET', val:s.radar.sweet},
+    {label:'BODY', val:s.radar.body},
+    {label:'ROAST', val:s.radar.roast},
+    {label:'BITTER', val:s.radar.bitter},
+    {label:'BALANCE', val:s.radar.balance}
+  ];
+  const n=axes.length;
+  const isLight=document.documentElement.classList.contains('light');
+  const textColor=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#e8e6e1';
+  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#a8d86e';
+  for(let lvl=1; lvl<=4; lvl++){
+    ctx.beginPath();
+    ctx.strokeStyle= isLight ? (lvl===4 ? 'rgba(0,0,0,0.40)' : 'rgba(0,0,0,0.22)') : (lvl===4 ? 'rgba(232,230,225,0.42)' : 'rgba(232,230,225,0.24)');
+    ctx.lineWidth= lvl===4 ? 1.6 : 1;
+    for(let i=0;i<n;i++){
+      let ang = (Math.PI*2*i/n) - Math.PI/2;
+      let r = R*lvl/4;
+      let x=cx+Math.cos(ang)*r, y=cy+Math.sin(ang)*r;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.strokeStyle= isLight ? 'rgba(0,0,0,0.32)' : 'rgba(232,230,225,0.34)';
+  ctx.lineWidth=1.2;
+  for(let i=0;i<n;i++){
+    let ang=(Math.PI*2*i/n)-Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*R, cy+Math.sin(ang)*R); ctx.stroke();
+  }
+  ctx.fillStyle=textColor; ctx.font='bold 11px JetBrains Mono, monospace';
+  for(let i=0;i<n;i++){
+    let ang=(Math.PI*2*i/n)-Math.PI/2;
+    let x=cx+Math.cos(ang)*(R+22), y=cy+Math.sin(ang)*(R+22);
+    ctx.textAlign = Math.cos(ang)>0.3 ? 'left' : Math.cos(ang)<-0.3 ? 'right' : 'center';
+    ctx.textBaseline='middle'; ctx.fillText(axes[i].label, x, y);
+  }
+  ctx.beginPath(); let pts=[];
+  for(let i=0;i<n;i++){
+    let ang=(Math.PI*2*i/n)-Math.PI/2;
+    let v=Math.max(0,Math.min(10, axes[i].val))/10;
+    let r=R*v; let x=cx+Math.cos(ang)*r, y=cy+Math.sin(ang)*r;
+    pts.push({x,y}); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath(); ctx.fillStyle='rgba(168,216,110,0.22)'; ctx.fill();
+  ctx.strokeStyle=accent; ctx.lineWidth=1.8; ctx.stroke();
+  pts.forEach(pt=>{ ctx.beginPath(); ctx.arc(pt.x,pt.y,4.5,0,Math.PI*2); ctx.fillStyle=accent; ctx.fill(); });
+}
+function drawChart(canvas,s){
+  const sc=setupCanvas(canvas);
+  if(!sc) return;
+  const {ctx, W, H}=sc;
+  ctx.clearRect(0,0,W,H);
+  const ml=48,mr=40,mt=16,mb=32,pw=W-ml-mr,ph=H-mt-mb;
+  let tMin=Math.min(...s.p.map(x=>x.time)), tMax=Math.max(...s.p.map(x=>x.time));
+  let tempMin=Math.min(...s.p.map(x=>x.temp))-3, tempMax=Math.max(...s.p.map(x=>x.temp))+3;
+  let rMin=Math.min(-5,...s.vals), rMax=Math.max(...s.vals)+2;
+  const x=(t)=>ml+(t-tMin)/(tMax-tMin||1)*pw; const yT=(v)=>mt+(1-(v-tempMin)/(tempMax-tempMin||1))*ph; const yR=(v)=>mt+(1-(v-rMin)/(rMax-rMin||1))*ph;
+  const textColor=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#e8e6e1';
+  const muted=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#8a8885';
+  const isLight=document.documentElement.classList.contains('light');
+  ctx.strokeStyle= isLight ? 'rgba(0,0,0,0.26)' : 'rgba(232,230,225,0.28)';
+  ctx.lineWidth=1.1;
+  for(let i=0;i<=5;i++){ let y=mt+i*ph/5; ctx.beginPath(); ctx.moveTo(ml,y); ctx.lineTo(W-mr,y); ctx.stroke(); }
+  ctx.strokeStyle= isLight ? 'rgba(0,0,0,0.12)' : 'rgba(232,230,225,0.12)';
+  ctx.lineWidth=0.8;
+  for(let i=0;i<=6;i++){ let xg=ml+i*pw/6; ctx.beginPath(); ctx.moveTo(xg,mt); ctx.lineTo(xg,mt+ph); ctx.stroke(); }
+  if(s.de&&s.fcs){
+    ctx.fillStyle='rgba(168,216,110,0.14)'; ctx.fillRect(x(s.charge.time),mt, x(s.de.time)-x(s.charge.time),ph);
+    ctx.fillStyle='rgba(255,140,66,0.14)'; ctx.fillRect(x(s.de.time),mt, x(s.fcs.time)-x(s.de.time),ph);
+    ctx.fillStyle='rgba(141,110,99,0.20)'; ctx.fillRect(x(s.fcs.time),mt, x(s.drop.time)-x(s.fcs.time),ph);
+  }
+  ctx.strokeStyle='#a8d86e'; ctx.lineWidth=1.8; ctx.beginPath(); s.p.forEach((p,i)=>{ let X=x(p.time),Y=yT(p.temp); if(i==0)ctx.moveTo(X,Y); else ctx.lineTo(X,Y); }); ctx.stroke();
+  ctx.strokeStyle='#4ecdc4'; ctx.lineWidth=1.2; ctx.setLineDash([5,4]); ctx.beginPath(); s.rors.forEach((r,i)=>{ let X=x(r.time),Y=yR(r.value); if(i==0)ctx.moveTo(X,Y); else ctx.lineTo(X,Y); }); ctx.stroke(); ctx.setLineDash([]);
+  s.p.forEach(p=>{ if(p.event){ let X=x(p.time),Y=yT(p.temp); ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.arc(X,Y,4,0,Math.PI*2); ctx.fill(); ctx.fillStyle=textColor; ctx.font='bold 11px monospace'; ctx.fillText((p.event||'').slice(0,10),X+5,Y-5);} });
+  ctx.fillStyle=muted; ctx.font='11px monospace'; ctx.fillText(tempMin.toFixed(0)+'°',2,yT(tempMin)); ctx.fillText(tempMax.toFixed(0)+'°',2,yT(tempMax)); ctx.fillText(fmt(tMin),ml,H-6); ctx.fillText(fmt(tMax),W-mr-36,H-6);
+}
+function render(s){
+  var d=s.dryDur||0,m=s.maillDur||0,dv=s.devDur||0,tot=s.total||1,sum=d+m+dv||tot;
+  var dPct=sum?d/sum*100:0, mPct=sum?m/sum*100:0, dvPct=sum?dv/sum*100:0;
+  document.getElementById('simpleStats').innerHTML='<div class="modern-stats">'
+    +'<div class="ms-group"><span class="ms-label">TEMP</span>'
+    +'<span class="ms-pill"><span class="dot" style="background:#a8d86e"></span> MAX <b>'+s.maxBT.toFixed(1)+'℃</b></span>'
+    +'<span class="ms-pill">TP <b>'+s.tp.temp.toFixed(1)+'℃</b> <small>@'+fmt(s.tp.time)+'</small></span>'
+    +'<span class="ms-pill">DROP <b>'+s.drop.temp.toFixed(1)+'℃</b> <small>@'+fmt(s.drop.time)+'</small></span></div>'
+    +'<div class="ms-group"><span class="ms-label">RoR</span>'
+    +'<span class="ms-pill">MAX <b>'+s.maxRoR.toFixed(1)+'</b><small>℃/m</small></span>'
+    +'<span class="ms-pill">AVG <b>'+s.avgRoR.toFixed(1)+'</b></span>'
+    +'<span class="ms-pill">DROP <b>'+(s.rorAt(s.drop)!=null?s.rorAt(s.drop).toFixed(1):'--')+'</b></span></div>'
+    +'<div class="ms-group"><span class="ms-label">EVENT</span>'
+    +'<span class="ms-pill">1C <b>'+(s.fcs?fmt(s.fcs.time):'--:--')+'</b> <small>'+(s.fcs?s.fcs.temp.toFixed(1)+'℃':'')+'</small></span>'
+    +'<span class="ms-pill">2C <b>'+(s.scs?fmt(s.scs.time):'--:--')+'</b></span>'
+    +'<span class="ms-pill" style="border-color:var(--accent)">DTR <b>'+(s.DTR!=null?s.DTR.toFixed(1)+'%':'--')+'</b> <small>ideal 20-25%</small></span></div></div>';
+  document.getElementById('titleSimple').textContent=s.title + ' ['+s.originalUnit+']'; document.getElementById('memoSimple').textContent=s.memo;
+  var bar='<div class="phase-modern">'
+    +'<div class="phase-seg dry" style="width:'+dPct+'%">'+(dPct>=10?'<span>'+dPct.toFixed(0)+'%</span>':'')+'</div>'
+    +'<div class="phase-seg maill" style="width:'+mPct+'%">'+(mPct>=10?'<span>'+mPct.toFixed(0)+'%</span>':'')+'</div>'
+    +'<div class="phase-seg dev" style="width:'+dvPct+'%">'+(dvPct>=10?'<span>'+dvPct.toFixed(0)+'%</span>':'')+'</div>'
+    +'</div>'
+    +'<div class="phase-legend">'
+    +'<div class="phase-legend-item"><span class="phase-legend-dot" style="background:#a8d86e"></span> DRY <b>'+fmtDur(s.dryDur)+'</b> <small>('+pct(s.dryDur,s.total)+')</small></div>'
+    +'<div class="phase-legend-item"><span class="phase-legend-dot" style="background:#ffad4a"></span> MAILLARD <b>'+fmtDur(s.maillDur)+'</b> <small>('+pct(s.maillDur,s.total)+')</small></div>'
+    +'<div class="phase-legend-item"><span class="phase-legend-dot" style="background:#c45a3c"></span> DEV <b>'+fmtDur(s.devDur)+'</b> <small>('+pct(s.devDur,s.total)+')</small></div>'
+    +'</div>';
+  document.getElementById('phaseBarSimple').innerHTML=bar;
+  drawChart(document.getElementById('chartSimple'),s);
+  let basic=[S('CHARGE TEMP',s.charge.temp.toFixed(1)+'℃',fmt(s.charge.time)),S('CHARGE RoR',s.rorAt(s.charge)!=null?s.rorAt(s.charge).toFixed(1):'--','℃/m'),S('TP TEMP',s.tp.temp.toFixed(1)+'℃',fmt(s.tp.time)),S('TP RoR',s.rorAt(s.tp)!=null?s.rorAt(s.tp).toFixed(1):'--'),S('MAX BT',s.maxBT.toFixed(1)+'℃',''),S('MIN BT',s.minBT.toFixed(1)+'℃',''),S('DROP TEMP',s.drop.temp.toFixed(1)+'℃',fmt(s.drop.time)),S('DROP RoR',s.rorAt(s.drop)!=null?s.rorAt(s.drop).toFixed(1):'--'),S('DELTA BT',(s.drop.temp-s.charge.temp).toFixed(1)+'℃',''),S('TOTAL TIME',fmt(s.total),''),S('AVG BT',(s.p.reduce((a,b)=>a+b.temp,0)/s.p.length).toFixed(1)+'℃',''),S('HEAT GAIN',(s.maxBT-s.minBT).toFixed(1)+'℃','')];
+  let phase=[S('DRY TIME',fmtDur(s.dryDur),''),S('DRY %',pct(s.dryDur,s.total),''),S('MAILL TIME',fmtDur(s.maillDur),''),S('MAILL %',pct(s.maillDur,s.total),''),S('DEV TIME',fmtDur(s.devDur),''),S('DEV %',pct(s.devDur,s.total),''),S('DTR',s.DTR!=null?s.DTR.toFixed(1)+'%':'--',''),S('POST-FC %',pct(s.devDur,s.total),''),S('PRE-FC %',pct(s.total-s.devDur,s.total),''),S('DRY/MAILL',d&&m?(d/m).toFixed(2):'--',''),S('MAILL/DEV',m&&dv?(m/dv).toFixed(2):'--',''),S('DRY/DEV',d&&dv?(d/dv).toFixed(2):'--','')];
+  let energy=[S('AUC',s.auc.toFixed(0)+'','℃·min'),S('AUC>100',s.aucAbove100.toFixed(0),''),S('AUC/min',(s.auc/(s.total/60||1)).toFixed(1)+'℃',''),S('AUC ratio',(s.aucAbove100/s.auc*100).toFixed(1)+'%','>100/total'),S('CHARGE-DE E',s.de?s.p.filter(x=>x.time<=s.de.time).reduce((a,b,i,arr)=>{if(i==0)return 0; let dt=(b.time-arr[i-1].time)/60; return a+(b.temp+arr[i-1].temp)/2*dt;},0).toFixed(0):'--',''),S('DE-DROP E',(s.auc - (s.de?s.p.filter(x=>x.time<=s.de.time).reduce((a,b,i,arr)=>{if(i==0)return 0; let dt=(b.time-arr[i-1].time)/60; return a+(b.temp+arr[i-1].temp)/2*dt;},0):0)).toFixed(0),''),S('Avg Power',(s.auc/(s.total/60||1)).toFixed(1)+'℃',''),S('Energy Bal',(s.aucAbove100/s.auc*100).toFixed(1)+'%','')];
+  let slope=[S('CHARGE-TP',s.slope(s.charge,s.tp)!=null?s.slope(s.charge,s.tp).toFixed(1)+'℃/m':'--',''),S('TP-DE',s.slope(s.tp,s.de)!=null?s.slope(s.tp,s.de).toFixed(1):'--',''),S('DE-FCS',s.slope(s.de,s.fcs)!=null?s.slope(s.de,s.fcs).toFixed(1):'--',''),S('FCS-DROP',s.slope(s.fcs,s.drop)!=null?s.slope(s.fcs,s.drop).toFixed(1):'--',''),S('CHARGE-FCS',s.slope(s.charge,s.fcs)!=null?s.slope(s.charge,s.fcs).toFixed(1):'--',''),S('TP-FCS',s.slope(s.tp,s.fcs)!=null?s.slope(s.tp,s.fcs).toFixed(1):'--',''),S('Overall',s.slope(s.charge,s.drop)!=null?s.slope(s.charge,s.drop).toFixed(1):'--',''),S('TP Depth',(s.charge.temp-s.tp.temp).toFixed(1)+'℃',''),S('TP Dur',fmtDur(s.tp.time-s.charge.time),''),S('DE Temp',s.de?s.de.temp.toFixed(1)+'℃':'--',''),S('FCS Temp',s.fcs?s.fcs.temp.toFixed(1)+'℃':'--',''),S('DROP-FCS Δ',(s.drop.temp-(s.fcs?s.fcs.temp:0)).toFixed(1)+'℃','')];
+  let ror=[S('MAX RoR',s.maxRoR.toFixed(1)+'℃/m',''),S('MIN RoR',s.minRoR.toFixed(1),''),S('AVG RoR',s.avgRoR.toFixed(1),''),S('MED RoR',s.medianRoR.toFixed(1),''),S('STD RoR',s.stdRoR.toFixed(2),''),S('RANGE', (s.maxRoR-s.minRoR).toFixed(1),''),S('RoR@CHARGE',s.rorAt(s.charge)!=null?s.rorAt(s.charge).toFixed(1):'--',''),S('RoR@TP',s.rorAt(s.tp)!=null?s.rorAt(s.tp).toFixed(1):'--',''),S('RoR@DE',s.rorAt(s.de)!=null?s.rorAt(s.de).toFixed(1):'--',''),S('RoR@FCS',s.rorAt(s.fcs)!=null?s.rorAt(s.fcs).toFixed(1):'--',''),S('RoR@FCE',s.rorAt(s.fce)!=null?s.rorAt(s.fce).toFixed(1):'--',''),S('RoR@DROP',s.rorAt(s.drop)!=null?s.rorAt(s.drop).toFixed(1):'--',''),S('Δ FCS-DROP',s.rorAt(s.fcs)!=null&&s.rorAt(s.drop)!=null?(s.rorAt(s.drop)-s.rorAt(s.fcs)).toFixed(1):'--',''),S('Δ MAX-MIN',(s.maxRoR-s.minRoR).toFixed(1),''),S('Momentum',(s.avgRoR-(s.rorAt(s.drop)||0)).toFixed(1),'')];
+  let rorAcc=[S('MAX ACCEL',s.maxAccel.toFixed(1)+'℃/m2',''),S('MIN ACCEL',s.minAccel.toFixed(1),''),S('ACC RANGE',(s.maxAccel-s.minAccel).toFixed(1),'')];
+  let dev=[S('DTR',s.DTR!=null?s.DTR.toFixed(1)+'%':'--',''),S('DEV TIME',fmtDur(s.devDur),''),S('DEV RISE',s.fcs?(s.drop.temp-s.fcs.temp).toFixed(1)+'℃':'--',''),S('DEV %RISE',s.fcs?((s.drop.temp-s.fcs.temp)/s.fcs.temp*100).toFixed(1)+'%':'--',''),S('TIME TO 1C',s.fcs?fmtDur(s.fcs.time-s.charge.time):'--',''),S('TO 1C %',s.fcs?pct(s.fcs.time-s.charge.time,s.total):'--',''),S('FC INTERVAL',s.fce&&s.fcs?fmtDur(s.fce.time-s.fcs.time):'--',''),S('FC-DROP %',s.fcs&&s.total?((s.drop.time-s.fcs.time)/s.total*100).toFixed(1)+'%':'--',''),S('DE-FCS',fmtDur(s.maillDur),''),S('DROP/FCS rate',s.fcs&&s.devDur?((s.drop.temp-s.fcs.temp)/(s.devDur/60)).toFixed(2)+'℃/m':'--',''),S('Baked Risk',s.avgRoR<8?'HIGH':'Low',''),S('Under Risk',s.DTR!=null&&s.DTR<15?'HIGH':'Low',''),S('Over Risk',s.DTR!=null&&s.DTR>30?'HIGH':'Low',''),S('DE-FCS %',pct(s.maillDur,s.total),''),S('CHARGE-FCS %',s.fcs?pct(s.fcs.time-s.charge.time,s.total):'--',''),S('FCS-DROP %',s.fcs&&s.total?((s.drop.time-s.fcs.time)/s.total*100).toFixed(1)+'%':'--','')];
+  let p100=s.p.filter(x=>x.temp>=100)[0]; let p150=s.p.filter(x=>x.temp>=150)[0];
+  let t100 = p100 ? s.fcs ? s.fcs.time - p100.time : null : null;
+  let t150 = p150 ? s.fcs ? s.fcs.time - p150.time : null : null;
+  let pct100 = (s.fcs&&p100) ? (s.fcs.time-p100.time)/s.total*100 : null;
+  let slope100_150 = (p100&&p150) ? s.slope(p100,p150) : null;
+  let curveLen=(function(){let len=0;for(let i=1;i<s.p.length;i++){let dx=(s.p[i].time-s.p[i-1].time)/60; let dy=s.p[i].temp-s.p[i-1].temp; len+=Math.sqrt(dx*dx+dy*dy);}return len.toFixed(1);})();
+  let totalMin = s.total/60;
+  let devMin = s.devDur!=null ? s.devDur/60 : null;
+  let maillMin = s.maillDur!=null ? s.maillDur/60 : null;
+  let isInvalid = totalMin < 2.5 || (s.fcs==null && totalMin < 6);
+  let risk=[
+    S('Crash',s.crash ? s.crash.toFixed(1)+' drop' : 'No'),
+    S('Flick',s.flick ? '+'+s.flick.toFixed(1) : 'No'),
+    S('Tipping',s.maxRoR>35?'HIGH':'Low'),
+    S('Scorch',s.rorAt(s.charge)!=null&&s.rorAt(s.charge)>30?'HIGH':'Low'),
+    S('Baked',s.avgRoR<6?'HIGH':s.avgRoR<8?'Med':'Low'),
+    S('Facings',s.stdRoR>10?'HIGH':s.stdRoR>7?'Med':'Low')
+  ];
+  function flavorBody(){ if(isInvalid) return '--'; if(devMin==null) return '--'; if(s.DTR!=null){ if(s.DTR > 28 || devMin > 3.5) return 'Heavy'; if(s.DTR > 22 || devMin > 2.2) return 'Med-Heavy'; if(s.DTR > 15) return 'Med'; return 'Light'; } if(devMin > 3.5) return 'Heavy'; if(devMin > 2.0) return 'Med'; return 'Light'; }
+  function flavorSweet(){ if(isInvalid) return '--'; if(maillMin==null) return '--'; if(maillMin < 1.5) return 'Low'; if(maillMin < 2.5) return 'Med-Low'; if(maillMin < 4) return 'Med'; return 'High'; }
+  function flavorAcid(){ if(isInvalid) return '--'; if(s.DTR==null) return '--'; if(s.DTR < 15) return 'High'; if(s.DTR < 20) return 'Med-High'; if(s.DTR < 25) return 'Med'; return 'Low'; }
+  function flavorAgtron(){ if(isInvalid) return '--'; let t=s.drop.temp; if(t>225) return '~35'; if(t>218) return '~45'; if(t>212) return '~55'; if(t>205) return '~65'; if(t>195) return '~75'; return '~85'; }
+  function flavorLevel(){ if(isInvalid) return 'Invalid'; let t=s.drop.temp; if(t>220) return 'Very Dark'; if(t>212) return 'Dark'; if(t>205) return 'Med-Dark'; if(t>198) return 'Medium'; return 'Light'; }
+  function flavorWL(){ if(isInvalid) return '--'; let t=s.drop.temp; if(t>220) return '16-18%'; if(t>212) return '14-16%'; if(t>205) return '12-14%'; if(t>195) return '10-12%'; return '8-10%'; }
+  function scoreAcid(){ let t=flavorAcid(); if(t==='High') return 9; if(t==='Med-High') return 7; if(t==='Med') return 5; if(t==='Low') return 3; return 0; }
+  function scoreBody(){ let t=flavorBody(); if(t==='Heavy') return 9; if(t==='Med-Heavy') return 7; if(t==='Med') return 5; if(t==='Light') return 3; return 0; }
+  function scoreSweet(){ let t=flavorSweet(); if(t==='High') return 9; if(t==='Med') return 6; if(t==='Med-Low') return 4; if(t==='Low') return 2; return 0; }
+  function scoreRoast(){ let t=flavorLevel(); if(t==='Very Dark') return 9; if(t==='Dark') return 7.5; if(t==='Med-Dark') return 6; if(t==='Medium') return 4; if(t==='Light') return 2.5; return 0; }
+  function scoreBitter(){ let t=flavorAgtron(); if(t==='~35') return 9; if(t==='~45') return 7.5; if(t==='~55') return 6; if(t==='~65') return 4.5; if(t==='~75') return 3; if(t==='~85') return 2; return 0; }
+  function scoreBalance(){ if(isInvalid) return 0; let dtrScore = s.DTR!=null ? 10 - Math.abs(s.DTR-22)/3 : 5; let crashPenalty = s.crash ? 3 : 0; let flickPenalty = s.flick ? 2 : 0; let stdPenalty = s.stdRoR>10 ? 2 : s.stdRoR>7 ? 1 : 0; return Math.max(0, Math.min(10, dtrScore - crashPenalty - flickPenalty - stdPenalty)); }
+  s.radar={acid:scoreAcid(), body:scoreBody(), sweet:scoreSweet(), roast:scoreRoast(), bitter:scoreBitter(), balance:scoreBalance()};
+  let flavor=[S('Agtron',flavorAgtron()),S('Acidity',flavorAcid()),S('Body',flavorBody()),S('Sweet',flavorSweet()),S('Level',flavorLevel()),S('WL Est.',flavorWL())];
+  let adv=[S('Points',String(s.p.length)),S('Sample', (s.total/s.p.length).toFixed(1)+'s'),S('Orig Unit',s.originalUnit),S('AUC Bal',(s.aucAbove100/s.auc*100).toFixed(1)+'%'),S('Curve Len',curveLen),S('Hash',String(Math.floor(s.auc))+'-'+(s.DTR!=null?Math.floor(s.DTR):0)),S('Title',s.title.slice(0,10)),S('Memo Len',String((s.memo||'').length))];
+  let extra=[S('CHARGE-DROP',fmt(s.total)),S('TP-DROP',fmtDur(s.drop.time-s.tp.time)),S('CHARGE-DE',fmtDur(s.dryDur)),S('DE-DROP',fmtDur((s.maillDur||0)+(s.devDur||0))),S('100C-FCS',t100!=null?fmtDur(t100):'--'),S('150C-FCS',t150!=null?fmtDur(t150):'--'),S('100/FCS %',pct100!=null?pct100.toFixed(1)+'%':'--'),S('Slope 100-150',slope100_150!=null?slope100_150.toFixed(1):'--'),S('Drop-FCS',s.fcs? (s.drop.temp-s.fcs.temp).toFixed(1)+'C' : '--'),S('FCS% Total',s.fcs?pct(s.fcs.time-s.charge.time,s.total):'--')];
+  document.getElementById('basic').innerHTML=basic.join('');
+  document.getElementById('phaseStats').innerHTML=phase.slice(0,4).join(''); document.getElementById('phaseExtra').innerHTML=phase.slice(4).join('');
+  document.getElementById('energy').innerHTML=energy.join('');
+  document.getElementById('slope').innerHTML=slope.join('');
+  document.getElementById('ror').innerHTML=ror.join(''); document.getElementById('rorAccel').innerHTML=rorAcc.join('');
+  document.getElementById('dev').innerHTML=dev.join('');
+  document.getElementById('risk').innerHTML=risk.join(''); document.getElementById('flavor').innerHTML=flavor.join(''); document.getElementById('advanced').innerHTML=adv.join('');
+  document.getElementById('extra').innerHTML=extra.join('');
+  document.getElementById('events').innerHTML=[['CHARGE',s.charge],['TP',s.tp],['DE',s.de],['FCS',s.fcs],['FCE',s.fce],['SCS',s.scs],['DROP',s.drop]].map(([l,ev])=> ev?`<div class="line"><span>${l} <span class="badge">${(ev.event||'').slice(0,10)}</span></span><b>${fmt(ev.time)} @${ev.temp.toFixed(1)}℃</b></div>`:`<div class="line"><span>${l}</span><b>--:--</b></div>`).join('');
+  drawFlavorRadar(document.getElementById('flavorRadar'), s);
+}
+function handleData(d){ window._lastData=d; try{ render(parse(d)); var fromUrl=false; try{ var p=new URLSearchParams(location.search); if(p.get('data')) fromUrl=true; }catch(e){} if(fromUrl){ var el=document.getElementById('dropText'); if(el) el.textContent='URLパラメータから読み込み: '+ (d.title||'profile') + ' ('+ (d.profile?d.profile.length:0) +' pts)'; } }catch(e){ console.error(e); alert(e);} }
+function handleFile(f){ let r=new FileReader(); r.onload=ev=>{ try{ handleData(JSON.parse(ev.target.result)); document.getElementById('dropText').textContent='Loaded: '+f.name; }catch(e){alert(e)} }; r.readAsText(f); }
+function setMode(mode){ document.body.classList.remove('mode-basic','mode-manual'); document.body.classList.add('mode-'+mode); document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active')); document.getElementById('btn'+mode.charAt(0).toUpperCase()+mode.slice(1)).classList.add('active'); let url=new URL(location.href); url.searchParams.set('mode',mode); history.replaceState(null,'',url); }
+function toggleAdvanced(){ let el=document.getElementById('advancedSection'); el.classList.toggle('open'); let btn=document.getElementById('advToggleBtn'); btn.textContent=el.classList.contains('open')?'▲ ADVANCED を閉じる':'▼ ADVANCED を表示'; if(el.classList.contains('open')){ setTimeout(()=>{ if(window._lastData) render(parse(window._lastData)); },80); } }
+function toggleTheme(){ let isLight=document.documentElement.classList.toggle('light'); document.getElementById('themeBtn').textContent=isLight?'☀️ LIGHT':'🌙 DARK'; let url=new URL(location.href); url.searchParams.set('theme',isLight?'light':'dark'); history.replaceState(null,'',url); if(window._lastData) render(parse(window._lastData)); }
+document.getElementById('file').addEventListener('change',e=>{ let f=e.target.files[0]; if(f) handleFile(f); });
+const drop=document.getElementById('drop'); drop.addEventListener('click',()=>document.getElementById('file').click()); drop.addEventListener('dragover',e=>{e.preventDefault(); drop.style.borderColor='#a8d86e'}); drop.addEventListener('dragleave',()=>drop.style.borderColor=''); drop.addEventListener('drop',e=>{e.preventDefault(); handleFile(e.dataTransfer.files[0])});
+(function(){
+  const q=new URLSearchParams(location.search);
+  const fp=q.get('file');
+  const mode=q.get('mode')||'basic';
+  const theme=q.get('theme');
+  if(theme==='light'){ document.documentElement.classList.add('light'); var b=document.getElementById('themeBtn'); if(b) b.textContent='☀️ LIGHT'; }
+  setMode(mode);
+  var urlData=null;
+  try{ urlData=getDataFromURL(); }catch(e){ console.error(e); }
+  if(urlData){
+    try{ handleData(urlData); return; }catch(e){ console.error(e); }
+  }
+  if(fp){ fetch(fp).then(function(r){return r.json();}).then(function(j){ handleData(j); }).catch(function(){ handleData(SAMPLE); }); }
+  else { handleData(SAMPLE); }
+})();
+window.addEventListener('message',e=>{ if(e.data&&e.data.profile){ handleData(e.data);} });
+window.addEventListener('resize',()=>{ if(window._lastData) render(parse(window._lastData)); });
+</script>
+</body>
+</html>
