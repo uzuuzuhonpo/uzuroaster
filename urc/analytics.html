@@ -118,6 +118,21 @@ body.mode-manual .basic-view{display:none}
 
 function getDataFromURL(){
   try{
+    // 1. ハッシュフラグメントから (#data=...) を最優先で読む - Cloudflare回避のためサーバーに送られない
+    var hash = location.hash || '';
+    if(hash.indexOf('data=') >= 0){
+      var m = hash.match(/data=([^&]+)/);
+      if(m && m[1]){
+        var d = m[1];
+        try{
+          var b64 = d.replace(/-/g, '+').replace(/_/g, '/');
+          while(b64.length % 4) b64 += '=';
+          var jsonStr = decodeURIComponent(escape(atob(b64)));
+          return JSON.parse(jsonStr);
+        }catch(e){}
+      }
+    }
+    // 2. クエリパラメータから (?data=...) - 後方互換
     var p = new URLSearchParams(location.search);
     var d = p.get('data') || p.get('p') || p.get('json');
     if(!d) return null;
@@ -374,7 +389,7 @@ function render(s){
   document.getElementById('events').innerHTML=[['CHARGE',s.charge],['TP',s.tp],['DE',s.de],['FCS',s.fcs],['FCE',s.fce],['SCS',s.scs],['DROP',s.drop]].map(([l,ev])=> ev?`<div class="line"><span>${l} <span class="badge">${(ev.event||'').slice(0,10)}</span></span><b>${fmt(ev.time)} @${ev.temp.toFixed(1)}℃</b></div>`:`<div class="line"><span>${l}</span><b>--:--</b></div>`).join('');
   drawFlavorRadar(document.getElementById('flavorRadar'), s);
 }
-function handleData(d){ window._lastData=d; try{ render(parse(d)); var fromUrl=false; try{ var p=new URLSearchParams(location.search); if(p.get('data')) fromUrl=true; }catch(e){} if(fromUrl){ var el=document.getElementById('dropText'); if(el) el.textContent='URLパラメータから読み込み: '+ (d.title||'profile') + ' ('+ (d.profile?d.profile.length:0) +' pts)'; } }catch(e){ console.error(e); alert(e);} }
+function handleData(d){ window._lastData=d; try{ render(parse(d)); var fromUrl=false; try{ if(location.hash && location.hash.indexOf('data=')>=0) fromUrl=true; else { var p=new URLSearchParams(location.search); if(p.get('data')) fromUrl=true; } }catch(e){} if(fromUrl){ var el=document.getElementById('dropText'); if(el) el.textContent='URLパラメータから読み込み: '+ (d.title||'profile') + ' ('+ (d.profile?d.profile.length:0) +' pts)'; } }catch(e){ console.error(e); alert(e);} }
 function handleFile(f){ let r=new FileReader(); r.onload=ev=>{ try{ handleData(JSON.parse(ev.target.result)); document.getElementById('dropText').textContent='Loaded: '+f.name; }catch(e){alert(e)} }; r.readAsText(f); }
 function setMode(mode){ document.body.classList.remove('mode-basic','mode-manual'); document.body.classList.add('mode-'+mode); document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active')); document.getElementById('btn'+mode.charAt(0).toUpperCase()+mode.slice(1)).classList.add('active'); let url=new URL(location.href); url.searchParams.set('mode',mode); history.replaceState(null,'',url); }
 function toggleAdvanced(){ let el=document.getElementById('advancedSection'); el.classList.toggle('open'); let btn=document.getElementById('advToggleBtn'); btn.textContent=el.classList.contains('open')?'▲ ADVANCED を閉じる':'▼ ADVANCED を表示'; if(el.classList.contains('open')){ setTimeout(()=>{ if(window._lastData) render(parse(window._lastData)); },80); } }

@@ -7006,16 +7006,8 @@ function openAnalyticsFromSave(){
     try{
         var b64 = btoa(unescape(encodeURIComponent(jsonStr)));
         var b64url = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-        // 長すぎる場合は通常のencodeURIComponentにフォールバック (ESP32ではURL長制限に注意)
-        var param;
-        if(b64url.length < 7000){
-            param = b64url;
-        }else{
-            // 大きすぎる場合はそのままURIエンコード (ブラウザの限界 ~2000-8000文字だが、とりあえず試す)
-            param = encodeURIComponent(jsonStr);
-        }
-        var url = 'analytics.html?data=' + param;
-        // ESP32では同一オリジンで開く
+        // ハッシュフラグメントを使うとCloudflareのURL長制限を回避できる (#以降はサーバーに送られない)
+        var url = 'analytics.html#data=' + b64url;
         window.open(url, '_blank');
     }catch(e){
         console.error(e);
