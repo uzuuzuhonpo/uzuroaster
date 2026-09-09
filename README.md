@@ -186,6 +186,7 @@ uzuroaster/
 │  ├─ command_reference.html       # コマンドリファレンス
 │  ├─ favicon.ico
 │  ├─ index.html                   # URC本体
+│  ├─ analytics.html               # 統計・分析ページ
 │  └─ uzu_roaster_manual.html      # マニュアル
 │
 └─uz_01
