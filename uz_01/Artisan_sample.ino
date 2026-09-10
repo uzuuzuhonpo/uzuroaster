@@ -38,6 +38,7 @@ void QueueMorseFeedback(const String& message);
 const String version = "1.3.3";
 const String CodeName ="Antigua";
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+String SerialNumber = "";
 TaskHandle_t taskHandle;
 AsyncWebServer ServerObject(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -728,6 +729,8 @@ void setup() {
   preferences.begin("system", false);
   int count = preferences.getInt("powerup_count", 0);
   preferences.putInt("powerup_count", (count + 1));
+  SerialNumber = preferences.getString("serialnumber", "");
+
   preferences.end();
   MySerial.println(String("Power On Count: ") + String(count));
   
@@ -744,7 +747,8 @@ void setup() {
     esp_log_level_set("wifi", ESP_LOG_NONE);
   }
 
- MySerial.println("Version: " + version + " / CodeName: " + CodeName);
+  MySerial.println("Version: " + version + " / CodeName: " + CodeName);
+  MySerial.println("Serial Number: " + SerialNumber);
 
     // オプションボタンの登録
   preferences.begin("function", true);
@@ -1151,12 +1155,11 @@ void CommandProcess(String& command, const uint8_t* params) {
   }
   else if (command == "serialnumber") {
     preferences.begin("system", true);
-    String serial = preferences.getString("serialnumber", "");
     preferences.end();
-    if (serial.length() == 0) {
+    if (SerialNumber.length() == 0) {
       MySerial.println("Serial number: (not set)");
     } else {
-      MySerial.println("Serial number: " + serial);
+      MySerial.println("Serial number: " + SerialNumber);
     }
   }
   else if (command.startsWith("serialnumber ")) {
@@ -1166,6 +1169,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.putString("serialnumber", str);
     preferences.end();
     MySerial.println("Serial number set: " + str);
+    SerialNumber = str;
   }
   else if (command == "wifi on") {
       WiFiSetup();
@@ -1777,6 +1781,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     // システム
     MySerial.println("[System]");
     MySerial.println("  Version       : " + version + " / CodeName: " + CodeName);
+    MySerial.println("  Serial Number : " + SerialNumber);
     // WiFi
     MySerial.println("[WiFi]");
     MySerial.println("  AP SSID       : " + ssid);
