@@ -1740,17 +1740,18 @@
             <polygon points="50,5 38,22 62,22" fill="white"/> <polygon points="50,95 38,78 62,78" fill="white"/> </svg>
           </span>
         </button>
-        <!--  とりあえず統計ボタンはこのバージョンでは非表示にする
-        <button id="stats-mode-button" title="統計・分析データ" data-i18n-title="TOOLTIP_STATS_VIEW" class="chart-control-button">
-            <span id="stats-mode-icon" style="display: flex; align-items: center;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="22" height="22">
-                <rect x="15" y="55" width="14" height="25" rx="4" fill="white" opacity="0.8"/>
-                <rect x="40" y="35" width="14" height="45" rx="4" fill="white" opacity="0.8"/>
-                <rect x="65" y="20" width="14" height="60" rx="4" fill="white" opacity="0.8"/>
-              </svg>
-            </span>
-          </button>
-        -->
+        <!--  とりあえず統計ボタンはこのバージョンでは非表示にする　-->
+        <button style="display: none;" 
+        
+          id="stats-mode-button" title="統計・分析データ" data-i18n-title="TOOLTIP_STATS_VIEW" class="chart-control-button">
+          <span id="stats-mode-icon" style="display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="22" height="22">
+              <rect x="15" y="55" width="14" height="25" rx="4" fill="white" opacity="0.8"/>
+              <rect x="40" y="35" width="14" height="45" rx="4" fill="white" opacity="0.8"/>
+              <rect x="65" y="20" width="14" height="60" rx="4" fill="white" opacity="0.8"/>
+            </svg>
+          </span>
+        </button>
       </div>
 
     <!-- ========================================
@@ -2172,17 +2173,16 @@ function getTimeAxisUnitLabel() {
 }
 
 function updateChartTexts() {
-  if (!roastChart) return;
-    if (roastChart.options?.scales?.x?.title) {
+  if (roastChart?.options?.scales?.x?.title) {
     roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
   }
-  if (roastChart.options?.scales?.y?.title) {
+  if (roastChart?.options?.scales?.y?.title) {
     roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
   }
-  if (roastChart.options?.scales?.y1?.title) {
+  if (roastChart?.options?.scales?.y1?.title) {
     roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
   }
-  const datasets = roastChart.data?.datasets;
+  const datasets = roastChart?.data?.datasets;
   if (datasets) {
     if (datasets[PROFILE_TEMP]) datasets[PROFILE_TEMP].label = t('CHART_DATASET_PROFILE_TEMP');
     if (datasets[CURRENT_TEMP]) datasets[CURRENT_TEMP].label = t('CHART_DATASET_CURRENT_TEMP');
@@ -2328,9 +2328,12 @@ function getDTRUnitHtml() {
 
 function updateDTRDisplay() {
   if (!roastDTRDisplay) return;
-  if (!roastChart || !roastChart.data?.datasets?.[CURRENT_TEMP]) return;
+  if (!roastChart?.data?.datasets?.[CURRENT_TEMP]) return;
+if (typeof PhaseManager === 'undefined' || !PhaseManager.phases) return;
 
   const currentTime = getCurrentTime();
+  if (currentTime === null) return; // ←焙煎前なら -- 表示でOK
+
   const fc = PhaseManager.phases.FCS;
   const drop = PhaseManager.phases.DROP || currentTime;
   const value = (fc !== null && drop !== null && drop > fc && drop > 0)
@@ -2545,7 +2548,6 @@ function refreshTemperatureDisplayBoxes() {
 }
 
 function updateChartUnitLabels() {
-  if (!roastChart) return;
   roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
   roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
 }
@@ -2844,9 +2846,13 @@ function isMobile() {
 ////////////////////////////////////////////////////////////////
 function initApp() {
     try {
-        chartAreaInitialize();
+        // 正しい初期化順序: Chart -> UI基盤 -> 言語/表示 -> オプション
+        chartAreaInitialize(); // initChart()を内部で最初に実行
         updateProfileList();
         initColorMode();
+        // 言語初期化はChart生成後に実行 (以前は別DOMContentLoadedでレースしてた)
+        setupProfileModificationTracking();
+        setupLanguageControl();
         connectionSelect();
         initializeGuideProfileUI();
         initializeStatsModeUI();
@@ -3967,15 +3973,8 @@ function setupProfileModificationTracking() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setupProfileModificationTracking();
-    setupLanguageControl();
-  });
-} else {
-  setupProfileModificationTracking();
-  setupLanguageControl();
-}
+// setupProfileModificationTracking & setupLanguageControl は initApp() 内でChart生成後に呼ばれるように統合
+// (以前ここで別リスナーとして登録されてレースコンディションを起こしていたため削除)
 
 // ======================================
 // ガイドプロファイルオフセットをテーブル確定
@@ -4038,7 +4037,7 @@ function applyAndConfirmGuideOffsets(offsetX, offsetY) {
 }
 
 function overwriteTableWithLastRoast() {
-  if (!roastChart || !roastChart.data.datasets || !roastChart.data.datasets[CURRENT_TEMP] || !roastChart.data.datasets[CURRENT_TEMP].data || roastChart.data.datasets[CURRENT_TEMP].data.length === 0) {
+  if (!roastChart.data.datasets || !roastChart.data.datasets[CURRENT_TEMP] || !roastChart.data.datasets[CURRENT_TEMP].data || roastChart.data.datasets[CURRENT_TEMP].data.length === 0) {
     alert(t('ALERT_NO_PREVIOUS_ROAST'));
     return;
   }
@@ -4889,11 +4888,10 @@ function updatePhaseUI() {
 }
 
 function getCurrentTime() {
-    const chart_data = roastChart.data.datasets[CURRENT_TEMP].data;
-    if (chart_data.length === 0) return  null;
-    const time = chart_data[chart_data.length - 1].x;
-
-    return time;
+  const chart_data = roastChart?.data?.datasets?.[CURRENT_TEMP]?.data;
+  if (!chart_data || chart_data.length === 0) return null;
+  const time = chart_data[chart_data.length - 1].x;
+  return time;
 }
 
 function handlePhaseClick() {
@@ -5008,6 +5006,7 @@ function toggleEditMode() {
 function initializeStatsModeUI() {
     toggleStatsMode();  // 最初は統計モードを隠してスタート
 }
+
 let isStatsMode = true;
 if (statsModeButton) {
   statsModeButton.addEventListener('click', () => {
@@ -5102,6 +5101,7 @@ if (statsModeButton) {
 // 統計表示モードの切り替え
 ///////////////////////////////////////////////////////////
 function toggleStatsMode() {
+    if (!statsModeButton || !statsHudLayer || !statsHudLayer.parentElement) return;
     const btnRect = statsModeButton.getBoundingClientRect();
     const parentRect = statsHudLayer.parentElement.getBoundingClientRect();
     const hudLeft = statsHudLayer.offsetLeft;
@@ -5231,7 +5231,7 @@ function handleGuideProfileDragMove(e) {
     guideProfileDragCurrentX = e.clientX;
     guideProfileDragCurrentY = e.clientY;
     
-    if (!roastChart || !roastChart.scales) return;
+    if (!roastChart.scales) return;
     
     const xScale = roastChart.scales.x;
     const yScale = roastChart.scales.y;
@@ -5689,8 +5689,6 @@ function getOneSecondIntervalProfile(originalProfileData) {
 }
 
 function updateChartWithProfile(profileData) {
-  if (!roastChart) return;
-
   // ガイドプロファイルのオフセットを取得
   const guideOffsetX = parseFloat(offsetInputTime.value) || 0;
   const guideOffsetY = parseFloat(offsetInputTemp.value) || 0;
@@ -5989,6 +5987,9 @@ afterLayout: (chart) => {
 };
 
 function chartAreaInitialize() {
+  // Phase 1: Chart must exist before any UI binding that uses roastChart
+  initChart();
+
   if (roastTimeDisplayArea) {
     roastTimeDisplayArea.addEventListener('click', () => {
       isMinutesSecondsFormat = !isMinutesSecondsFormat;
@@ -6058,11 +6059,10 @@ function chartAreaInitialize() {
     }
   });
 
-  initChart();
   updateTemperatureUnitDisplay();
   initPhaseUI();
-  stopButton.disabled = true;
-  roastChart.resize();
+  if (stopButton) stopButton.disabled = true;
+  if (roastChart) roastChart.resize();
 }
 
 function parseCSV(csvText) {
@@ -6166,7 +6166,7 @@ const smartAIIndicatorPlugin = {
 
     // 1. ヒートマップ円の描画
     moveImageAt(currentTime, currentTemp, indicatorRadius * 2, setHslaAlpha(indicatorColor, 0.6));
-    updateArrowPositionAndRotation(roastChart, currentTime, currentTemp, 5);
+    updateArrowPositionAndRotation(currentTime, currentTemp, 5);
     
     ShowChartIndicators();
 
@@ -6237,7 +6237,6 @@ let isCompareProfileShown = false;
 
 function copyProfileChartToCompare() {
     const btn = document.getElementById('button-copy-profile');
-    if (!roastChart) return;
     // 比較用データセットのインデックスを探す
     const compareProfileLabel = t('CHART_DATASET_COMPARE_PROFILE');
     const compareIndex = roastChart.data.datasets.findIndex(ds => ds.label === compareProfileLabel || ds.label === '比較用プロファイル');
@@ -6501,7 +6500,7 @@ function calculateArrowVector(currentTemp, targetTemp, currentRoR, targetRoR, ac
 
 // 指定したチャート座標に画像を追加する関数
 function moveImageAt(xValue, yValue, size, color) {
-    const xy = translateChartCoordinate(roastChart, xValue, yValue);
+    const xy = translateChartCoordinate(xValue, yValue);
     // 画像要素を作成
     const img = document.getElementById('chart-point');
     img.style.left = (xy.x - img.offsetWidth / 2) + 'px'; // 中央揃え
@@ -6512,14 +6511,14 @@ function moveImageAt(xValue, yValue, size, color) {
 }
 
 // 指定したチャート座標に画像を追加する関数
-function translateChartCoordinate(chart, xValue, yValue) {
+function translateChartCoordinate(xValue, yValue) {
     // チャート座標をピクセル座標に変換
-    const xPixel = chart.scales.x.getPixelForValue(xValue);
-    const yPixel = chart.scales.y.getPixelForValue(yValue);
+    const xPixel = roastChart.scales.x.getPixelForValue(xValue);
+    const yPixel = roastChart.scales.y.getPixelForValue(yValue);
     
     // キャンバスの位置を取得
-    const canvasRect = chart.canvas.getBoundingClientRect();
-    const containerRect = chart.canvas.parentElement.getBoundingClientRect();
+    const canvasRect = roastChart.canvas.getBoundingClientRect();
+    const containerRect = roastChart.canvas.parentElement.getBoundingClientRect();
     
     // HTML絶対座標に変換（コンテナ基準）
     const absoluteX = xPixel + (canvasRect.left - containerRect.left);
@@ -6530,23 +6529,21 @@ function translateChartCoordinate(chart, xValue, yValue) {
 
 /**
  * 矢印要素の位置と回転を更新します。
- *
- * @param {object} chart - Chart.jsのチャートインスタンス
  * @param {number} currentTime - 現在のチャート上の時間（X軸の値）
  * @param {number} currentTemp - 現在のチャート上の温度（Y軸の値）
  * @param {number} historyCount - 矢印の方向計算に使用する過去のデータポイント数（N）
  * @param {number} [arrowLength=30] - 矢印の長さ（ピクセル）。デフォルトは30px。
  */
-function updateArrowPositionAndRotation(chart, currentTime, currentTemp, historyCount, arrowLength = 30) {
+function updateArrowPositionAndRotation(currentTime, currentTemp, historyCount, arrowLength = 30) {
     const arrowElement = document.getElementById('chart-arrow');
-    const rorDataset = chart.data.datasets[CURRENT_TEMP];
+    const rorDataset = roastChart.data.datasets[CURRENT_TEMP];
 
     if (!arrowElement || !rorDataset || rorDataset.data.length === 0) {
         arrowElement.style.display = 'none'; // 非表示にする
         return;
     }
     // --- 1. 現在のデータポイントのピクセル座標を取得 ---
-    const currentPixelPos = translateChartCoordinate(chart, currentTime, currentTemp);
+    const currentPixelPos = translateChartCoordinate(currentTime, currentTemp);
     // --- 2. 過去N回分の平均データポイントを計算 ---
     let pastXSum = 0;
     let pastYSum = 0;
@@ -6574,7 +6571,7 @@ function updateArrowPositionAndRotation(chart, currentTime, currentTemp, history
     const avgPastX = pastXSum / validCount;
     const avgPastY = pastYSum / validCount;
 
-    const avgPastPixelPos = translateChartCoordinate(chart, avgPastX, avgPastY);
+    const avgPastPixelPos = translateChartCoordinate(avgPastX, avgPastY);
 
     // --- 4. ベクトル（方向）を計算 ---
     // (現在の点) - (過去の平均点)
@@ -6605,7 +6602,7 @@ function resizeOverlayCanvas() {
 
 // --- Helper to get pixel coordinates ---
 function getChartPixelCoordinates(dataPoint) {
-    if (!roastChart || !dataPoint || isNaN(dataPoint.x) || isNaN(dataPoint.y)) {
+    if (!dataPoint || isNaN(dataPoint.x) || isNaN(dataPoint.y)) {
         return null;
     }
     const xPixel = roastChart.scales.x.getPixelForValue(dataPoint.x);
@@ -6615,7 +6612,6 @@ function getChartPixelCoordinates(dataPoint) {
 
 /**
  * 現在温度地点から焙煎プロファイル上の目標点へ補助線を引き、矢印を調整する
- * @param {Chart} chart Chart.jsインスタンス
  * @param {object} currentTempData 現在温度のデータ点 {x: time, y: temp}
  * @param {Array<object>} profileData 焙煎プロファイルのデータ配列 [{x: time, y: temp}, ...]
  */
@@ -6673,10 +6669,9 @@ let lastCurrentPoint = null;
  * 現在温度地点からターゲットポイントを通ってチャートの端まで破線を描画する関数
  * @param {object} currentChartPointData 現在温度地点の {x: 時間, y: 温度} データ値
  * @param {object} targetChartPointData 目標点の {x: 時間, y: 温度} データ値
- * @param {Chart} chart Chart.jsインスタンス
  */
 function drawTargetDashLine(currentChartPointData, targetChartPointData) {
-    if (!overlayCtx || !overlayCanvas || !chart) {
+    if (!overlayCtx || !overlayCanvas) {
         console.error("Overlay Canvas, Context, または Chart インスタンスが利用できません。");
         return;
     }
@@ -6695,7 +6690,7 @@ function drawTargetDashLine(currentChartPointData, targetChartPointData) {
     // --- ここから線の終点計算ロジック ---
     const dx = targetPx.x - currentPx.x;
     const dy = targetPx.y - currentPx.y;
-    const chartArea = chart.chartArea; 
+    const chartArea = roastChart.chartArea; 
 
     function calculateLineEndPoint(startPx, dx, dy, chartArea) {
         // ベクトルが0（点が重なっている）場合は、終点も始点と同じ
@@ -7006,16 +7001,8 @@ function openAnalyticsFromSave(){
     try{
         var b64 = btoa(unescape(encodeURIComponent(jsonStr)));
         var b64url = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-        // 長すぎる場合は通常のencodeURIComponentにフォールバック (ESP32ではURL長制限に注意)
-        var param;
-        if(b64url.length < 7000){
-            param = b64url;
-        }else{
-            // 大きすぎる場合はそのままURIエンコード (ブラウザの限界 ~2000-8000文字だが、とりあえず試す)
-            param = encodeURIComponent(jsonStr);
-        }
-        var url = 'analytics.html?data=' + param;
-        // ESP32では同一オリジンで開く
+        // ハッシュフラグメントを使うとCloudflareのURL長制限を回避できる (#以降はサーバーに送られない)
+        var url = 'analytics.html#data=' + b64url;
         window.open(url, '_blank');
     }catch(e){
         console.error(e);
