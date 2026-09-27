@@ -1421,6 +1421,148 @@
       z-index: 99999 !important;
     }
 
+
+    /* === URC ONBOARDING v1.0 2026-05-13 === */
+    #chart-control-button-container { overflow: visible !important; }
+    .onboarding-balloon {
+      position: absolute;
+      bottom: 56px;
+      left: 0px;
+      background: #2c2c2c;
+      color: #fff8f0;
+      padding: 16px 44px 16px 20px;
+      border-radius: 12px;
+      font-size: 15.5px;
+      line-height: 1.65;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+      z-index: 500;
+      max-width: 340px;
+      min-width: 280px;
+      white-space: normal;
+      animation: onboardingPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: auto;
+      user-select: none;
+    }
+    .onboarding-balloon::after {
+      content: ""; position: absolute; bottom: -8px; left: 14px;
+      width: 16px; height: 16px; background: #2c2c2c;
+      transform: rotate(45deg); border-radius: 0 0 2px 0;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.25);
+    }
+    .onboarding-balloon-close {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border: none;
+      background: rgba(255,255,255,0.14); color: #fff8f0;
+      border-radius: 50%; cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .onboarding-balloon-close:hover { background: rgba(255,255,255,0.25); }
+    @keyframes onboardingPop { 0%{transform:translateY(10px) scale(0.9);opacity:0} 100%{transform:translateY(0) scale(1);opacity:1} }
+    .onboarding-highlight {
+      animation: none !important;
+      background: rgba(255,255,255,0.28) !important;
+      border: 2px solid rgba(255,255,255,0.95) !important;
+      box-shadow: 0 0 0 2px rgba(255,248,240,0.7), 0 0 20px rgba(255,255,255,0.6) !important;
+      opacity: 1 !important; visibility: visible !important;
+    }
+    /* === END URC ONBOARDING === */
+
+    
+    /* ===== 新チュートリアル / ヒントシステム ===== */
+    #onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 10000;
+      display: none;
+      /* 背面ブロック用 */
+      pointer-events: auto;
+      touch-action: manipulation;
+      overscroll-behavior: contain;
+    }
+    #onboarding-overlay.is-active { display: block; }
+    #onboarding-overlay .onboarding-spotlight {
+      position: absolute;
+      border: 3px solid rgba(255,255,255,1);
+      border-radius: 10px;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.25), 0 0 24px rgba(255,255,255,0.6), 0 0  25px rgb(255, 255, 255);
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.34,1.2,0.64,1);
+    }
+    #onboarding-balloon-new {
+      position: absolute;
+      background: #2c2c2c;
+      color: #fff8f0;
+      padding: 18px 46px 18px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.7;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
+      z-index: 10001;
+      max-width: 360px;
+      min-width: 260px;
+      white-space: normal;
+      animation: onboardingPop 0.42s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: auto;
+      user-select: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    /* スマホ用: 下部ドロワー固定 */
+    @media (max-width: 768px) {
+      #onboarding-balloon-new {
+        position: fixed !important;
+        left: 8px !important;
+        right: 8px !important;
+        bottom: 12px !important;
+        top: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-height: min(70vh, 420px) !important;
+        border-radius: 16px !important;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #onboarding-balloon-new::after { display: none !important; }
+      #onboarding-overlay .onboarding-spotlight {
+        /* スマホではスポットライトを少し太く見やすく */
+        border-width: 3px;
+      }
+    }
+    #onboarding-balloon-new.pos-top::after { bottom:-7px; left:20px; }
+    #onboarding-balloon-new.pos-bottom::after { top:-7px; left:20px; }
+    #onboarding-balloon-new.pos-left::after { right:-7px; top:20px; }
+    #onboarding-balloon-new.pos-right::after { left:-7px; top:20px; }
+    #onboarding-balloon-new .onboarding-progress {
+      font-size: 11px; opacity:0.6; margin-bottom:6px; letter-spacing:0.08em;
+    }
+    #onboarding-balloon-new .onboarding-actions {
+      display:flex; gap:8px; margin-top:12px;
+    }
+    #onboarding-balloon-new .onboarding-btn {
+      border:none; border-radius:8px; padding:6px 14px; cursor:pointer;
+      font-size:13px; font-weight:600;
+      transition: all 0.2s;
+    }
+    #onboarding-balloon-new .onboarding-btn-next {
+      background:#fff8f0; color:#2c2c2c;
+    }
+    #onboarding-balloon-new .onboarding-btn-next:hover { background:#fff; transform:scale(1.03); }
+    #onboarding-balloon-new .onboarding-btn-skip {
+      background:transparent; color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.2);
+    }
+    @keyframes onboardingPop {
+      0% { transform: scale(0.85) translateY(8px); opacity:0; }
+      100% { transform: scale(1) translateY(0); opacity:1; }
+    }
+
 </style>
   <!-- Firebase SDK (compat版) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -1643,19 +1785,19 @@
       <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span id="maxTempLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Temperature(℃):</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;" data-i18n="LABEL_MAX_TEMP">Temperature</span><span style="color:#aaa; font-size:0.75em; flex-shrink:0;" class="unit_temp">(℃)</span>
       <input type="number" id="maxTempInput" min="200" max="999" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveMaxTemp" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span id="maxRorLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror(℃/min):</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror</span><span class="unit_ror" style="color:#aaa; font-size:0.75em; flex-shrink:0;">(℃/min):</span>
       <input type="number" id="MaxRorInput" min="20" max="200" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveMaxRor" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size</span>
       <input type="number" id="rorWindowInput" min="1" max="100" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
@@ -1724,7 +1866,7 @@
         <svg width="24" height="24" style="display:block;"><use href="#icon-info"/></svg>
     </button>
 
-    <button class="button" title="" data-i18n-title="TOOLTIP_MANUAL" onclick="manualButtonCommand()">
+    <button id="manual-button" class="button" title="" data-i18n-title="TOOLTIP_MANUAL" onclick="manualButtonCommand()">
         <svg width="24" height="24" style="display:block;"><use href="#icon-manual"/></svg>
     </button>
 
@@ -1741,11 +1883,11 @@
   </div>
   <div class="profile-meta">
     <div class="meta-field">
-      <label for="profileTitle" class="uzu-label uzu-label--small" data-i18n="LABEL_TITLE">タイトル：</label>
+      <label for="profileTitle" class="uzu-label uzu-label--small" data-i18n="LABEL_TITLE">タイトル</label>
       <input type="text" id="profileTitle" style="font-size: 16px;" placeholder="" data-i18n-placeholder="PLACEHOLDER_TITLE">
     </div>
     <div class="meta-field">
-      <label for="profileMemo" class="uzu-label uzu-label--small" data-i18n="LABEL_MEMO">メモ：</label>
+      <label for="profileMemo" class="uzu-label uzu-label--small" data-i18n="LABEL_MEMO">メモ</label>
       <textarea id="profileMemo" rows="1" style="font-size: 16px;" placeholder="" data-i18n-placeholder="PLACEHOLDER_MEMO" onClick=""></textarea>
     </div>
   </div>
@@ -1828,7 +1970,7 @@
   <!-- テーブルセクション -->
   <div class="table-section" id="table_contents">
     <div class="table-container">
-      <div id="table_title" class="uzu-label" style="display: block; margin: 0px 10px;" data-i18n="TABLE_TITLE">プロファイルテーブル</div>
+      <div id="table_title" class="uzu-label" style="display: block; margin: 5px 10px;" data-i18n="TABLE_TITLE">プロファイルテーブル</div>
       <table id="profileTable">
         <thead>
           <tr>
@@ -1992,8 +2134,9 @@
   
   // ドラッグ可能なデバッグコンソール
   document.addEventListener('DOMContentLoaded', () => {
-    const draggableElement = debugConsole;
-    const dragHandle = debugDraggableHandle;
+    const draggableElement = document.getElementById('debugConsole');
+    const dragHandle = document.getElementById('debugDraggableHandle');
+    if(!draggableElement || !dragHandle) return;
     document.getElementById('rorWindowInput').value = rorWindowSize;
     refreshDebugConsoleSettings();
     document.getElementById('saveMaxTemp').addEventListener('click', () => {
@@ -2165,8 +2308,8 @@ const i18n = {
     CLOUD_LOGIN_DISABLED_HINT: ['クラウド機能にはインターネット接続が必要です', 'Cloud features require an internet connection'],
     CLOUD_LOGOUT_TITLE: ['ログアウト：', 'Logout: '],
     TOOLTIP_TOGGLE_TIME_FORMAT: ['クリックで秒/分表示切替', 'Click to toggle seconds/minutes'],
-    LABEL_TITLE: ['タイトル：', 'Title:'],
-    LABEL_MEMO: ['メモ：', 'Memo:'],
+    LABEL_TITLE: ['タイトル', 'Title'],
+    LABEL_MEMO: ['メモ', 'Memo'],
     PLACEHOLDER_TITLE: ['タイトルを入力', 'Enter title'],
     PLACEHOLDER_MEMO: ['メモを入力', 'Enter memo'],
     DISPLAY_LABEL_TIME: ['経過時間', 'Elapsed time'],
@@ -2303,6 +2446,13 @@ const i18n = {
     CLOUD_PROFILE_NOT_FOUND: ['該当するプロファイルがありません', 'No matching profiles found'],
     CLOUD_PROFILE_LOADING: ['読み込み中...', 'Loading...'],
     CONTROL_PANEL_CLICK_TO_MOVE: ['操作パネル: ドラッグで移動可能（チャート全画面表示時のみ)', 'Control panel: Drag to move (only in full-screen chart mode)'],
+    ONBOARDING_SIMPLE: ['💡このボタンでシンプルな測定画面に変更できます', '💡This button allows you to switch to the simple measurement screen'],    HINT_SIMPLE_VIEW: ['💡このボタンでシンプルな測定画面に変更できます', '💡This button switches to simple measurement view'],
+    HINT_START_ROAST: ['💡ここから焙煎を開始します。温度ログがリアルタイムで表示されます', '💡Start roasting here. Temperature will be logged in real time'],
+    HINT_MANUAL: ['💡詳しくはマニュアルをご覧ください', '💡Refer to the manual for more information'],
+    HINT_NEXT: ['次へ', 'Next'],
+    HINT_DONE: ['完了', 'Done'],
+    HINT_SKIP: ['スキップ', 'Skip'],
+
   }
 };
 let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || 'ja';
@@ -2548,14 +2698,6 @@ function formatDebugInputRoR(celsiusRoRValue) {
 }
 
 function refreshDebugConsoleSettings() {
-  const maxTempLabel = document.getElementById('maxTempLabel');
-  if (maxTempLabel) {
-    maxTempLabel.textContent = `Max Temperature(${getUnitTempLabel()}):`;
-  }
-  const maxRorLabel = document.getElementById('maxRorLabel');
-  if (maxRorLabel) {
-    maxRorLabel.textContent = `Max Ror(${getUnitRoRLabel()}):`;
-  }
   const maxTempInput = document.getElementById('maxTempInput');
   if (maxTempInput) {
     const limits = getDebugTempInputLimits();
@@ -2730,7 +2872,7 @@ function toggleTemperatureUnit() {
   updateTemperatureUnitDisplay();
 }
 
-const URCVersionStr = "1.3.3";
+const URCVersionStr = "1.3.5";
 const URCVersionCodeNameStr = "Antigua";
 let roastChart = null;
 const PROFILE_TEMP = 0;
@@ -3008,6 +3150,7 @@ function initApp() {
     try {
         // 正しい初期化順序: Chart -> UI基盤 -> 言語/表示 -> オプション
         chartAreaInitialize(); // initChart()を内部で最初に実行
+        // 旧オンボーディングは新システムに統合済み
         updateProfileList();
         initColorMode();
         // 言語初期化はChart生成後に実行 (以前は別DOMContentLoadedでレースしてた)
@@ -5439,6 +5582,9 @@ function syncChartToTable(index, time, temp) {
 // ======================================
 // チャート全画面表示切り替え
 // ======================================
+
+// 旧オンボーディング v1.0 は新システムに統合済みのため削除
+
 function toggleChartFullscreen() {
     const controlButtons = document.getElementById('control-buttons');
     const chartArea = document.getElementById('chart-area');
@@ -7399,7 +7545,368 @@ if (document.readyState === 'loading') {
     setTimeout(initApp, 0);
 }
 
+
+// ==================================================
+// ヒント / チュートリアルシステム - テーブル管理
+// ==================================================
+/**
+ * ★ここを編集すればヒントを追加できます★
+ * - target: CSSセレクタ (例 '#fullscreen-toggle-btn' や '.button' )
+ * - textJa / textEn: 表示テキスト
+ * - pos: 'top' | 'bottom' | 'left' | 'right' | 'auto' (autoは自動判定)
+ * - highlight: trueなら対象を枠で強調
+ * - condition: (optional) 表示条件を満たさない場合はスキップする関数
+ */
+const URC_HINTS_TABLE = [
+  {
+    id: 'simple_view',
+    target: '#fullscreen-toggle-btn',
+    textId: 'HINT_SIMPLE_VIEW',
+    pos: 'top',
+    highlight: true
+  },
+  {
+    id: 'start_roast',
+    target: '#start-button',
+    textId: 'HINT_START_ROAST',
+    pos: 'bottom',
+    highlight: true
+  },
+  {
+    id: 'manual_hint',
+    target: '#manual-button',
+    textId: 'HINT_MANUAL',
+    pos: 'bottom',
+    highlight: true
+  },
+];
+const ONBOARDING_STORAGE_KEY = 'urc_onboarding_v2_completed';
+const ONBOARDING_VERSION = 'v2';
+
+let _onboardingIndex = 0;
+let _onboardingActive = false;
+
+function isJa() { try { return (localStorage.getItem('urc_lang')||'ja').startsWith('ja'); } catch(e){ return true; } }
+
+function getHintText(hint){
+  if(hint.textId){
+    return t(hint.textId);
+  }
+  if(hint.textJa || hint.textEn){
+    return isJa() ? (hint.textJa || hint.textEn) : (hint.textEn || hint.textJa);
+  }
+  if(hint.text) return hint.text;
+  return '';
+}
+
+function showOnboardingSequence(force = false){
+  try{
+    if(!force){
+      const done = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if(done === ONBOARDING_VERSION) return;
+    }
+    const availableHints = URC_HINTS_TABLE.filter(h=>{
+      if(h.condition && typeof h.condition==='function'){
+        try{ return h.condition(); }catch(e){ return true; }
+      }
+      // targetが存在しないものはスキップ
+      if(h.target){
+        const el = document.querySelector(h.target);
+        if(!el) return false;
+        // 非表示要素はスキップ
+        if(el.offsetParent===null && getComputedStyle(el).display==='none') return false;
+      }
+      return true;
+    });
+    if(availableHints.length===0) return;
+    window._onboardingQueue = availableHints;
+    _onboardingIndex = 0;
+    _onboardingActive = true;
+    _showCurrentHint();
+  }catch(e){ console.warn('[onboarding] init failed', e); }
+}
+
+function _showCurrentHint(){
+  const overlay = document.getElementById('onboarding-overlay');
+  const balloon = document.getElementById('onboarding-balloon-new');
+  const spotlight = document.getElementById('onboarding-spotlight');
+  const textEl = document.getElementById('onboarding-text');
+  const progressEl = document.getElementById('onboarding-progress');
+  const queue = window._onboardingQueue || [];
+
+  if(_onboardingIndex >= queue.length){
+    _closeOnboarding(true);
+    return;
+  }
+  const hint = queue[_onboardingIndex];
+  let targetEl = hint.target ? document.querySelector(hint.target) : null;
+
+  overlay.classList.add('is-active');
+  overlay.style.display = 'block';
+  // 背景スクロール防止はPCのみ、スマホはドロワーなので禁止しない
+  const isMobile = window.innerWidth <= 768;
+  if(!isMobile){
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+
+  textEl.textContent = getHintText(hint);
+  if(progressEl){
+    progressEl.textContent = `${_onboardingIndex+1} / ${queue.length}`;
+  }
+
+  const nextBtn = document.getElementById('onboarding-next-btn');
+  const skipBtn = document.getElementById('onboarding-skip-btn');
+  if(nextBtn){
+    nextBtn.textContent = (_onboardingIndex === queue.length-1) ? t('HINT_DONE') : t('HINT_NEXT');
+  }
+  if(skipBtn){
+    skipBtn.textContent = t('HINT_SKIP');
+  }
+
+  // ターゲットが画面外なら中央にスクロール (B+C)
+  if(targetEl){
+    const r = targetEl.getBoundingClientRect();
+    const outOfView = r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth;
+    if(outOfView || isMobile){
+      try{
+        targetEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+      }catch(e){
+        try{ targetEl.scrollIntoView(); }catch(e2){}
+      }
+    }
+  }
+
+  // スポットライトとバルーン配置 - スクロール後にレイアウト確定させるため2フレーム待つ
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      let rect = null;
+      if(targetEl){
+        // 再取得 (scrollIntoView後)
+        rect = targetEl.getBoundingClientRect();
+        if(hint.highlight){
+          spotlight.style.display = 'block';
+          // overlayは fixedなので scrollX/Y 加算しないのが正しい
+          spotlight.style.left = (rect.left - 6) + 'px';
+          spotlight.style.top = (rect.top - 6) + 'px';
+          spotlight.style.width = (rect.width + 12) + 'px';
+          spotlight.style.height = (rect.height + 12) + 'px';
+        } else {
+          spotlight.style.display = 'none';
+        }
+      } else {
+        spotlight.style.display = 'none';
+      }
+
+      // スマホはドロワー固定なので位置計算不要
+      if(isMobile){
+        balloon.className = 'pos-bottom';
+        balloon.style.top = '';
+        balloon.style.left = '';
+        // fixed bottomはCSSで決まるのでJSでは触らない
+        balloon.style.removeProperty('top');
+        balloon.style.removeProperty('left');
+        // 中央ドロワー位置はCSSに任せる
+        balloon.style.bottom = '12px';
+        // 強制的に見える位置へ
+        balloon.style.transform = '';
+        balloon.id = 'onboarding-balloon-new';
+        return;
+      }
+
+      // PC用: 従来の追従ロジック
+      const bRect = balloon.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let top, left;
+      let pos = hint.pos || 'auto';
+
+      if(pos === 'auto' && rect){
+        const spaceBottom = vh - rect.bottom;
+        pos = spaceBottom > 180 ? 'top' : 'bottom';
+      }
+
+      if(rect){
+        if(pos === 'top'){
+          top = rect.top - bRect.height - 38;
+          left = rect.left;
+          balloon.className = 'pos-top';
+        } else if(pos === 'bottom'){
+          top = rect.bottom + 18;
+          left = rect.left;
+          balloon.className = 'pos-bottom';
+        } else if(pos === 'left'){
+          top = rect.top;
+          left = rect.left - bRect.width - 18;
+          balloon.className = 'pos-left';
+        } else {
+          top = rect.top;
+          left = rect.right + 18;
+          balloon.className = 'pos-right';
+        }
+        if(left < 8) left = 8;
+        if(left + bRect.width > vw - 8) left = vw - bRect.width - 8;
+        if(top < 8) top = 8;
+        if(top + bRect.height > vh - 8) top = vh - bRect.height - 8;
+      } else {
+        top = (vh - bRect.height)/2;
+        left = (vw - bRect.width)/2;
+        balloon.className = 'pos-top';
+      }
+      balloon.style.top = top + 'px';
+      balloon.style.left = left + 'px';
+      balloon.id = 'onboarding-balloon-new';
+    });
+  });
+
+  // C: 詰み検出 - 5秒経っても次へ押されなければ自動で中央寄せ or スキップヒント
+  clearTimeout(window._onboardingSafetyTimer);
+  window._onboardingSafetyTimer = setTimeout(()=>{
+    if(!_onboardingActive) return;
+    const b = document.getElementById('onboarding-balloon-new');
+    if(!b) return;
+    const br = b.getBoundingClientRect();
+    const isOff = br.top < 0 || br.bottom > window.innerHeight + 20 || br.left < -20 || br.right > window.innerWidth + 20;
+    if(isOff){
+      console.warn('[onboarding] balloon offscreen, forcing center-bottom');
+      b.style.position = 'fixed';
+      b.style.left = '8px';
+      b.style.right = '8px';
+      b.style.bottom = '12px';
+      b.style.top = 'auto';
+      b.style.maxWidth = 'none';
+    }
+  }, 1500);
+}
+function _nextHint(){
+  _onboardingIndex++;
+  _showCurrentHint();
+}
+
+function _closeOnboarding(completed){
+  const overlay = document.getElementById('onboarding-overlay');
+  if(overlay){
+    overlay.classList.remove('is-active');
+    overlay.style.display = 'none';
+  }
+  const spotlight = document.getElementById('onboarding-spotlight');
+  if(spotlight) spotlight.style.display='none';
+  document.body.style.overflow = '';
+  document.body.style.top = '';
+  _onboardingActive = false;
+  clearTimeout(window._onboardingSafetyTimer);
+  if(completed){
+    try{ localStorage.setItem(ONBOARDING_STORAGE_KEY, ONBOARDING_VERSION); }catch(e){}
+  }
+}
+
+function initOnboardingSystem(){
+  const overlay = document.getElementById('onboarding-overlay');
+  if(!overlay) return;
+  // 背面クリックは無効 (ヒントか×しか押せない)
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay){
+      e.stopPropagation();
+      e.preventDefault();
+      const balloon = document.getElementById('onboarding-balloon-new');
+      if(balloon && balloon.animate){
+        balloon.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:200});
+      }
+    }
+  });
+  // スマホでのスクロール詰み対策: バルーン内はスクロール許可、背景は禁止
+  overlay.addEventListener('touchmove', function(e){
+    const balloon = document.getElementById('onboarding-balloon-new');
+    if(balloon && balloon.contains(e.target)){
+      // バルーン内は許可 (内部スクロールできるように)
+      // ただしバウンスしすぎないようにバブリングのみ止める
+      e.stopPropagation();
+      return;
+    }
+    // 背景はスクロール禁止
+    e.preventDefault();
+  }, {passive:false});
+
+  document.getElementById('onboarding-close-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _closeOnboarding(true); });
+  document.getElementById('onboarding-next-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _nextHint(); });
+  document.getElementById('onboarding-skip-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _closeOnboarding(true); });
+  // ESCでスキップ
+  document.addEventListener('keydown', function(e){ if(_onboardingActive && e.key==='Escape'){ _closeOnboarding(true); } });
+
+  // ターゲット要素自体のクリックもブロック (ヒント表示中は押せない)
+  document.addEventListener('click', function(e){
+    if(!_onboardingActive) return;
+    const balloon = document.getElementById('onboarding-balloon-new');
+    if(balloon && balloon.contains(e.target)) return;
+    // オーバーレイ自体のクリックは既に処理済み
+    if(e.target && e.target.closest && e.target.closest('#onboarding-overlay') && !e.target.closest('#onboarding-balloon-new')){
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+
+  // リサイズ時に再配置
+  window.addEventListener('resize', function(){
+    if(_onboardingActive){
+      _showCurrentHint();
+    }
+  });
+}
+
+// 旧関数を新システムに差し替え
+function showFullscreenOnboarding(force){
+  // 旧実装は無効化、新システムを呼ぶ
+  if(force){
+    // force時はストレージクリアして再表示
+    try{ localStorage.removeItem(ONBOARDING_STORAGE_KEY); }catch(e){}
+  }
+  showOnboardingSequence(force);
+}
+
+// 初期化フックに組み込む
+(function(){
+  const origInit = window.initApp;
+  // initAppは後で定義されるので、DOMContentLoadedで遅延初期化
+  function tryInitOnboarding(){
+    initOnboardingSystem();
+    // 少し遅延させて初回表示 (UIが描画されてから)
+    setTimeout(()=>{ showOnboardingSequence(false); }, 500);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', tryInitOnboarding);
+  } else {
+    setTimeout(tryInitOnboarding, 400);
+  }
+  // デバッグ用: URLに ?onboarding で強制表示
+  try{
+    if(location.search.includes('onboarding')){
+      setTimeout(()=>{ showOnboardingSequence(true); }, 800);
+    }
+  }catch(e){}
+})();
+
+// 開発者向け: コンソールから URC_HINTS_TABLE を編集して showOnboardingSequence(true) でテスト可能
+window.URC_HINTS_TABLE = URC_HINTS_TABLE;
+window.showOnboardingSequence = showOnboardingSequence;
+window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STORAGE_KEY); localStorage.removeItem('urc_onboarding_simple_v1'); }catch(e){}; showOnboardingSequence(true); };
+
 </script>
+
+
+<!-- 新チュートリアルオーバーレイ -->
+<div id="onboarding-overlay" aria-hidden="true">
+  <div class="onboarding-spotlight" id="onboarding-spotlight" style="display:none;"></div>
+  <div id="onboarding-balloon-new" role="dialog">
+    <button class="onboarding-balloon-close" id="onboarding-close-btn" aria-label="閉じる" data-no-drag="">×</button>
+    <div class="onboarding-progress" id="onboarding-progress"></div>
+    <div id="onboarding-text"></div>
+    <div class="onboarding-actions">
+      <button class="onboarding-btn onboarding-btn-next" id="onboarding-next-btn">次へ</button>
+      <button class="onboarding-btn onboarding-btn-skip" id="onboarding-skip-btn">スキップ</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
