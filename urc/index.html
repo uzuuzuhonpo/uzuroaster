@@ -6346,6 +6346,7 @@ function chartAreaInitialize() {
       displaySecondsOrMinutes(getCurrentTime());
       updateProfileTableTimeHeader();
       refreshProfileTableTimeInputs();
+      updateChartDsiaplayValue();
       roastChart.update();
     });
   }
@@ -6356,6 +6357,7 @@ function chartAreaInitialize() {
       isDevelopmentTimeRatio = !isDevelopmentTimeRatio;
       roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
       updateDTRDisplay();
+      updateChartDsiaplayValue();
     });
   }
   if (document.getElementById('roast_temperature_area')) {
