@@ -71,7 +71,7 @@
       filter: saturate(0) brightness(0.85) contrast(1.5);
     }
     .mode7 {
-      filter: saturate(0) brightness(0.8) contrast(1); mix-blend-mode: difference; color: white;
+      user-select: none;
     }
     .mode8 {
       filter: hue-rotate(240deg);
@@ -1563,7 +1563,46 @@
       100% { transform: scale(1) translateY(0); opacity:1; }
     }
 
+
+    /* === URC Game Mode - Floating & Decoupled v0.2 === */
+    #gamify-hud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3000; display: none; align-items: center; gap: 14px; background: rgba(25,20,18,0.92); border: 1px solid rgba(255,215,0,0.45); border-radius: 28px; padding: 6px 18px; color: #fff8f0; font-weight: 800; backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); font-family: ui-monospace, monospace; }
+    #gamify-hud.active { display: flex; }
+    #gamify-hud .score { color:#ffd700; font-size:16px; }
+    #gamify-hud .combo { color:#ff8a65; font-size:13px; }
+    #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
+    @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
+    #gamify-hud .rank { font-size:11px; opacity:0.7; background:rgba(255,255,255,0.12); padding:2px 7px; border-radius:10px; }
+    #gamify-judge { position: absolute; top: 42%; left: 50%; transform: translate(-50%,-50%) scale(0.6); z-index: 2000; font-size: clamp(28px, 5vw, 52px); font-weight: 900; pointer-events: none; opacity: 0; transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 2px 0 #000, 0 0 14px rgba(0,0,0,0.7); white-space: nowrap; }
+    #gamify-judge.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
+    #gamify-judge.perfect { color:#ffd700; -webkit-text-stroke:2px #7a5a00; }
+    #gamify-judge.great { color:#aed581; -webkit-text-stroke:1.6px #33691e; }
+    #gamify-judge.good { color:#81d4fa; -webkit-text-stroke:1.6px #01579b; }
+    #gamify-judge.miss { color:#ef9a9a; -webkit-text-stroke:1.6px #b71c1c; }
+    #chart-area.gamify-perfect { box-shadow: 0 0 0 3px gold, 0 0 20px rgba(255,215,0,0.45) !important; }
+    #chart-area.gamify-great { box-shadow: 0 0 0 2px #aed581, 0 0 14px rgba(174,213,129,0.35) !important; }
+    #chart-area { transition: box-shadow 0.25s ease; position: relative; }
+    #gamify-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1500; }
+    #gamify-result-window { position: fixed; top: 80px; right: 20px; width: 320px; background: rgba(30,25,22,0.96); border: 1px solid rgba(255,215,0,0.5); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,215,0,0.2); z-index: 4000; display: none; flex-direction: column; overflow: hidden; backdrop-filter: blur(12px); font-family: sans-serif; }
+    #gamify-result-window.active { display: flex; animation: result-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes result-pop { 0%{transform: scale(0.8) translateY(20px); opacity:0} 100%{transform: scale(1) translateY(0); opacity:1} }
+    #gamify-result-header { background: linear-gradient(135deg, #3e2723, #5d4037); padding: 10px 14px; display:flex; justify-content:space-between; align-items:center; cursor: move; user-select: none; border-bottom: 1px solid rgba(255,215,0,0.2); }
+    #gamify-result-header span { color:#ffd700; font-weight:900; font-size:14px; letter-spacing:1px; }
+    #gamify-result-header button { background:rgba(255,255,255,0.1); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer; }
+    #gamify-result-body { padding: 16px; color:#fff8f0; }
+    #gamify-result-body .result-rank { font-size: 42px; font-weight: 900; text-align:center; margin: 8px 0; color:#ffd700; text-shadow:0 2px 0 #000; }
+    #gamify-result-body .result-score { font-size: 20px; text-align:center; margin: 4px 0 12px; font-family: monospace; }
+    #gamify-result-body .result-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-top:12px; }
+    #gamify-result-body .result-stats div { background:rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; }
+    #gamify-result-body .result-stats b { color:#ffd700; }
+    #gamify-result-body .result-comment { margin-top:14px; font-size:12px; opacity:0.8; text-align:center; font-style:italic; }
+    #gamify-result-window.minimized #gamify-result-body { display:none; }
+
+    #gamify-result-window.dragging { animation: none !important; transition: none !important; will-change: left, top; }
+    #gamify-result-window.dragging #gamify-result-header { cursor: grabbing !important; }
+    #gamify-result-window.no-anim { animation: none !important; }
+
 </style>
+
   <!-- Firebase SDK (compat版) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -1594,6 +1633,11 @@
   </script>
 </head>
 <body>
+<div id="adjustment-layer" style="width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
+
+<div id="gamify-hud"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div>
+<div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">🎮 焙煎結果</span><div style="display:flex; gap:6px;"><button id="gamify-result-min" data-i18n-title="GAMIFY_RESULT_MINIMIZE" title="最小化">─</button><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div></div><div id="gamify-result-body"><div class="result-rank" id="gamify-result-rank">-</div><div class="result-score" id="gamify-result-score">SCORE: 0</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div>
+
 <!-- アイコン定義 -->
 <svg style="display: none;">
   <symbol id="icon-reload" viewBox="0 0 24 26">
@@ -1771,6 +1815,14 @@
         <option value="en">English</option>
       </select>
     </div>
+    <div style="border:1px solid #444; border-radius:6px; padding:4px; margin:4px 0; background:rgba(255,215,0,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="color:#fafaf8e7; font-size:0.8em;">GAME MODE</div>
+        </div>
+        <button id="gamify-mode-toggle-btn" class="button-debug" style="background:#222; color:#fff; border:1px solid #555; padding:1px 8px; border-radius:20px; font-size:0.8em; cursor:pointer; min-width:60px; font-weight:400; transition: all 0.2s;">OFF</button>
+      </div>
+    </div>
     <div><button class="button-debug" onclick="location.href='/update'" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.75rem; width:100%; cursor: pointer;">UPDATE</button>
     </div>
     <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
@@ -1780,7 +1832,7 @@
       <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C4</button>
       <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C5</button>
       <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C6</button>
-      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C7</button>
+      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;">C7</button>
       <button class="button-debug" onclick="changeColorMode(8)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C8</button>
       <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
     </div>
@@ -2009,6 +2061,7 @@
   <!-- チャートセクション -->
   <div class="chart-section no-select" id="chart-section">
     <div class="chart-container" id="chart-area">
+<div id="gamify-judge"></div><canvas id="gamify-canvas"></canvas>
       <div class="image-overlay" id="chart-point"></div>
       <div class="image-arrow" id="chart-arrow">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 24">
@@ -2134,11 +2187,11 @@
   
   // ドラッグ可能なデバッグコンソール
   document.addEventListener('DOMContentLoaded', () => {
-    const draggableElement = document.getElementById('debugConsole');
-    const dragHandle = document.getElementById('debugDraggableHandle');
-    if(!draggableElement || !dragHandle) return;
-    document.getElementById('rorWindowInput').value = rorWindowSize;
-    refreshDebugConsoleSettings();
+    const draggableElement = document.getElementById('debug_console');
+    const dragHandle = document.getElementById('draggable-zone');
+    const rorInput = document.getElementById('rorWindowInput');
+    if(rorInput) rorInput.value = rorWindowSize;
+    if(typeof refreshDebugConsoleSettings === 'function') refreshDebugConsoleSettings();
     document.getElementById('saveMaxTemp').addEventListener('click', () => {
             let rawVal = parseFloat(document.getElementById('maxTempInput').value);
             if (isNaN(rawVal)) {
@@ -2154,8 +2207,11 @@
             maxTemperature = newVal;
             document.getElementById('maxTempInput').value = formatDebugInputTemp(maxTemperature);
             localStorage.setItem(MAX_TEMP_KEY, maxTemperature);
-            roastChart.options.scales.y.max = maxTemperature;
-            roastChart.update();
+            if(typeof roastChart !== 'undefined' && roastChart?.options?.scales?.y){
+                roastChart.options.scales.y.max = maxTemperature;
+                roastChart.update();
+            }
+            if(window.URCStore){ window.URCStore.set({ maxTemperature: maxTemperature }); }
         });
     document.getElementById('saveRorWindow').addEventListener('click', () => {
             let newVal = parseInt(document.getElementById('rorWindowInput').value);
@@ -2165,11 +2221,11 @@
                 newVal = 100;
             }
             rorWindowSize = newVal;
-            document.getElementById('rorWindowInput').value = rorWindowSize;
+            const rorInp = document.getElementById('rorWindowInput');
+            if(rorInp) rorInp.value = rorWindowSize;
             localStorage.setItem(ROR_WINDOW_KEY, rorWindowSize);
-            alert(t('ALERT_ROR_WINDOW_SET') + rorWindowSize + t('ALERT_ROR_WINDOW_SET_SUFFIX'));
-            // roastChart.destroy();
-            // initChart();
+            if(window.URCStore){ window.URCStore.set({ rorWindowSize: rorWindowSize }); }
+            try{ if(typeof t === 'function') alert(t('ALERT_ROR_WINDOW_SET') + rorWindowSize + t('ALERT_ROR_WINDOW_SET_SUFFIX')); }catch(e){ alert('RoR Window Size: '+rorWindowSize); }
         });
     document.getElementById('saveMaxRor').addEventListener('click', () => {
             let rawVal = parseFloat(document.getElementById('MaxRorInput').value);
@@ -2186,8 +2242,11 @@
             MaxRor = newVal;
             document.getElementById('MaxRorInput').value = formatDebugInputRoR(MaxRor);
             localStorage.setItem(MAX_ROR_KEY, MaxRor);
-            roastChart.options.scales.y1.max = MaxRor;
-            roastChart.update();
+            if(typeof roastChart !== 'undefined' && roastChart?.options?.scales?.y1){
+                roastChart.options.scales.y1.max = MaxRor;
+                roastChart.update();
+            }
+            if(window.URCStore){ window.URCStore.set({ MaxRor: MaxRor }); }
         });
 
     let isDragging = false;
@@ -2453,6 +2512,24 @@ const i18n = {
     HINT_DONE: ['完了', 'Done'],
     HINT_SKIP: ['スキップ', 'Skip'],
 
+    GAMIFY_RESULT_TITLE: ['🎮 焙煎結果', '🎮 Roast Result'],
+    GAMIFY_RESULT_MINIMIZE: ['最小化', 'Minimize'],
+    GAMIFY_RESULT_CLOSE: ['閉じる', 'Close'],
+    GAMIFY_LABEL_MAX_COMBO: ['MAX COMBO', 'MAX COMBO'],
+    GAMIFY_LABEL_PERFECT_RATE: ['PERFECT率', 'PERFECT Rate'],
+    GAMIFY_LABEL_ACCURACY: ['追従精度', 'Accuracy'],
+    GAMIFY_LABEL_ROAST_TIME: ['焙煎時間', 'Roast Time'],
+    GAMIFY_COMMENT_DEFAULT: ['プロファイルを読み込んでゲーム開始！', 'Load a profile to start the game!'],
+    GAMIFY_COMMENT_S: ['神焙煎！プロファイル完全追従！', 'God roast! Perfect tracking!'],
+    GAMIFY_COMMENT_A: ['素晴らしい！ほぼ完璧な追従！', 'Amazing! Almost perfect tracking!'],
+    GAMIFY_COMMENT_B: ['ナイス焙煎！良い出来だ！', 'Nice roast! Well done!'],
+    GAMIFY_COMMENT_C: ['もう一歩！次はPERFECT狙おう！', 'One more step! Aim for PERFECT next!'],
+    GAMIFY_COMMENT_D: ['焙煎お疲れ！次はプロファイルに寄せてみよう', 'Good effort! Try to follow the profile next time'],
+    GAMIFY_COMMENT_NONE: ['プロファイルを読み込んで再挑戦！', 'Load a profile and try again!'],
+    GAMIFY_SUFFIX_TIMES: ['回', ' times'],
+    GAMIFY_SCORE_PREFIX: ['SCORE: ', 'SCORE: '],
+
+
   }
 };
 let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || 'ja';
@@ -2620,12 +2697,49 @@ const TEMPERATURE_UNIT_KEY = 'uzu_temperature_unit';
 let isFahrenheit = localStorage.getItem(TEMPERATURE_UNIT_KEY) === 'F';
 let isDevelopmentTimeRatio = true;
 
+// ===== Phase2: Central Store (Single File, no split) =====
+const URCBus = {
+  _e: {},
+  on(evt, fn){ (this._e[evt] = this._e[evt] || []).push(fn); },
+  emit(evt, data){ (this._e[evt]||[]).forEach(fn=>{ try{fn(data);}catch(e){console.error(e);} }); }
+};
+
+const URCStore = {
+  state: {
+    isFahrenheit: isFahrenheit,
+    isDevelopmentTimeRatio: isDevelopmentTimeRatio,
+    isMinutesSecondsFormat: isMinutesSecondsFormat,
+    maxTemperature: maxTemperature,
+    MaxRor: MaxRor,
+    rorWindowSize: rorWindowSize
+  },
+  set(patch){
+    const prev = {...this.state};
+    Object.assign(this.state, patch);
+    // 既存のグローバル変数にも同期（既存コード互換）
+    if('isFahrenheit' in patch) isFahrenheit = patch.isFahrenheit;
+    if('isDevelopmentTimeRatio' in patch) isDevelopmentTimeRatio = patch.isDevelopmentTimeRatio;
+    if('isMinutesSecondsFormat' in patch) isMinutesSecondsFormat = patch.isMinutesSecondsFormat;
+    if('maxTemperature' in patch) maxTemperature = patch.maxTemperature;
+    if('MaxRor' in patch) MaxRor = patch.MaxRor;
+    if('rorWindowSize' in patch) rorWindowSize = patch.rorWindowSize;
+    // 永続化
+    if('isFahrenheit' in patch) localStorage.setItem(TEMPERATURE_UNIT_KEY, patch.isFahrenheit ? 'F' : 'C');
+    if('isMinutesSecondsFormat' in patch) localStorage.setItem(TIME_FORMAT_KEY, patch.isMinutesSecondsFormat);
+    if('maxTemperature' in patch) localStorage.setItem(MAX_TEMP_KEY, patch.maxTemperature);
+    if('MaxRor' in patch) localStorage.setItem(MAX_ROR_KEY, patch.MaxRor);
+    if('rorWindowSize' in patch) localStorage.setItem(ROR_WINDOW_KEY, patch.rorWindowSize);
+    URCBus.emit('state:changed', this.state, prev);
+  },
+  get(){ return this.state; }
+};
+// デバッグ用
+window.URCStore = URCStore;
+window.URCBus = URCBus;
+
+
 function getTimeUnitHtml() {
   return `<span class="unit_sec unit_generic">${t('UNIT_SEC')}</span>`;
-}
-
-function getDTRUnitHtml() {
-  return `<span class="unit_dtr unit_generic">${t('UNIT_PERCENT')}</span>`;
 }
 
 function getDTRLabelText() {
@@ -2863,14 +2977,74 @@ function updateTemperatureUnitDisplay() {
     roastChart.update();
   }
   refreshTemperatureDisplayBoxes();
-  updateChartDsiaplayValue();
+  updateChartDisplayValue();
 }
 
 function toggleTemperatureUnit() {
-  isFahrenheit = !isFahrenheit;
-  localStorage.setItem(TEMPERATURE_UNIT_KEY, isFahrenheit ? 'F' : 'C');
+  URCStore.set({ isFahrenheit: !URCStore.state.isFahrenheit });
   updateTemperatureUnitDisplay();
 }
+
+// ===== Phase3: 一括レンダリング (Single Source of Truth) =====
+// 従来: displaySecondsOrMinutes(), updateDTRDisplay(), updateChartDisplayValue() がバラバラ
+// 今後: 状態が変わったらここ一発で全部揃う
+function renderAllDisplays() {
+  try {
+    // 時間表示（メイン + chartAreaInfos内のコピーも内部で同期される）
+    if (typeof displaySecondsOrMinutes === 'function') {
+      displaySecondsOrMinutes(typeof getCurrentTime === 'function' ? getCurrentTime() : null);
+    }
+    // DTR/DT表示
+    if (typeof updateDTRDisplay === 'function') {
+      updateDTRDisplay();
+    }
+    // chartAreaInfos への同期（コピー方式の維持：Phase3では呼び忘れを防ぐため一元化）
+    if (typeof updateChartDisplayValue === 'function') {
+      updateChartDisplayValue();
+    }
+    // チャート軸タイトルもStore準拠に更新
+    if (typeof roastChart !== 'undefined' && roastChart?.options?.scales) {
+      if (roastChart.options.scales.x?.title && typeof getTimeAxisUnitLabel === 'function') {
+        roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
+      }
+      if (roastChart.options.scales.y?.title && typeof getUnitTempLabel === 'function') {
+        roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
+      }
+      if (roastChart.options.scales.y1?.title && typeof getUnitRoRLabel === 'function') {
+        roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
+      }
+    }
+  } catch(e) {
+    console.warn('[renderAllDisplays]', e);
+  }
+}
+
+// Storeの変更を購読して自動再描画（Phase3の肝）
+if (typeof URCBus !== 'undefined') {
+  URCBus.on('state:changed', (state, prev) => {
+    try {
+      // Store経由で温度系が変わった場合、チャート軸を同期
+      if (typeof roastChart !== 'undefined' && roastChart?.options?.scales) {
+        if (prev && state.maxTemperature !== prev.maxTemperature && roastChart.options.scales.y) {
+          roastChart.options.scales.y.max = state.maxTemperature;
+        }
+        if (prev && state.MaxRor !== prev.MaxRor && roastChart.options.scales.y1) {
+          roastChart.options.scales.y1.max = state.MaxRor;
+        }
+      }
+    } catch(e){ console.warn('[URCBus] chart sync failed', e); }
+    renderAllDisplays();
+    if (typeof roastChart !== 'undefined' && roastChart) {
+      try { roastChart.update('none'); } catch(_) { try{ roastChart.update(); }catch(__){} }
+    }
+    // デバッグ入力欄もStoreに同期
+    if (prev && (state.maxTemperature !== prev.maxTemperature || state.MaxRor !== prev.MaxRor || state.isFahrenheit !== prev.isFahrenheit)) {
+      if (typeof refreshDebugConsoleSettings === 'function') refreshDebugConsoleSettings();
+    }
+  });
+}
+window.renderAllDisplays = renderAllDisplays;
+
 
 const URCVersionStr = "1.3.5";
 const URCVersionCodeNameStr = "Antigua";
@@ -2951,12 +3125,16 @@ function changeColorMode(modeNum, isSave = true) {
     for (let i = 1; i <= 8; i++) {
         document.body.classList.remove('mode' + i);
     }
-    
+    if (modeNum === 7) {
+        document.getElementById('adjustment-layer').style.display = 'block';
+    } 
+    else {
+        document.getElementById('adjustment-layer').style.display = 'none';
+    }
     if (modeNum >= 1 && modeNum <= 8) {
         document.body.classList.add('mode' + modeNum);
     }
 
-    // ③ ストレージに保存（初期化時は保存しなくていいので判定を入れる）
     if (isSave) {
         localStorage.setItem('uzu_color_mode', modeNum);
     }
@@ -3563,7 +3741,28 @@ function receiveWebMessage(data) {
     if (data.time > -1 && isRoasting) {
       roastMessage.textContent = t('ROAST_MESSAGE_STARTED');
 
-      const current_ror = addLiveDataPoint(data.time, tempWithOffset); // グラフ追加関数
+      const current_ror = addLiveDataPoint(data.time, tempWithOffset);
+
+      // === Gamify Hook (decoupled) ===
+      try{
+        const profTempForGamify = (function(){
+          try{
+            const guideOffsetX = parseFloat(offsetInputTime.value) || 0;
+            const guideOffsetY = parseFloat(offsetInputTemp.value) || 0;
+            const profileTime = data.time - guideOffsetX;
+            const pt = getOneSecondIntervalProfile(getProfileDataFromTable());
+            if(!pt || pt.length===0) return null;
+            if(pt[0].time >= profileTime) return pt[0].temp + guideOffsetY;
+            const idx = Math.round(profileTime - pt[0].time);
+            if(idx>=0 && idx<pt.length) return pt[idx].temp + guideOffsetY;
+            return pt[pt.length-1].temp + guideOffsetY;
+          }catch(e){ return null; }
+        })();
+        if(window.gamifyEvaluate){
+          window.gamifyEvaluate(parseFloat(temp), profTempForGamify, current_ror ? current_ror.y : null);
+        }
+      }catch(e){ console.warn('gamify hook error', e); }
+ // グラフ追加関数
       roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(data.time); 
       setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
       if (roastChart.data.datasets[PROFILE_TEMP].data.length === 0) {
@@ -3610,7 +3809,7 @@ function receiveWebMessage(data) {
     if (isRoasting == true && data.time >= maxChartTime - 1) {
       sendStopCommand();
     }
-    updateChartDsiaplayValue();  
+    updateChartDisplayValue();  
   } 
 }
 
@@ -4040,7 +4239,7 @@ function toggleChartDisplay(flag) {
     }
 }
 
-function updateChartDsiaplayValue() {
+function updateChartDisplayValue() {
     const idMap = {
         'roast_time':   'currentTimeInside',
         'roast_temperature':   'currentTempInside',
@@ -6340,24 +6539,20 @@ function chartAreaInitialize() {
 
   if (roastTimeDisplayArea) {
     roastTimeDisplayArea.addEventListener('click', () => {
-      isMinutesSecondsFormat = !isMinutesSecondsFormat;
-      localStorage.setItem(TIME_FORMAT_KEY, isMinutesSecondsFormat);
-      roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
-      displaySecondsOrMinutes(getCurrentTime());
+      URCStore.set({ isMinutesSecondsFormat: !URCStore.state.isMinutesSecondsFormat });
+      // 表示更新は URCBus -> renderAllDisplays に一任
+      // テーブルヘッダーだけはプロファイル固有なので追加で更新
       updateProfileTableTimeHeader();
       refreshProfileTableTimeInputs();
-      updateChartDsiaplayValue();
-      roastChart.update();
     });
   }
   if (roastDTRArea) {
     roastDTRArea.style.cursor = 'pointer';
     roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
     roastDTRArea.addEventListener('click', () => {
-      isDevelopmentTimeRatio = !isDevelopmentTimeRatio;
+      URCStore.set({ isDevelopmentTimeRatio: !URCStore.state.isDevelopmentTimeRatio });
+      // 表示は renderAllDisplays に一任、ツールチップだけ更新
       roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
-      updateDTRDisplay();
-      updateChartDsiaplayValue();
     });
   }
   if (document.getElementById('roast_temperature_area')) {
@@ -7909,6 +8104,271 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     </div>
   </div>
 </div>
+
+
+<script>
+// === URC Game Mode v0.2 - Debug Console Toggle & Decoupled ===
+(function(){
+  const STORAGE_KEY_MODE = 'urc_gamify_mode';
+  const hud = document.getElementById('gamify-hud');
+  const scoreEl = document.getElementById('gamify-score');
+  const comboEl = document.getElementById('gamify-combo');
+  const rankEl = document.getElementById('gamify-rank');
+  const judgeEl = document.getElementById('gamify-judge');
+  const canvas = document.getElementById('gamify-canvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  const resultWindow = document.getElementById('gamify-result-window');
+  const resultRankEl = document.getElementById('gamify-result-rank');
+  const resultScoreEl = document.getElementById('gamify-result-score');
+  const resultComboEl = document.getElementById('gamify-result-combo');
+  const resultPerfectEl = document.getElementById('gamify-result-perfect');
+  const resultAccuracyEl = document.getElementById('gamify-result-accuracy');
+  const resultTimeEl = document.getElementById('gamify-result-time');
+  const resultCommentEl = document.getElementById('gamify-result-comment');
+  const scoreDisplay = document.getElementById('score');
+  let mode = 'normal';
+  let active = false;
+  let score = 0;
+  let combo = 0;
+  let maxCombo = 0;
+  let lastEvalTime = 0;
+  let perfectCount = 0;
+  let greatCount = 0;
+  let goodCount = 0;
+  let missCount = 0;
+  let rorStabilitySec = 0;
+  let lastRoR = null;
+  let particles = [];
+  let rafId = null;
+  let roastStartTime = null;
+  function loadMode(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_MODE);
+      if (saved === 'game' || saved === 'normal') { mode = saved; }
+    } catch(e) {}
+  }
+  function saveMode(){ try { localStorage.setItem(STORAGE_KEY_MODE, mode); } catch(e) {} }
+  function applyMode(){
+    if (mode === 'game') {
+    } else {
+      if (hud) { hud.classList.remove('active'); }
+      if (resultWindow) { resultWindow.classList.remove('active'); }
+      active = false;
+      if (rafId) { cancelAnimationFrame(rafId); }
+    }
+  }
+  window.URC = window.URC || {};
+  function updateToggleUI(){
+    const btn = document.getElementById('gamify-mode-toggle-btn');
+    if (!btn) { return; }
+    if (mode === 'game') {
+      btn.textContent='ON';
+      btn.style.background='linear-gradient(135deg, #ffd700, #ff8c00)';
+      btn.style.color='#000';
+      btn.style.borderColor='gold';
+      btn.style.boxShadow='0 0 10px rgba(255,215,0,0.5)';
+    } else {
+      btn.textContent='OFF';
+      btn.style.background='#222';
+      btn.style.color='#fff';
+      btn.style.borderColor='#555';
+      btn.style.boxShadow='none';
+    }
+  }
+
+  window.URC.setMode = function(m){
+    mode = m; saveMode(); applyMode(); updateToggleUI(); console.log('[URC] mode ->', mode);
+    return mode;
+  };
+  window.URC.getMode = function(){ return mode; };
+  window.URC.toggleMode = function(){ return window.URC.setMode(mode === 'game' ? 'normal' : 'game'); };
+  window.setGamifyMode = window.URC.setMode;
+  window.getGamifyMode = window.URC.getMode;
+  window.toggleGamifyMode = window.URC.toggleMode;
+  function resizeCanvas(){
+    if (!canvas || !canvas.parentElement) { return; }
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+    if (ctx) { ctx.setTransform(dpr,0,0,dpr,0,0); }
+  }
+  function showJudge(text, cls){
+    if (!judgeEl || mode !== 'game') { return; }
+    judgeEl.textContent = text; judgeEl.className = ''; judgeEl.classList.add(cls);
+    void judgeEl.offsetWidth; judgeEl.classList.add('show');
+    const chartArea = document.getElementById('chart-area');
+    if (chartArea) {
+      chartArea.classList.remove('gamify-perfect','gamify-great');
+      if (cls === 'perfect') { chartArea.classList.add('gamify-perfect'); }
+      if (cls === 'great') { chartArea.classList.add('gamify-great'); }
+      setTimeout(function(){ chartArea.classList.remove('gamify-perfect','gamify-great'); }, 380);
+    }
+    setTimeout(function(){ judgeEl.classList.remove('show'); }, 650);
+  }
+  function spawnParticles(color, count){
+    if (!ctx || !canvas || mode !== 'game') { return; }
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.width * 0.5; const y = rect.height * 0.45;
+    for (let i=0;i<count;i++) { particles.push({ x:x, y:y, vx:(Math.random()-0.5)*9, vy:(Math.random()-0.5)*9 -1.5, life:1, decay:0.028+Math.random()*0.035, color:color, size:2.2+Math.random()*3.8 }); }
+  }
+  function loop(){
+    if (!active || mode !== 'game' || !ctx || !canvas) { return; }
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0,0,rect.width, rect.height);
+    particles = particles.filter(function(p){ return p.life>0; });
+    particles.forEach(function(p){ p.x += p.vx; p.y += p.vy; p.vy += 0.14; p.life -= p.decay; ctx.globalAlpha = Math.max(0,p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); });
+    ctx.globalAlpha=1; rafId = requestAnimationFrame(loop);
+  }
+  function updateHUD(){
+    if (!hud || mode !== 'game') { return; }
+    if (scoreEl) { scoreEl.textContent = Math.floor(score).toLocaleString(); }
+    if (comboEl) { comboEl.textContent='COMBO x'+combo; comboEl.classList.toggle('hot', combo>=3); if (combo>=10) { comboEl.style.color='#ffd700'; } else if (combo>=5) { comboEl.style.color='#ff8a65'; } else { comboEl.style.color=''; } }
+    if (rankEl) { let r='-'; if (score>=5000) { r='S'; } else if (score>=3000) { r='A'; } else if (score>=1500) { r='B'; } else if (score>=500) { r='C'; } else if (score>0) { r='D'; } rankEl.textContent = r + (maxCombo>0 ? ' MAX:'+maxCombo : ''); }
+  }
+  function getRank(){ if (score>=5000) { return 'S'; } if (score>=3000) { return 'A'; } if (score>=1500) { return 'B'; } if (score>=500) { return 'C'; } if (score>0) { return 'D'; } return '-'; }
+  function getComment(rank){ if (rank==='S') { return t('GAMIFY_COMMENT_S'); } if (rank==='A') { return t('GAMIFY_COMMENT_A'); } if (rank==='B') { return t('GAMIFY_COMMENT_B'); } if (rank==='C') { return t('GAMIFY_COMMENT_C'); } if (rank==='D') { return t('GAMIFY_COMMENT_D'); } return t('GAMIFY_COMMENT_NONE'); }
+  function showResultWindow(){
+    if (mode!=='game' || !resultWindow) { return; }
+    const rank = getRank();
+    const total = perfectCount + greatCount + goodCount + missCount;
+    const perfectRate = total>0 ? Math.round((perfectCount/total)*100) : 0;
+    const accuracy = total>0 ? (100 - Math.min(100, Math.round((missCount/total)*100))) : 0;
+    const elapsed = roastStartTime ? Math.floor((Date.now()-roastStartTime)/1000) : 0;
+    if (resultRankEl) { resultRankEl.textContent = rank; if (rank==='S') { resultRankEl.style.color='#ffd700'; } else if (rank==='A') { resultRankEl.style.color='#aed581'; } else if (rank==='B') { resultRankEl.style.color='#81d4fa'; } else { resultRankEl.style.color='#fff'; } }
+    if (resultScoreEl) { resultScoreEl.textContent = t('GAMIFY_SCORE_PREFIX') + Math.floor(score).toLocaleString(); }
+    if (resultComboEl) { resultComboEl.textContent = 'x' + maxCombo; }
+    if (resultPerfectEl) { resultPerfectEl.textContent = perfectRate + '% ('+perfectCount+t('GAMIFY_SUFFIX_TIMES')+')'; }
+    if (resultAccuracyEl) { resultAccuracyEl.textContent = accuracy + '%'; }
+    if (resultTimeEl) { resultTimeEl.textContent = Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0'); }
+    if (resultCommentEl) { resultCommentEl.textContent = getComment(rank); }
+    resultWindow.classList.remove('minimized'); resultWindow.classList.add('active');
+    if (scoreDisplay) { scoreDisplay.textContent = Math.floor(score) + 'pt ('+rank+')'; scoreDisplay.style.fontWeight='900'; if (rank==='S') { scoreDisplay.style.color='#b8860b'; } else if (rank==='A') { scoreDisplay.style.color='#2e7d32'; } }
+  }
+  (function makeDraggable(){
+    const header = document.getElementById('gamify-result-header');
+    const win = resultWindow;
+    if (!header || !win) { return; }
+    let isDragging=false, startX, startY, origX, origY;
+    let rafId=null, pendingX=0, pendingY=0;
+    function applyPos(){
+      rafId=null;
+      win.style.left = pendingX + 'px';
+      win.style.top = pendingY + 'px';
+    }
+    function onMove(e){
+      if (!isDragging) { return; }
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      pendingX = origX + clientX - startX;
+      pendingY = origY + clientY - startY;
+      if (rafId===null) { rafId = requestAnimationFrame(applyPos); }
+    }
+    function onUp(){
+      if (!isDragging) { return; }
+      isDragging=false;
+      win.classList.remove('dragging');
+      win.classList.add('no-anim');
+      // アニメーション無効を次のフレームで解除してpopアニメの再発火を防ぐ
+      setTimeout(()=>{ win.classList.remove('no-anim'); win.style.animation=''; }, 50);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+      if (rafId!==null) { cancelAnimationFrame(rafId); rafId=null; }
+    }
+    function onDown(e){
+      if (e.target.tagName==='BUTTON') { return; }
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      isDragging=true; startX=clientX; startY=clientY;
+      const rect=win.getBoundingClientRect(); origX=rect.left; origY=rect.top;
+      win.style.right='auto'; win.style.bottom='auto';
+      win.style.animation='none';
+      win.style.transition='none';
+      win.classList.add('dragging');
+      document.addEventListener('mousemove', onMove, {passive:true});
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove, {passive:true});
+      document.addEventListener('touchend', onUp);
+      if (e.cancelable) { e.preventDefault(); }
+    }
+    header.addEventListener('mousedown', onDown);
+    header.addEventListener('touchstart', onDown, {passive:false});
+    const closeBtn = document.getElementById('gamify-result-close');
+    if (closeBtn) { closeBtn.addEventListener('click', function(){ win.classList.remove('active'); }); }
+    const minBtn = document.getElementById('gamify-result-min');
+    if (minBtn) { minBtn.addEventListener('click', function(){ win.classList.toggle('minimized'); }); }
+  })();
+  window.gamifyEvaluate = function(currentTemp, profileTemp, currentRoR){
+    if (mode !== 'game' || !active) { return; }
+    const now = Date.now();
+    if (now - lastEvalTime < 1500) {
+      if (currentRoR != null && lastRoR != null) {
+        if (Math.abs(currentRoR-lastRoR) < 2) { rorStabilitySec += 0.1; } else { rorStabilitySec = Math.max(0, rorStabilitySec - 0.3); }
+      }
+      lastRoR = currentRoR; return;
+    }
+    lastEvalTime = now;
+    if (profileTemp == null || isNaN(profileTemp) || profileTemp <= 0) { return; }
+    const diff = Math.abs(currentTemp - profileTemp);
+    let judge, pts, color, cls;
+    if (diff <= 1.5) { judge='PERFECT!!'; pts=100; color='#ffd700'; cls='perfect'; combo++; perfectCount++; score += pts * (1 + combo*0.1); spawnParticles(color,14); }
+    else if (diff <= 3.0) { judge='GREAT!'; pts=50; color='#aed581'; cls='great'; combo++; greatCount++; score += pts * (1 + combo*0.05); spawnParticles(color,8); }
+    else if (diff <= 6.0) { judge='GOOD'; pts=20; color='#81d4fa'; cls='good'; combo = Math.max(0, combo-1); goodCount++; score += pts; }
+    else { judge='MISS...'; pts=0; color='#ef9a9a'; cls='miss'; combo=0; missCount++; }
+    if (combo > maxCombo) { maxCombo = combo; }
+    showJudge(judge, cls); updateHUD();
+    if (rorStabilitySec >= 5 && rorStabilitySec < 5.5) { score += 10; }
+    lastRoR = currentRoR;
+  };
+  function startGame(){
+    if (mode !== 'game') { return; }
+    active=true; score=0; combo=0; maxCombo=0; perfectCount=0; greatCount=0; goodCount=0; missCount=0;
+    rorStabilitySec=0; lastEvalTime=0; particles=[]; roastStartTime=Date.now();
+    resizeCanvas(); updateHUD();
+    if (hud) { hud.classList.add('active'); }
+    if (rafId) { cancelAnimationFrame(rafId); }
+    loop(); showJudge('READY!', 'great'); console.log('[URC Game] START');
+  }
+  function stopGame(){
+    if (mode !== 'game' || !active) { return; }
+    active=false;
+    if (rafId) { cancelAnimationFrame(rafId); }
+    if (ctx) { const r=canvas.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height); }
+    if (hud) { hud.classList.remove('active'); }
+    showResultWindow();
+    const rank=getRank();
+    showJudge(rank+' RANK!', rank==='S' ? 'perfect' : rank==='A' ? 'great' : 'good');
+    console.log('[URC Game] STOP SCORE:', Math.floor(score), 'RANK:', rank);
+  }
+  const originalExecuteStop = window.executeStopCommand;
+  window.executeStopCommand = function(){
+    if (typeof originalExecuteStop === 'function') { originalExecuteStop.apply(this, arguments); }
+    else { try { SetRoastingState(false); HideChartIndicators(); const rm=document.getElementById('roast_message'); if (rm) { rm.textContent='焙煎停止'; } } catch(e) {} }
+    if (mode === 'game') { setTimeout(stopGame, 100); }
+  };
+  let lastIsRoasting=false;
+  setInterval(function(){
+    try {
+      const isRoastingNow = (typeof isRoasting !== 'undefined' ? isRoasting : false) || (typeof roastState !== 'undefined' && roastState==='ROASTING');
+      if (!lastIsRoasting && isRoastingNow && mode==='game') { startGame(); }
+      lastIsRoasting = !!isRoastingNow;
+    } catch(e) {}
+  }, 500);
+  window.addEventListener('resize', resizeCanvas);
+  loadMode(); applyMode();
+  
+  document.addEventListener('DOMContentLoaded', function(){
+    const btn = document.getElementById('gamify-mode-toggle-btn');
+    if (btn) {
+      btn.addEventListener('click', function(){ window.URC.toggleMode(); });
+    }
+    setTimeout(function(){ if (typeof updateToggleUI === 'function') { updateToggleUI(); } }, 600);
+  });
+  setTimeout(function(){ if (typeof updateToggleUI === 'function') { updateToggleUI(); } }, 1000);
+})();
+</script>
 
 </body>
 </html>
