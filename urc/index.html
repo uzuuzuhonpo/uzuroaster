@@ -1565,41 +1565,228 @@
 
 
     /* === URC Game Mode - Floating & Decoupled v0.2 === */
-    #gamify-hud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3000; display: none; align-items: center; gap: 14px; background: rgba(25,20,18,0.92); border: 1px solid rgba(255,215,0,0.45); border-radius: 28px; padding: 6px 18px; color: #fff8f0; font-weight: 800; backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); font-family: ui-monospace, monospace; }
+    #gamify-hud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3000; display: none; flex-direction: column; align-items: stretch; gap: 6px; min-width: 240px; box-sizing: border-box; background: rgba(25,20,18,0.92); border: 1px solid rgba(255,215,0,0.45); border-radius: 18px; padding: 8px 18px; color: #fff8f0; font-weight: 800; backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); font-family: ui-monospace, monospace; }
     #gamify-hud.active { display: flex; }
+    #gamify-hud-main { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    #gamify-combo-meter-row { display:flex; align-items:center; gap:8px; }
+    #gamify-combo-meter { height:7px; flex:1; min-width:0; border-radius:999px; background:rgba(255,255,255,0.14); box-shadow:inset 0 1px 2px rgba(0,0,0,0.55); }
+    #gamify-combo-meter-fill { width:0%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#ff7043,#ffb74d,#ffd700); box-shadow:0 0 8px rgba(255,183,77,0.75); transform:scaleX(1) scaleY(1); transform-origin:left center; transition:width 0.24s cubic-bezier(0.2,0.8,0.2,1); }
+    #gamify-combo-meter-fill.pulse { animation: combo-meter-pulse 0.42s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes combo-meter-pulse { 0%,68%,100%{width:var(--combo-meter-width);transform:scaleY(1)} 34%{width:var(--combo-meter-pulse-width);transform:scaleY(1.9);filter:brightness(1.7)} 55%{width:var(--combo-meter-width);transform:scaleY(0.95)} }
+    #gamify-combo-flame { display:inline-block; font-size:15px; line-height:1; transform:scale(1); transform-origin:center; }
+    #gamify-combo-flame.pulse { animation: combo-flame-pulse 0.42s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes combo-flame-pulse { 0%,100%{transform:scale(1)} 36%{transform:scale(3.6)} 68%{transform:scale(0.9)} }
     #gamify-hud .score { color:#ffd700; font-size:16px; }
     #gamify-hud .combo { color:#ff8a65; font-size:13px; }
     #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
     @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
     #gamify-hud .rank { font-size:11px; opacity:0.7; background:rgba(255,255,255,0.12); padding:2px 7px; border-radius:10px; }
-    #gamify-judge { position: absolute; top: 42%; left: 50%; transform: translate(-50%,-50%) scale(0.6); z-index: 2000; font-size: clamp(28px, 5vw, 52px); font-weight: 900; pointer-events: none; opacity: 0; transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 2px 0 #000, 0 0 14px rgba(0,0,0,0.7); white-space: nowrap; }
+    
+    #gamify-judge { 
+      position: absolute; 
+      top: 42%; left: 50%; 
+      transform: translate(-50%,-50%) scale(0.5); 
+      z-index: 2000; 
+      font-size: clamp(42px, 9vw, 92px); 
+      font-weight: 900; 
+      pointer-events: none; 
+      opacity: 0; 
+      transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.22s ease; 
+      text-shadow: 0 3px 0 #000, 0 0 20px rgba(0,0,0,0.8); 
+      white-space: nowrap; 
+      letter-spacing: 2px;
+      font-family: 'Arial Black', sans-serif;
+    }
     #gamify-judge.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
-    #gamify-judge.perfect { color:#ffd700; -webkit-text-stroke:2px #7a5a00; }
-    #gamify-judge.great { color:#aed581; -webkit-text-stroke:1.6px #33691e; }
-    #gamify-judge.good { color:#81d4fa; -webkit-text-stroke:1.6px #01579b; }
-    #gamify-judge.miss { color:#ef9a9a; -webkit-text-stroke:1.6px #b71c1c; }
-    #chart-area.gamify-perfect { box-shadow: 0 0 0 3px gold, 0 0 20px rgba(255,215,0,0.45) !important; }
-    #chart-area.gamify-great { box-shadow: 0 0 0 2px #aed581, 0 0 14px rgba(174,213,129,0.35) !important; }
-    #chart-area { transition: box-shadow 0.25s ease; position: relative; }
-    #gamify-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1500; }
-    #gamify-result-window { position: fixed; top: 80px; right: 20px; width: 320px; background: rgba(30,25,22,0.96); border: 1px solid rgba(255,215,0,0.5); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,215,0,0.2); z-index: 4000; display: none; flex-direction: column; overflow: hidden; backdrop-filter: blur(12px); font-family: sans-serif; }
-    #gamify-result-window.active { display: flex; animation: result-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes result-pop { 0%{transform: scale(0.8) translateY(20px); opacity:0} 100%{transform: scale(1) translateY(0); opacity:1} }
-    #gamify-result-header { background: linear-gradient(135deg, #3e2723, #5d4037); padding: 10px 14px; display:flex; justify-content:space-between; align-items:center; cursor: move; user-select: none; border-bottom: 1px solid rgba(255,215,0,0.2); }
-    #gamify-result-header span { color:#ffd700; font-weight:900; font-size:14px; letter-spacing:1px; }
-    #gamify-result-header button { background:rgba(255,255,255,0.1); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer; }
-    #gamify-result-body { padding: 16px; color:#fff8f0; }
-    #gamify-result-body .result-rank { font-size: 42px; font-weight: 900; text-align:center; margin: 8px 0; color:#ffd700; text-shadow:0 2px 0 #000; }
-    #gamify-result-body .result-score { font-size: 20px; text-align:center; margin: 4px 0 12px; font-family: monospace; }
-    #gamify-result-body .result-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-top:12px; }
-    #gamify-result-body .result-stats div { background:rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; }
-    #gamify-result-body .result-stats b { color:#ffd700; }
-    #gamify-result-body .result-comment { margin-top:14px; font-size:12px; opacity:0.8; text-align:center; font-style:italic; }
-    #gamify-result-window.minimized #gamify-result-body { display:none; }
+    #gamify-judge.perfect { 
+      color:#fff; 
+      -webkit-text-stroke:3px #b8860b; 
+      text-shadow: 0 0 10px #ffd700, 0 0 30px #ff9800, 0 0 60px #ffd700, 0 4px 0 #000;
+      animation: perfect-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), perfect-glow 0.6s ease-in-out infinite alternate;
+    }
+    #gamify-judge.great { 
+      color:#e8f5e9; 
+      -webkit-text-stroke:2.5px #2e7d32; 
+      text-shadow: 0 0 15px #66bb6a, 0 0 35px #43a047, 0 3px 0 #000;
+      animation: great-pop 0.4s ease-out;
+    }
+    #gamify-judge.good { 
+      color:#e1f5fe; 
+      -webkit-text-stroke:2px #0277bd; 
+      text-shadow: 0 0 12px #29b6f6, 0 2px 0 #000; 
+    }
+    #gamify-judge.miss { 
+      color:#ffebee; 
+      -webkit-text-stroke:2.5px #b71c1c; 
+      text-shadow: 0 0 20px #ef5350, 0 3px 0 #000;
+      animation: miss-shake 0.35s ease;
+    }
+    @keyframes perfect-bounce {
+      0% { transform: translate(-50%,-50%) scale(0.3) rotate(-8deg); }
+      50% { transform: translate(-50%,-50%) scale(1.25) rotate(3deg); }
+      70% { transform: translate(-50%,-50%) scale(0.95) rotate(-2deg); }
+      100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+    @keyframes perfect-glow {
+      from { filter: brightness(1) drop-shadow(0 0 10px gold); }
+      to { filter: brightness(1.35) drop-shadow(0 0 25px gold) drop-shadow(0 0 45px orange); }
+    }
+    @keyframes great-pop {
+      0% { transform: translate(-50%,-50%) scale(0.5); }
+      60% { transform: translate(-50%,-50%) scale(1.15); }
+      100% { transform: translate(-50%,-50%) scale(1); }
+    }
+    @keyframes miss-shake {
+      0%,100% { transform: translate(-50%,-50%) scale(1); }
+      20% { transform: translate(-52%,-50%) scale(1.05) rotate(-2deg); }
+      40% { transform: translate(-48%,-50%) scale(1.05) rotate(2deg); }
+      60% { transform: translate(-52%,-50%) scale(1.02) rotate(-1deg); }
+      80% { transform: translate(-48%,-50%) scale(1.02) rotate(1deg); }
+    }
+    
+    /* COMBO独立表示 - チャート上にド派手に */
+    #gamify-combo-popup {
+      position: absolute;
+      top: 62%; left: 50%;
+      transform: translate(-50%,-50%) scale(0.5);
+      z-index: 2001;
+      font-size: clamp(26px, 5.5vw, 54px);
+      font-weight: 900;
+      font-family: 'Arial Black', sans-serif;
+      pointer-events: none;
+      opacity: 0;
+      white-space: nowrap;
+      letter-spacing: 1px;
+      -webkit-text-stroke: 2px #000;
+      text-shadow: 0 2px 0 #000;
+      transition: none;
+    }
+    #gamify-combo-popup.show { opacity:1; animation: combo-popup-base 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    #gamify-combo-popup.combo-5 { color:#ff8a65; -webkit-text-stroke:2.5px #bf360c; text-shadow:0 0 10px #ff8a65, 0 3px 0 #000; }
+    #gamify-combo-popup.combo-10 { 
+      color:#ff5722; -webkit-text-stroke:3px #4e0a00; 
+      text-shadow:0 0 12px #ff5722, 0 0 28px #ff3d00, 0 3px 0 #000;
+      font-size: clamp(32px, 6.5vw, 64px);
+    }
+    #gamify-combo-popup.combo-10.show { animation: combo-popup-fire 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-fire 0.5s ease-in-out infinite alternate; }
+    #gamify-combo-popup.combo-20 { 
+      color:#ffd700; -webkit-text-stroke:3px #7a3a00; 
+      text-shadow:0 0 15px #ffd700, 0 0 35px #ff9800, 0 0 60px #ff5722, 0 4px 0 #000;
+      font-size: clamp(38px, 7.5vw, 78px);
+    }
+    #gamify-combo-popup.combo-20.show { animation: combo-popup-super 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-super 0.3s ease-in-out infinite alternate; }
+    @keyframes combo-popup-base {
+      0% { transform: translate(-50%,-30%) scale(0.3); opacity:0; }
+      50% { transform: translate(-50%,-55%) scale(1.2); opacity:1; }
+      70% { transform: translate(-50%,-48%) scale(0.95); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    }
+    @keyframes combo-popup-fire {
+      0% { transform: translate(-50%,-30%) scale(0.3) rotate(-6deg); opacity:0; }
+      40% { transform: translate(-50%,-60%) scale(1.35) rotate(4deg); opacity:1; }
+      65% { transform: translate(-50%,-45%) scale(0.9) rotate(-2deg); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1.1) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-popup-super {
+      0% { transform: translate(-50%,-40%) scale(0.2) rotate(-10deg); opacity:0; filter:brightness(1.5); }
+      30% { transform: translate(-50%,-70%) scale(1.5) rotate(6deg); opacity:1; filter:brightness(1.8); }
+      55% { transform: translate(-50%,-40%) scale(0.85) rotate(-3deg); opacity:1; }
+      75% { transform: translate(-50%,-55%) scale(1.15) rotate(2deg); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1.15) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-popup-ultra {
+      0% { transform: translate(-50%,-50%) scale(0.1) rotate(-20deg); opacity:0; filter:brightness(2) blur(4px); }
+      25% { transform: translate(-50%,-80%) scale(1.7) rotate(10deg); opacity:1; filter:brightness(2.5) blur(0px); }
+      50% { transform: translate(-50%,-30%) scale(0.8) rotate(-5deg); }
+      70% { transform: translate(-50%,-60%) scale(1.25) rotate(3deg); }
+      100% { transform: translate(-50%,-50%) scale(1.25) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-glow-fire { from{filter:brightness(1) drop-shadow(0 0 8px #ff5722)} to{filter:brightness(1.3) drop-shadow(0 0 18px #ff5722) drop-shadow(0 0 30px #ff3d00)} }
+    @keyframes combo-glow-super { from{filter:brightness(1) drop-shadow(0 0 12px gold)} to{filter:brightness(1.5) drop-shadow(0 0 25px gold) drop-shadow(0 0 50px orange)} }
+    @keyframes combo-glow-ultra { from{filter:brightness(1.2) drop-shadow(0 0 20px #fff)} to{filter:brightness(1.8) drop-shadow(0 0 35px #fff) drop-shadow(0 0 70px gold)} }
 
-    #gamify-result-window.dragging { animation: none !important; transition: none !important; will-change: left, top; }
-    #gamify-result-window.dragging #gamify-result-header { cursor: grabbing !important; }
-    #gamify-result-window.no-anim { animation: none !important; }
+    /* MISSダメージ赤フラッシュ */
+    #gamify-damage-flash {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1600;
+      background: radial-gradient(ellipse at center, rgba(255,0,0,0) 40%, rgba(200,0,0,0.55) 100%);
+      opacity:0; transition: opacity 0.1s ease;
+    }
+    #gamify-damage-flash.hit { animation: damage-flash-anim 0.45s ease-out; }
+    @keyframes damage-flash-anim {
+      0% { opacity:0.85; background: rgba(255,30,30,0.7); }
+      15% { opacity:0.9; background: radial-gradient(ellipse at center, rgba(255,50,50,0.4) 0%, rgba(200,0,0,0.7) 100%); }
+      100% { opacity:0; }
+    }
+    /* コンボ熱演出 */
+    #chart-area.gamify-perfect { box-shadow: inset 0 0 0 4px gold, inset 0 0 35px rgba(255,215,0,0.7), inset 0 0 70px rgba(255,165,0,0.4) !important; animation: chart-perfect-pulse 0.4s ease; }
+    #chart-area.gamify-great { box-shadow: 0 0 0 3px #66bb6a, 0 0 20px rgba(102,187,106,0.5) !important; }
+    #chart-area.gamify-miss { box-shadow: 0 0 0 3px #ef5350, 0 0 25px rgba(239,83,80,0.6) !important; animation: chart-miss-shake 0.3s ease; }
+    @keyframes chart-perfect-pulse { 0%{box-shadow:inset 0 0 0 0 rgba(255,215,0,0.8)} 50%{box-shadow:inset 0 0 50px 8px rgba(255,215,0,0.35), inset 0 0 70px gold} 100%{box-shadow:inset 0 0 0 4px gold, inset 0 0 35px rgba(255,215,0,0.7), inset 0 0 70px rgba(255,165,0,0.4)} }
+    @keyframes chart-miss-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    /* コンボ段階演出 */
+    #gamify-hud.combo-5 { background: rgba(60,30,10,0.95) !important; border-color: #ff8a65 !important; box-shadow: 0 0 15px rgba(255,138,101,0.5) !important; }
+    #gamify-hud.combo-10 { background: linear-gradient(135deg, rgba(80,20,0,0.95), rgba(120,40,0,0.95)) !important; border-color: #ff5722 !important; box-shadow: 0 0 20px rgba(255,87,34,0.6), 0 0 40px rgba(255,87,34,0.3) !important; animation: hud-fire 0.4s ease-in-out infinite alternate; }
+    #gamify-hud.combo-20 { background: linear-gradient(135deg, rgba(100,0,0,0.96), rgba(180,50,0,0.96)) !important; border-color: #ffd700 !important; border-width:2px !important; box-shadow: 0 0 25px rgba(255,215,0,0.7), 0 0 50px rgba(255,87,34,0.5) !important; animation: hud-super-fire 0.25s ease-in-out infinite alternate; }
+    #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
+    @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
+    @keyframes hud-fire { from{box-shadow:0 0 20px rgba(255,87,34,0.6)} to{box-shadow:0 0 30px rgba(255,87,34,0.9), 0 0 50px rgba(255,87,34,0.4)} }
+    @keyframes hud-super-fire { from{box-shadow:0 0 25px gold} to{box-shadow:0 0 40px gold, 0 0 70px orange} }
+    #gamify-combo.combo-10 { font-size:15px !important; text-shadow:0 0 8px currentColor; }
+    #gamify-combo.combo-20 { font-size:17px !important; text-shadow:0 0 12px gold, 0 0 20px orange; animation: combo-text-burn 0.3s ease-in-out infinite alternate; }
+    @keyframes combo-text-burn { from{filter:brightness(1)} to{filter:brightness(1.4)} }
+
+    #gamify-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1500; }
+    
+    /* --- Gamify Result: Fixed 80% Debug Window --- */
+    #gamify-result-window { 
+      position: fixed; 
+      top: 50%; left: 50%; 
+      width: 80%; max-width: 720px; min-width: 300px;
+      max-height: 80vh;
+      transform: translate(-50%, -50%);
+      background: #1e1e1e; 
+      border: 1px solid #3c3c3c; 
+      border-radius: 6px; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
+      z-index: 4000; 
+      display: none; 
+      flex-direction: column; 
+      overflow: hidden; 
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+      color: #cccccc; 
+    }
+    #gamify-result-window.active { 
+      display: flex; 
+      animation: debug-fade-in 0.18s ease-out;
+    }
+    @keyframes debug-fade-in { from { opacity:0; transform: translate(-50%, -48%); } to { opacity:1; transform: translate(-50%, -50%); } }
+    #gamify-result-header { 
+      background: #2d2d2d; 
+      padding: 8px 12px; 
+      display:flex; justify-content:space-between; align-items:center; 
+      user-select: none; 
+      border-bottom: 1px solid #3c3c3c; 
+      cursor: default;
+    }
+    #gamify-result-header span { color:#cccccc; font-weight:700; font-size:13px; }
+    #gamify-result-header button { background:#3c3c3c; border:1px solid #555; color:#ccc; width:24px; height:24px; border-radius:3px; cursor:pointer; font-size:12px; }
+    #gamify-result-header button:hover { background:#4a4a4a; color:#fff; }
+    #gamify-result-body { padding: 16px 20px; color:#cccccc; font-size:13px; line-height:1.6; overflow-y:auto; }
+    #gamify-result-body .result-rank { font-size: 36px; font-weight: 700; text-align:left; margin: 4px 0 10px; color:#4ec9b0; border-bottom:1px solid #333; padding-bottom:8px; }
+    #gamify-result-body .result-score { font-size: 16px; text-align:left; margin: 8px 0; color:#dcdcaa; }
+    #gamify-result-body .result-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-top:12px; }
+    #gamify-result-body .result-stats div { background:#252526; padding:8px 10px; border-radius:4px; border:1px solid #333; }
+    #gamify-result-body .result-stats b { color:#9cdcfe; font-weight:700; font-size:14px; }
+    #gamify-result-body .result-comment { margin-top:12px; font-size:12px; opacity:0.8; text-align:left; color:#858585; border-top:1px solid #333; padding-top:8px; }
+    #gamify-result-window.dragging { animation: none !important; }
+
+
+
+    #gamify-hud { cursor: pointer; user-select: none; }
+    #gamify-hud:hover { filter: brightness(1.1); }
+    #score, #score * { cursor: pointer; }
+    #score:hover { filter: brightness(1.2); }
 
 </style>
 
@@ -1635,8 +1822,8 @@
 <body>
 <div id="adjustment-layer" style="width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
 
-<div id="gamify-hud"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div>
-<div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">🎮 焙煎結果</span><div style="display:flex; gap:6px;"><button id="gamify-result-min" data-i18n-title="GAMIFY_RESULT_MINIMIZE" title="最小化">─</button><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div></div><div id="gamify-result-body"><div class="result-rank" id="gamify-result-rank">-</div><div class="result-score" id="gamify-result-score">SCORE: 0</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div>
+<div id="gamify-hud"><div id="gamify-hud-main"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div><div id="gamify-combo-meter-row"><div id="gamify-combo-meter" role="progressbar" aria-label="Combo meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="gamify-combo-meter-fill"></div></div><span id="gamify-combo-flame" aria-hidden="true">🔥</span></div></div>
+<div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">🎮 焙煎結果</span><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div><div id="gamify-result-body"><div class="result-rank" id="gamify-result-rank">-</div><div class="result-score" id="gamify-result-score">SCORE: 0</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div>
 
 <!-- アイコン定義 -->
 <svg style="display: none;">
@@ -1989,10 +2176,10 @@
 <div class="table-controls">
 <div class="button-container" style="border-radius: 5px;">
   <span class="profile_manupilation_title" data-i18n="PROFILE_MANIPULATION_TITLE">プロファイル</span>
-  <button type="button" class="button table_edit" title="" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
+  <button id="load-profile-button" type="button" class="button table_edit" title="" aria-keyshortcuts="L" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
   <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
-  <button onclick="openJSONSaveModal()" class="button table_edit" title="" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
-  <button class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="" data-i18n-title="TOOLTIP_COPY_ROAST_TO_PROFILE" data-i18n="BUTTON_COPY_FROM_ROAST">焙煎データ⇒</button>
+  <button id="save-profile-button" onclick="openJSONSaveModal()" class="button table_edit" title="" aria-keyshortcuts="S" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
+  <button id="copy-roast-data-button" class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="" aria-keyshortcuts="R" data-i18n-title="TOOLTIP_COPY_ROAST_TO_PROFILE" data-i18n="BUTTON_COPY_FROM_ROAST">焙煎データ⇒</button>
   <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare()"; title="" data-i18n-title="TOOLTIP_COMPARE_PROFILE" data-i18n="BUTTON_COMPARE_PROFILE_SHOW">比較プロファイル表示</button>
   <button id="button-default-profile" class="button table_edit" onclick="showProfModal()"; title="" data-i18n-title="TOOLTIP_STANDARD_CURVE" data-i18n="BUTTON_STANDARD_CURVE">標準カーブ</button>
 </div>
@@ -2004,7 +2191,7 @@
     </div>
     <div class="phase-control-group button-container">
       <button id="phasePrevBtn" class="button button-phase-control" style="border-radius: 20px 0px 0px 20px;" onclick="handlePrevClick()" title="" data-i18n-title="TOOLTIP_PREV_PHASE">&lt;</button>
-      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="" data-i18n-title="TOOLTIP_PHASE_MARK">DE</button>
+      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="" aria-keyshortcuts="M" data-i18n-title="TOOLTIP_PHASE_MARK">DE</button>
       <button id="phaseSkipBtn" class="button button-phase-control" style="border-radius: 0px 20px 20px 0px;" onclick="handleSkipClick()"  title="" data-i18n-title="TOOLTIP_NEXT_PHASE">&gt;</button>
     </div>
     <div class="button-container">
@@ -2051,8 +2238,8 @@
         </div>
         <div class="table-edit-buttons">
           <button id="guide-move-toggle-btn" class="button table_edit" style="background: #888; color: white; border: 2px solid transparent; display: none;" onclick="toggleGuideMoveMode()" data-i18n="BUTTON_GUIDE_MOVE">📐 移動</button>
-          <button id="align-button" class="button" onclick="applyCurrentProfile();" title="" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
-          <button class="button table_edit" onclick="addRowByButton();" title="" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
+          <button id="align-button" class="button" onclick="applyCurrentProfile();" title="" aria-keyshortcuts="A" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
+          <button id="add-profile-row-button" class="button table_edit" onclick="addRowByButton();" title="" aria-keyshortcuts="N" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
           <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = profileTable; while (t.rows.length > 1) {t.deleteRow(1); }" title="" data-i18n-title="TOOLTIP_DELETE_ALL" data-i18n="BUTTON_DELETE_ALL">🗑 全削除</button>
         </div>
       </div>
@@ -2061,7 +2248,7 @@
   <!-- チャートセクション -->
   <div class="chart-section no-select" id="chart-section">
     <div class="chart-container" id="chart-area">
-<div id="gamify-judge"></div><canvas id="gamify-canvas"></canvas>
+<div id="gamify-judge"></div><div id="gamify-combo-popup"></div><canvas id="gamify-canvas"></canvas><div id="gamify-damage-flash"></div>
       <div class="image-overlay" id="chart-point"></div>
       <div class="image-arrow" id="chart-arrow">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 24">
@@ -2070,7 +2257,7 @@
       </div>
       <canvas id="overlayCanvas"></canvas>
       <canvas id="roastChart"></canvas>
-      <div id="chart-infos-button" title="測定値表示">
+      <div id="chart-infos-button" title="測定値表示" role="button" tabindex="0" aria-keyshortcuts="D">
         <span style='color:#882222;font-size:20px;'>📊</span>
       </div>
       <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; touch-action: none; z-index: 100; background: rgba(0, 0, 0, 0.0);"></div>
@@ -2513,7 +2700,6 @@ const i18n = {
     HINT_SKIP: ['スキップ', 'Skip'],
 
     GAMIFY_RESULT_TITLE: ['🎮 焙煎結果', '🎮 Roast Result'],
-    GAMIFY_RESULT_MINIMIZE: ['最小化', 'Minimize'],
     GAMIFY_RESULT_CLOSE: ['閉じる', 'Close'],
     GAMIFY_LABEL_MAX_COMBO: ['MAX COMBO', 'MAX COMBO'],
     GAMIFY_LABEL_PERFECT_RATE: ['PERFECT率', 'PERFECT Rate'],
@@ -3046,7 +3232,7 @@ if (typeof URCBus !== 'undefined') {
 window.renderAllDisplays = renderAllDisplays;
 
 
-const URCVersionStr = "1.3.5";
+const URCVersionStr = "1.4.0";
 const URCVersionCodeNameStr = "Antigua";
 let roastChart = null;
 const PROFILE_TEMP = 0;
@@ -4010,10 +4196,17 @@ offsetInputs.forEach(input => {
 });
 
 document.addEventListener('keydown', function(event) {
-  if (['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return; // 入力中は無視
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; // 入力中は無視
 // キーごとのアクションを定義
     const keyActions = {
         ' ': () => (isRoasting ? stopButton : startButton)?.click(),
+        'f': () => fullscreenToggleBtn?.click(),
+        'l': () => document.getElementById('load-profile-button')?.click(),
+        's': () => document.getElementById('save-profile-button')?.click(),
+        'r': () => document.getElementById('copy-roast-data-button')?.click(),
+        'a': () => document.getElementById('align-button')?.click(),
+        'n': () => document.getElementById('add-profile-row-button')?.click(),
+        'd': () => chartInfosButton?.click(),
         '[': () => shortenButton?.click(),
         ']': () => enlargeButton?.click(),
         '0': () => resetWidthButton?.click(),
@@ -4024,6 +4217,7 @@ document.addEventListener('keydown', function(event) {
 
     // 大文字小文字もケアするなら .toLowerCase() を使うと完璧
     const key = event.key.toLowerCase();
+    if (/^[a-z]$/.test(key) && event.repeat) return;
     if (keyActions[key]) {
         keyActions[key]();
         event.preventDefault();
@@ -8110,9 +8304,20 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
 // === URC Game Mode v0.2 - Debug Console Toggle & Decoupled ===
 (function(){
   const STORAGE_KEY_MODE = 'urc_gamify_mode';
+  const COMBO_THRESHOLDS = Object.freeze({
+    highlight: 5,
+    fire: 10,
+    super: 20,
+    disco: 30
+  });
+  const COMBO_METER_MAX = 100;
+  const GAME_JUDGE_DELAY_MS = 3000;
   const hud = document.getElementById('gamify-hud');
   const scoreEl = document.getElementById('gamify-score');
   const comboEl = document.getElementById('gamify-combo');
+  const comboMeterEl = document.getElementById('gamify-combo-meter');
+  const comboMeterFillEl = document.getElementById('gamify-combo-meter-fill');
+  const comboFlameEl = document.getElementById('gamify-combo-flame');
   const rankEl = document.getElementById('gamify-rank');
   const judgeEl = document.getElementById('gamify-judge');
   const canvas = document.getElementById('gamify-canvas');
@@ -8130,6 +8335,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
   let active = false;
   let score = 0;
   let combo = 0;
+  let lastMeterCombo = 0;
   let maxCombo = 0;
   let lastEvalTime = 0;
   let perfectCount = 0;
@@ -8139,8 +8345,12 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
   let rorStabilitySec = 0;
   let lastRoR = null;
   let particles = [];
+  let discoLights = [];
   let rafId = null;
   let roastStartTime = null;
+  let judgeHideTimer = null;
+  let judgeCleanupTimer = null;
+  let chartEffectTimer = null;
   function loadMode(){
     try {
       const saved = localStorage.getItem(STORAGE_KEY_MODE);
@@ -8155,6 +8365,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
       if (resultWindow) { resultWindow.classList.remove('active'); }
       active = false;
       if (rafId) { cancelAnimationFrame(rafId); }
+      clearGameEffects();
     }
   }
   window.URC = window.URC || {};
@@ -8193,38 +8404,342 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
     if (ctx) { ctx.setTransform(dpr,0,0,dpr,0,0); }
   }
+  if (canvas && canvas.parentElement && typeof ResizeObserver !== 'undefined') {
+    const canvasResizeObserver = new ResizeObserver(resizeCanvas);
+    canvasResizeObserver.observe(canvas.parentElement);
+  }
+  
+  let comboPopupEl = null;
+  function ensureComboEl(){ if(!comboPopupEl) comboPopupEl = document.getElementById('gamify-combo-popup'); return comboPopupEl; }
+  function showComboPopup(cnt){
+    const el = ensureComboEl();
+    if (!el || mode !== 'game') return;
+    if (cnt < 3) { hideComboPopup(); return; }
+    clearTimeout(el._hideTimer);
+    clearTimeout(el._cleanupTimer);
+    let tier = '';
+    if (cnt >= COMBO_THRESHOLDS.super) tier='combo-20';
+    else if (cnt >= COMBO_THRESHOLDS.fire) tier='combo-10';
+    else if (cnt >= COMBO_THRESHOLDS.highlight) tier='combo-5';
+    else tier='';
+    el.textContent = cnt >= COMBO_THRESHOLDS.highlight ? cnt + ' COMBO!!' : 'COMBO x' + cnt;
+    el.className = '';
+    if (tier) el.classList.add(tier);
+    void el.offsetWidth;
+    el.classList.add('show');
+    if (tier) el.classList.add(tier);
+    // 表示時間はコンボ数で伸びる
+    let dur = cnt>=COMBO_THRESHOLDS.super ? 1100 : cnt>=COMBO_THRESHOLDS.fire ? 900 : 700;
+    el._hideTimer = setTimeout(hideComboPopup, dur);
+    // ド派手追加演出
+    if (cnt >= COMBO_THRESHOLDS.fire) {
+      spawnParticles(cnt>=COMBO_THRESHOLDS.super ? '#ffd700' : '#ff5722', cnt>=COMBO_THRESHOLDS.super ? 16 : 8, 'combo');
+      if (cnt % COMBO_THRESHOLDS.highlight === 0) {
+        // 5の倍数で画面フラッシュ
+        const chartArea = document.getElementById('chart-area');
+        if (chartArea) {
+          chartArea.style.filter = 'brightness(1.2)';
+          setTimeout(()=> chartArea.style.filter='', 120);
+        }
+      }
+    }
+  }
+  function hideComboPopup(){
+    const el = ensureComboEl();
+    if (!el) return;
+    clearTimeout(el._hideTimer);
+    clearTimeout(el._cleanupTimer);
+    el.classList.remove('show');
+    el._cleanupTimer = setTimeout(function(){
+      if (!el.classList.contains('show')) {
+        el.className = '';
+        el.textContent = '';
+      }
+    }, 250);
+  }
   function showJudge(text, cls){
     if (!judgeEl || mode !== 'game') { return; }
-    judgeEl.textContent = text; judgeEl.className = ''; judgeEl.classList.add(cls);
-    void judgeEl.offsetWidth; judgeEl.classList.add('show');
+    clearTimeout(judgeHideTimer);
+    clearTimeout(judgeCleanupTimer);
+    clearTimeout(chartEffectTimer);
+    judgeEl.textContent = text; 
+    judgeEl.className = ''; 
+    judgeEl.classList.add(cls);
+    void judgeEl.offsetWidth; 
+    judgeEl.classList.add('show');
     const chartArea = document.getElementById('chart-area');
+    const dmg = document.getElementById('gamify-damage-flash');
     if (chartArea) {
-      chartArea.classList.remove('gamify-perfect','gamify-great');
-      if (cls === 'perfect') { chartArea.classList.add('gamify-perfect'); }
+      chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss');
+      if (cls === 'perfect') { 
+        chartArea.classList.add('gamify-perfect'); 
+        // PERFECTは少し揺らす
+        if (navigator.vibrate) navigator.vibrate(20);
+      }
       if (cls === 'great') { chartArea.classList.add('gamify-great'); }
-      setTimeout(function(){ chartArea.classList.remove('gamify-perfect','gamify-great'); }, 380);
+      if (cls === 'miss') { 
+        chartArea.classList.add('gamify-miss'); 
+        if (dmg) {
+          dmg.classList.remove('hit');
+          void dmg.offsetWidth;
+          dmg.classList.add('hit');
+          setTimeout(()=> dmg.classList.remove('hit'), 500);
+        }
+        if (navigator.vibrate) navigator.vibrate([50,30,80]);
+      }
+      chartEffectTimer = setTimeout(function(){ chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss'); }, cls==='perfect' ? 600 : 380);
     }
-    setTimeout(function(){ judgeEl.classList.remove('show'); }, 650);
+    // MISSは長めに表示してダメージ感
+    judgeHideTimer = setTimeout(function(){
+      judgeEl.classList.remove('show');
+      judgeCleanupTimer = setTimeout(function(){
+        judgeEl.classList.remove('perfect','great','good','miss');
+      }, 250);
+    }, cls==='miss' ? 900 : cls==='perfect' ? 850 : 650);
   }
-  function spawnParticles(color, count){
+
+  function clearGameEffects(){
+    clearTimeout(judgeHideTimer);
+    clearTimeout(judgeCleanupTimer);
+    clearTimeout(chartEffectTimer);
+    judgeHideTimer = null;
+    judgeCleanupTimer = null;
+    chartEffectTimer = null;
+    if (judgeEl) { judgeEl.className = ''; }
+    const chartArea = document.getElementById('chart-area');
+    if (chartArea) { chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss'); }
+    hideComboPopup();
+    if (comboEl) {
+      comboEl.classList.remove('combo-10','combo-20');
+      comboEl.style.animation = '';
+    }
+    if (hud) { hud.classList.remove('combo-5','combo-10','combo-20'); }
+    discoLights = [];
+  }
+
+  
+  function spawnParticles(color, count, type){
     if (!ctx || !canvas || mode !== 'game') { return; }
+    if (particles.length > 90) {
+      particles.splice(0, particles.length - 70);
+    }
     const rect = canvas.getBoundingClientRect();
     const x = rect.width * 0.5; const y = rect.height * 0.45;
-    for (let i=0;i<count;i++) { particles.push({ x:x, y:y, vx:(Math.random()-0.5)*9, vy:(Math.random()-0.5)*9 -1.5, life:1, decay:0.028+Math.random()*0.035, color:color, size:2.2+Math.random()*3.8 }); }
+    if (type === 'perfect') {
+      count = 16;
+    } else if (type === 'miss') {
+      count = 6;
+    } else if (type === 'great') {
+      count = 10;
+    } else if (type === 'combo') {
+      count = combo >= COMBO_THRESHOLDS.super ? 4 : 6;
+    }
+    const PALETTE = ['#ffcc88', '#ffdde7', '#ffec8b'];
+    for (let i=0;i<count;i++) { 
+      if (type === 'falling') {
+        let px = Math.random()*rect.width;
+        let py = -10 - Math.random()*30;
+        let vx = (Math.random()-0.5)*1.2;
+        let vy = 0.8 + Math.random()*2.2;
+        let size = 2 + Math.random() * 20;
+        let c = PALETTE[Math.floor(Math.random() * 3)];
+        particles.push({ x:px, y:py, vx:vx, vy:vy, life:1, decay:0.008+Math.random()*0.002, color:c, size:size, type:'falling', twinkle: Math.random()*Math.PI*2 });
+      } else {
+        let vx = (Math.random()-0.5)*8;
+        let vy = (Math.random()-0.5)*8 -1;
+        let size = 2.2 + Math.random() * 5;
+        let c = color;
+        if (type==='perfect') {
+          c = i%2 === 0 ? '#fffde7' : '#ffd700';
+          size = 2.5+Math.random()*2.5;
+        }
+        particles.push({ x:x, y:y, vx:vx, vy:vy, life:1, decay:0.01 + Math.random()*0.01, color:c, size:size, type:type }); 
+      }
+    }
+    if (type==='perfect') {
+      for (let i=0;i<8;i++){
+        let ang = (i/8)*Math.PI*2;
+        particles.push({ x:x, y:y, vx:Math.cos(ang)*6, vy:Math.sin(ang)*6, life:1, decay:0.03, color:'#ffd700', size:2.5, type:'ring' });
+      }
+    }
+  }
+  function spawnFallingKira(){
+    if (!active || mode!=='game' || combo < COMBO_THRESHOLDS.super) return;
+    spawnParticles('#ffd700', 3, 'falling');
+  }
+  function getRandomDiscoPoint(width, height, radius){
+    const left = -radius - 1;
+    const top = -radius - 1;
+    const right = width + radius + 1;
+    const bottom = height + radius + 1;
+    const perimeter = 2 * (right - left + bottom - top);
+    let distance = Math.random() * perimeter;
+    if (distance < right - left) return { x:left + distance, y:top };
+    distance -= right - left;
+    if (distance < bottom - top) return { x:right, y:top + distance };
+    distance -= bottom - top;
+    if (distance < right - left) return { x:right - distance, y:bottom };
+    distance -= right - left;
+    return { x:left, y:bottom - distance };
+  }
+
+  function createDiscoLights(width, height){
+    discoLights = [];
+    for (let i=0; i<20; i++) {
+      const radius = (16 + Math.random()*30) * 4;
+      const speed = (2 + Math.random()*20) * 2;
+      const start = getRandomDiscoPoint(width, height, radius);
+      const target = getRandomDiscoPoint(width, height, radius);
+      discoLights.push({
+        x: start.x,
+        y: start.y,
+        targetX: target.x,
+        targetY: target.y,
+        speed: speed,
+        radius: radius,
+        hue: Math.floor(Math.random()*360),
+        opacity: 0.1 + Math.random()*0.3,
+        phase: Math.random()*Math.PI*2
+      });
+    }
   }
   function loop(){
     if (!active || mode !== 'game' || !ctx || !canvas) { return; }
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0,0,rect.width, rect.height);
-    particles = particles.filter(function(p){ return p.life>0; });
-    particles.forEach(function(p){ p.x += p.vx; p.y += p.vy; p.vy += 0.14; p.life -= p.decay; ctx.globalAlpha = Math.max(0,p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); });
-    ctx.globalAlpha=1; rafId = requestAnimationFrame(loop);
+    for (let i=particles.length-1;i>=0;i--) {
+      if (particles[i].life<=0) particles.splice(i,1);
+    }
+    let lastShadow = null;
+    for (let i=0;i<particles.length;i++){
+      let p = particles[i];
+      if (p.type === 'falling') {
+        p.x += p.vx + Math.sin(Date.now()*0.002 + p.twinkle)*0.4;
+        p.y += p.vy;
+        p.life -= p.decay;
+        p.twinkle += 0.1;
+        if (p.life<=0) continue;
+        ctx.globalAlpha = p.life * (0.7 + Math.sin(p.twinkle)*0.3);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.16; p.life -= p.decay;
+        if (p.life<=0) continue;
+        ctx.globalAlpha = Math.max(0,p.life);
+        if (p.type==='perfect' || p.type==='ring') {
+          if (lastShadow !== p.type) { ctx.shadowBlur = 8; ctx.shadowColor = p.color; lastShadow = p.type; }
+        } else { if (lastShadow !== null) { ctx.shadowBlur = 0; lastShadow = null; } }
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+      }
+    }
+    if (combo >= COMBO_THRESHOLDS.disco && discoLights.length) {
+      for (let i=0; i<discoLights.length; i++) {
+        const light = discoLights[i];
+        const dx = light.targetX - light.x;
+        const dy = light.targetY - light.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance <= light.speed) {
+          light.x = light.targetX;
+          light.y = light.targetY;
+          const nextTarget = getRandomDiscoPoint(rect.width, rect.height, light.radius);
+          light.targetX = nextTarget.x;
+          light.targetY = nextTarget.y;
+        } else {
+          light.x += dx / distance * light.speed;
+          light.y += dy / distance * light.speed;
+        }
+        light.phase += 0.035;
+        ctx.globalAlpha = 0.65 + Math.sin(light.phase)*0.2;
+        ctx.fillStyle = 'hsla('+light.hue+', 100%, 65%, '+light.opacity+')';
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = 'hsl('+light.hue+', 100%, 65%)';
+        ctx.beginPath();
+        ctx.arc(light.x, light.y, light.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'hsla('+light.hue+', 100%, 90%, 0.22)';
+        ctx.beginPath();
+        ctx.arc(light.x, light.y, light.radius*0.42, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha=1;
+    rafId = requestAnimationFrame(loop);
   }
+  if (!window._kiraInterval) {
+    window._kiraInterval = setInterval(function(){
+      if (active && mode==='game' && combo>=COMBO_THRESHOLDS.super) {
+        spawnFallingKira();
+      }
+    }, 200);
+  }
+
   function updateHUD(){
     if (!hud || mode !== 'game') { return; }
+    if (combo >= COMBO_THRESHOLDS.disco && discoLights.length === 0 && canvas) {
+      const rect = canvas.getBoundingClientRect();
+      createDiscoLights(rect.width, rect.height);
+    } else if (combo < COMBO_THRESHOLDS.disco && discoLights.length) {
+      discoLights = [];
+    }
+    const meterValue = Math.min(combo, COMBO_METER_MAX);
+    if (comboMeterEl) { comboMeterEl.setAttribute('aria-valuenow', String(meterValue)); }
+    if (comboMeterFillEl) {
+      comboMeterFillEl.style.setProperty('--combo-meter-width', meterValue + '%');
+      comboMeterFillEl.style.setProperty('--combo-meter-pulse-width', Math.min(meterValue + 20, COMBO_METER_MAX) + '%');
+      comboMeterFillEl.style.width = meterValue + '%';
+      if (combo > lastMeterCombo) {
+        comboMeterFillEl.classList.remove('pulse');
+        void comboMeterFillEl.offsetWidth;
+        comboMeterFillEl.classList.add('pulse');
+        if (comboFlameEl) {
+          comboFlameEl.classList.remove('pulse');
+          void comboFlameEl.offsetWidth;
+          comboFlameEl.classList.add('pulse');
+        }
+      }
+    }
+    lastMeterCombo = combo;
     if (scoreEl) { scoreEl.textContent = Math.floor(score).toLocaleString(); }
-    if (comboEl) { comboEl.textContent='COMBO x'+combo; comboEl.classList.toggle('hot', combo>=3); if (combo>=10) { comboEl.style.color='#ffd700'; } else if (combo>=5) { comboEl.style.color='#ff8a65'; } else { comboEl.style.color=''; } }
-    if (rankEl) { let r='-'; if (score>=5000) { r='S'; } else if (score>=3000) { r='A'; } else if (score>=1500) { r='B'; } else if (score>=500) { r='C'; } else if (score>0) { r='D'; } rankEl.textContent = r + (maxCombo>0 ? ' MAX:'+maxCombo : ''); }
+    if (comboEl) { 
+      comboEl.textContent='COMBO x'+combo; 
+      comboEl.classList.toggle('hot', combo>=3); 
+      comboEl.classList.remove('combo-10','combo-20');
+      if (combo>=COMBO_THRESHOLDS.super) comboEl.classList.add('combo-20');
+      else if (combo>=COMBO_THRESHOLDS.fire) comboEl.classList.add('combo-10');
+      if (combo>=COMBO_THRESHOLDS.super) { comboEl.style.color='#ffd700'; } 
+      else if (combo>=COMBO_THRESHOLDS.fire) { comboEl.style.color='#ff5722'; } 
+      else if (combo>=COMBO_THRESHOLDS.highlight) { comboEl.style.color='#ff8a65'; } 
+      else { comboEl.style.color=''; } 
+      if (combo>=COMBO_THRESHOLDS.highlight) {
+        comboEl.style.animation='none'; void comboEl.offsetWidth;
+        comboEl.style.animation = combo>=COMBO_THRESHOLDS.super ? 'combo-text-burn 0.3s ease-in-out infinite alternate, combo-pop 0.25s ease' : 'combo-pop 0.25s ease';
+      } else {
+        comboEl.style.animation = '';
+      }
+    }
+    if (hud) {
+      hud.classList.remove('combo-5','combo-10','combo-20');
+      if (combo>=COMBO_THRESHOLDS.super) hud.classList.add('combo-20');
+      else if (combo>=COMBO_THRESHOLDS.fire) hud.classList.add('combo-10');
+      else if (combo>=COMBO_THRESHOLDS.highlight) hud.classList.add('combo-5');
+    }
+    if (rankEl) { 
+      let r='-'; 
+      if (score>=5000) { r='S'; } 
+      else if (score>=3000) { r='A'; } 
+      else if (score>=1500) { r='B'; } 
+      else if (score>=500) { r='C'; } 
+      else if (score>0) { r='D'; } 
+      rankEl.textContent = r + (maxCombo>0 ? ' MAX:'+maxCombo : ''); 
+    }
   }
   function getRank(){ if (score>=5000) { return 'S'; } if (score>=3000) { return 'A'; } if (score>=1500) { return 'B'; } if (score>=500) { return 'C'; } if (score>0) { return 'D'; } return '-'; }
   function getComment(rank){ if (rank==='S') { return t('GAMIFY_COMMENT_S'); } if (rank==='A') { return t('GAMIFY_COMMENT_A'); } if (rank==='B') { return t('GAMIFY_COMMENT_B'); } if (rank==='C') { return t('GAMIFY_COMMENT_C'); } if (rank==='D') { return t('GAMIFY_COMMENT_D'); } return t('GAMIFY_COMMENT_NONE'); }
@@ -8242,67 +8757,56 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     if (resultAccuracyEl) { resultAccuracyEl.textContent = accuracy + '%'; }
     if (resultTimeEl) { resultTimeEl.textContent = Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0'); }
     if (resultCommentEl) { resultCommentEl.textContent = getComment(rank); }
-    resultWindow.classList.remove('minimized'); resultWindow.classList.add('active');
-    if (scoreDisplay) { scoreDisplay.textContent = Math.floor(score) + 'pt ('+rank+')'; scoreDisplay.style.fontWeight='900'; if (rank==='S') { scoreDisplay.style.color='#b8860b'; } else if (rank==='A') { scoreDisplay.style.color='#2e7d32'; } }
+    resultWindow.classList.add('active');
+    if (scoreDisplay) { scoreDisplay.textContent = Math.floor(score) + 'pt ('+rank+')'; if (rank==='S') { scoreDisplay.style.color='#b8860b'; } else if (rank==='A') { scoreDisplay.style.color='#2e7d32'; } }
   }
-  (function makeDraggable(){
-    const header = document.getElementById('gamify-result-header');
+  
+  // --- Score Window: Fixed, no drag, toggle via score area ---
+  (function setupResultWindow(){
     const win = resultWindow;
-    if (!header || !win) { return; }
-    let isDragging=false, startX, startY, origX, origY;
-    let rafId=null, pendingX=0, pendingY=0;
-    function applyPos(){
-      rafId=null;
-      win.style.left = pendingX + 'px';
-      win.style.top = pendingY + 'px';
-    }
-    function onMove(e){
-      if (!isDragging) { return; }
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      pendingX = origX + clientX - startX;
-      pendingY = origY + clientY - startY;
-      if (rafId===null) { rafId = requestAnimationFrame(applyPos); }
-    }
-    function onUp(){
-      if (!isDragging) { return; }
-      isDragging=false;
-      win.classList.remove('dragging');
-      win.classList.add('no-anim');
-      // アニメーション無効を次のフレームで解除してpopアニメの再発火を防ぐ
-      setTimeout(()=>{ win.classList.remove('no-anim'); win.style.animation=''; }, 50);
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onUp);
-      if (rafId!==null) { cancelAnimationFrame(rafId); rafId=null; }
-    }
-    function onDown(e){
-      if (e.target.tagName==='BUTTON') { return; }
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      isDragging=true; startX=clientX; startY=clientY;
-      const rect=win.getBoundingClientRect(); origX=rect.left; origY=rect.top;
-      win.style.right='auto'; win.style.bottom='auto';
-      win.style.animation='none';
-      win.style.transition='none';
-      win.classList.add('dragging');
-      document.addEventListener('mousemove', onMove, {passive:true});
-      document.addEventListener('mouseup', onUp);
-      document.addEventListener('touchmove', onMove, {passive:true});
-      document.addEventListener('touchend', onUp);
-      if (e.cancelable) { e.preventDefault(); }
-    }
-    header.addEventListener('mousedown', onDown);
-    header.addEventListener('touchstart', onDown, {passive:false});
+    if (!win) return;
     const closeBtn = document.getElementById('gamify-result-close');
-    if (closeBtn) { closeBtn.addEventListener('click', function(){ win.classList.remove('active'); }); }
-    const minBtn = document.getElementById('gamify-result-min');
-    if (minBtn) { minBtn.addEventListener('click', function(){ win.classList.toggle('minimized'); }); }
+    if (closeBtn) closeBtn.addEventListener('click', ()=> win.classList.remove('active'));
+    // スコア表示エリア（#score, #gamify-score, #gamify-hud, #gamify-combo, #gamify-rank）をクリックでON/OFF
+    function toggleWindow(){
+      if (!win) return;
+      win.classList.toggle('active');
+    }
+    const scoreEls = [
+      document.getElementById('score'),
+      document.getElementById('gamify-score'),
+      document.getElementById('gamify-combo'),
+      document.getElementById('gamify-rank'),
+      document.getElementById('gamify-hud')
+    ];
+    scoreEls.forEach(el=>{
+      if (!el) return;
+      el.style.cursor = 'pointer';
+      el.title = 'クリックで結果ウィンドウ表示切替';
+      el.addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleWindow();
+      });
+    });
+    // スコアの親要素も拾う（.display-value #score の親）
+    const scoreParent = document.getElementById('score')?.parentElement;
+    if (scoreParent) {
+      scoreParent.style.cursor = 'pointer';
+      scoreParent.addEventListener('click', function(e){
+        // ボタン以外のクリックでトグル
+        if (e.target.closest('button')) return;
+        toggleWindow();
+      });
+    }
   })();
+
   window.gamifyEvaluate = function(currentTemp, profileTemp, currentRoR){
     if (mode !== 'game' || !active) { return; }
     const now = Date.now();
+    if (roastStartTime != null && now - roastStartTime < GAME_JUDGE_DELAY_MS) {
+      lastRoR = currentRoR;
+      return;
+    }
     if (now - lastEvalTime < 1500) {
       if (currentRoR != null && lastRoR != null) {
         if (Math.abs(currentRoR-lastRoR) < 2) { rorStabilitySec += 0.1; } else { rorStabilitySec = Math.max(0, rorStabilitySec - 0.3); }
@@ -8313,18 +8817,25 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     if (profileTemp == null || isNaN(profileTemp) || profileTemp <= 0) { return; }
     const diff = Math.abs(currentTemp - profileTemp);
     let judge, pts, color, cls;
-    if (diff <= 1.5) { judge='PERFECT!!'; pts=100; color='#ffd700'; cls='perfect'; combo++; perfectCount++; score += pts * (1 + combo*0.1); spawnParticles(color,14); }
-    else if (diff <= 3.0) { judge='GREAT!'; pts=50; color='#aed581'; cls='great'; combo++; greatCount++; score += pts * (1 + combo*0.05); spawnParticles(color,8); }
-    else if (diff <= 6.0) { judge='GOOD'; pts=20; color='#81d4fa'; cls='good'; combo = Math.max(0, combo-1); goodCount++; score += pts; }
-    else { judge='MISS...'; pts=0; color='#ef9a9a'; cls='miss'; combo=0; missCount++; }
+    if (diff <= 1.5) { judge='PERFECT!!'; pts=100; color='#ffd700'; cls='perfect'; combo++; perfectCount++; score += pts * (1 + combo*0.1); 
+      if (combo>=COMBO_THRESHOLDS.fire) { spawnParticles(color,22,'perfect'); spawnParticles(color,8,'combo'); } else { spawnParticles(color,18,'perfect'); }
+    }
+    else if (diff <= 3.0) { judge='GREAT!'; pts=50; color='#aed581'; cls='great'; combo++; greatCount++; score += pts * (1 + combo*0.05); spawnParticles(color,10,'great'); if(combo>=COMBO_THRESHOLDS.highlight) spawnParticles(color,4,'combo'); }
+    else if (diff <= 6.0) { judge='GOOD'; pts=20; color='#81d4fa'; cls='good'; /* GOODはコンボ維持(増減なし) */ goodCount++; score += pts; }
+    else { judge='MISS...'; pts=0; color='#ef9a9a'; cls='miss'; combo=0; missCount++; spawnParticles('#ff4444',6,'miss'); }
     if (combo > maxCombo) { maxCombo = combo; }
-    showJudge(judge, cls); updateHUD();
+    showJudge(judge, cls); 
+    if (cls === 'miss') { hideComboPopup(); }
+    else if (cls === 'good') { /* GOODはコンボ表示維持のみ、カウントアップなし */ if (combo>=2) showComboPopup(combo); }
+    else { if (combo>=2) showComboPopup(combo); }
+    updateHUD();
     if (rorStabilitySec >= 5 && rorStabilitySec < 5.5) { score += 10; }
     lastRoR = currentRoR;
   };
   function startGame(){
     if (mode !== 'game') { return; }
     active=true; score=0; combo=0; maxCombo=0; perfectCount=0; greatCount=0; goodCount=0; missCount=0;
+    lastMeterCombo=0;
     rorStabilitySec=0; lastEvalTime=0; particles=[]; roastStartTime=Date.now();
     resizeCanvas(); updateHUD();
     if (hud) { hud.classList.add('active'); }
@@ -8337,6 +8848,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     if (rafId) { cancelAnimationFrame(rafId); }
     if (ctx) { const r=canvas.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height); }
     if (hud) { hud.classList.remove('active'); }
+    clearGameEffects();
     showResultWindow();
     const rank=getRank();
     showJudge(rank+' RANK!', rank==='S' ? 'perfect' : rank==='A' ? 'great' : 'good');
