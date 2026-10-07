@@ -71,11 +71,13 @@
       filter: saturate(0) brightness(0.85) contrast(1.5);
     }
     .mode7 {
-      filter: saturate(0) brightness(0.8) contrast(1);
-      mix-blend-mode: difference;
-      color: white;
+      user-select: none;
+    }
+    .mode8 {
+      filter: hue-rotate(240deg);
     }
 
+    
     /* ========================================
        基本スタイル
        ======================================== */
@@ -1271,7 +1273,554 @@
     #top-overall {
       display: flex;
     }
-  </style>
+  
+    /* ========================================
+       Simple Label - 使い回し用: 角丸四角囲み + 少し小さめフォント
+       ======================================== */
+    .uzu-label {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      padding: 2px 8px;
+      border: 1px solid #c9b8a5;
+      border-radius: 15px;
+      background: #fdfaf6;
+      color: #5a4a3a;
+      letter-spacing: 0.3px;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .uzu-label--small {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 15px;
+    }
+    .uzu-label--outline {
+      background: transparent;
+      border-color: #b8a690;
+    }
+    .uzu-box {
+      border: 1px solid #d8cabb;
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: #fffdfa;
+    }
+    /* 既存要素に適用: タイトル・メモ・プロファイル・焙煎プロファイルテーブル */
+    .profile-meta {
+      border: 1px solid #d8cabb;
+      border-radius: 8px;
+      padding: 8px 6px;
+      background: #fffdfa;
+      gap: 12px;
+    }
+    .meta-field label {
+      font-size: 12px;
+    }
+    #profileTitle, #profileMemo {
+      font-size: 13px !important;
+    }
+    .profile_manupilation_title {
+      font-size: 11px !important;
+      padding: 2px 8px !important;
+      border: 1px solid #c9b8a5;
+      border-radius: 15px;
+      background: #fdfaf6;
+      color: #5a4a3a !important;
+      display: inline-flex;
+      align-items: center;
+    }
+ 
+
+  
+    /* === 全画面修正: transform閉じ込め回避 + 操作パネル + スマホスクロール防止 === */
+    html.chart-fullscreen-lock,
+    body.chart-fullscreen-lock {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+      touch-action: none;
+      height: 100% !important;
+      height: 100dvh !important;
+    }
+    body.chart-fullscreen-lock {
+      position: fixed !important;
+      width: 100% !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+    #chart-area.chart-area-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      width: 100dvw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      height: 100svh !important;
+      z-index: 999 !important;
+      background: #fff !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      transform: none !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overscroll-behavior: none !important;
+      touch-action: none;
+    }
+    #chart-area.chart-area-fullscreen #roastChart {
+      flex: 1 !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    #control-buttons.is-floating {
+      position: fixed !important;
+      top: 8px !important;
+      right: 12px !important;
+      z-index: 1000 !important;
+      margin: 0 !important;
+      background: rgba(253, 250, 246, 0.97) !important;
+      border: 1px solid #c9b8a5 !important;
+      border-radius: 25px !important;
+      padding: 3px 8px !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.22) !important;
+      backdrop-filter: blur(4px);
+      cursor: move !important;
+}
+    #control-buttons {
+      cursor: move; /* 4方向矢印 - デフォルトのmoveカーソル */
+      user-select: none;
+      flex-wrap: nowrap !important;
+      background: rgba(253, 250, 246, 0.92);
+      border-radius: 25px;
+      padding: 2px 6px;
+      border: 1px solid rgba(0,0,0,0.08);
+      width: fit-content;
+      max-width: none !important;
+      box-sizing: border-box;
+    }
+    #control-buttons:active { cursor: grabbing; }
+    #control-buttons button { cursor: pointer; }
+
+  
+    /* === 汎用ドラッグ可能ウィンドウ === */
+    .uru-draggable, .draggable-window {
+      position: fixed !important;
+      touch-action: none;
+      will-change: transform;
+      z-index: 28000;
+    }
+    .uru-draggable-handle, .draggable-handle, [data-drag-handle] {
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+    }
+    .uru-draggable.dragging, .draggable-window.dragging {
+      opacity: 0.92;
+      z-index: 99999 !important;
+    }
+
+
+    /* === URC ONBOARDING v1.0 2026-05-13 === */
+    #chart-control-button-container { overflow: visible !important; }
+    .onboarding-balloon {
+      position: absolute;
+      bottom: 56px;
+      left: 0px;
+      background: #2c2c2c;
+      color: #fff8f0;
+      padding: 16px 44px 16px 20px;
+      border-radius: 12px;
+      font-size: 15.5px;
+      line-height: 1.65;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+      z-index: 500;
+      max-width: 340px;
+      min-width: 280px;
+      white-space: normal;
+      animation: onboardingPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: auto;
+      user-select: none;
+    }
+    .onboarding-balloon::after {
+      content: ""; position: absolute; bottom: -8px; left: 14px;
+      width: 16px; height: 16px; background: #2c2c2c;
+      transform: rotate(45deg); border-radius: 0 0 2px 0;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.25);
+    }
+    .onboarding-balloon-close {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border: none;
+      background: rgba(255,255,255,0.14); color: #fff8f0;
+      border-radius: 50%; cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .onboarding-balloon-close:hover { background: rgba(255,255,255,0.25); }
+    @keyframes onboardingPop { 0%{transform:translateY(10px) scale(0.9);opacity:0} 100%{transform:translateY(0) scale(1);opacity:1} }
+    .onboarding-highlight {
+      animation: none !important;
+      background: rgba(255,255,255,0.28) !important;
+      border: 2px solid rgba(255,255,255,0.95) !important;
+      box-shadow: 0 0 0 2px rgba(255,248,240,0.7), 0 0 20px rgba(255,255,255,0.6) !important;
+      opacity: 1 !important; visibility: visible !important;
+    }
+    /* === END URC ONBOARDING === */
+
+    
+    /* ===== 新チュートリアル / ヒントシステム ===== */
+    #onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 10000;
+      display: none;
+      /* 背面ブロック用 */
+      pointer-events: auto;
+      touch-action: manipulation;
+      overscroll-behavior: contain;
+    }
+    #onboarding-overlay.is-active { display: block; }
+    #onboarding-overlay .onboarding-spotlight {
+      position: absolute;
+      border: 3px solid rgba(255,255,255,1);
+      border-radius: 10px;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.25), 0 0 24px rgba(255,255,255,0.6), 0 0  25px rgb(255, 255, 255);
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.34,1.2,0.64,1);
+    }
+    #onboarding-balloon-new {
+      position: absolute;
+      background: #2c2c2c;
+      color: #fff8f0;
+      padding: 18px 46px 18px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.7;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
+      z-index: 10001;
+      max-width: 360px;
+      min-width: 260px;
+      white-space: normal;
+      animation: onboardingPop 0.42s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: auto;
+      user-select: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    /* スマホ用: 下部ドロワー固定 */
+    @media (max-width: 768px) {
+      #onboarding-balloon-new {
+        position: fixed !important;
+        left: 8px !important;
+        right: 8px !important;
+        bottom: 12px !important;
+        top: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-height: min(70vh, 420px) !important;
+        border-radius: 16px !important;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #onboarding-balloon-new::after { display: none !important; }
+      #onboarding-overlay .onboarding-spotlight {
+        /* スマホではスポットライトを少し太く見やすく */
+        border-width: 3px;
+      }
+    }
+    #onboarding-balloon-new.pos-top::after { bottom:-7px; left:20px; }
+    #onboarding-balloon-new.pos-bottom::after { top:-7px; left:20px; }
+    #onboarding-balloon-new.pos-left::after { right:-7px; top:20px; }
+    #onboarding-balloon-new.pos-right::after { left:-7px; top:20px; }
+    #onboarding-balloon-new .onboarding-progress {
+      font-size: 11px; opacity:0.6; margin-bottom:6px; letter-spacing:0.08em;
+    }
+    #onboarding-balloon-new .onboarding-actions {
+      display:flex; gap:8px; margin-top:12px;
+    }
+    #onboarding-balloon-new .onboarding-btn {
+      border:none; border-radius:8px; padding:6px 14px; cursor:pointer;
+      font-size:13px; font-weight:600;
+      transition: all 0.2s;
+    }
+    #onboarding-balloon-new .onboarding-btn-next {
+      background:#fff8f0; color:#2c2c2c;
+    }
+    #onboarding-balloon-new .onboarding-btn-next:hover { background:#fff; transform:scale(1.03); }
+    #onboarding-balloon-new .onboarding-btn-skip {
+      background:transparent; color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.2);
+    }
+    @keyframes onboardingPop {
+      0% { transform: scale(0.85) translateY(8px); opacity:0; }
+      100% { transform: scale(1) translateY(0); opacity:1; }
+    }
+
+
+    /* === URC Game Mode - Floating & Decoupled v0.2 === */
+    #gamify-hud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3000; display: none; flex-direction: column; align-items: stretch; gap: 6px; min-width: 240px; box-sizing: border-box; background: rgba(25,20,18,0.92); border: 1px solid rgba(255,215,0,0.45); border-radius: 18px; padding: 8px 18px; color: #fff8f0; font-weight: 800; backdrop-filter: blur(8px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); font-family: ui-monospace, monospace; }
+    #gamify-hud.active { display: flex; }
+    #gamify-hud-main { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    #gamify-combo-meter-row { display:flex; align-items:center; gap:8px; }
+    #gamify-combo-meter { height:7px; flex:1; min-width:0; border-radius:999px; background:rgba(255,255,255,0.14); box-shadow:inset 0 1px 2px rgba(0,0,0,0.55); }
+    #gamify-combo-meter-fill { width:0%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#ff7043,#ffb74d,#ffd700); box-shadow:0 0 8px rgba(255,183,77,0.75); transform:scaleX(1) scaleY(1); transform-origin:left center; transition:width 0.24s cubic-bezier(0.2,0.8,0.2,1); }
+    #gamify-combo-meter-fill.pulse { animation: combo-meter-pulse 0.42s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes combo-meter-pulse { 0%,68%,100%{width:var(--combo-meter-width);transform:scaleY(1)} 34%{width:var(--combo-meter-pulse-width);transform:scaleY(1.9);filter:brightness(1.7)} 55%{width:var(--combo-meter-width);transform:scaleY(0.95)} }
+    #gamify-combo-flame { display:inline-block; font-size:15px; line-height:1; transform:scale(1); transform-origin:center; }
+    #gamify-combo-flame.pulse { animation: combo-flame-pulse 0.42s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes combo-flame-pulse { 0%,100%{transform:scale(1)} 36%{transform:scale(3.6)} 68%{transform:scale(0.9)} }
+    #gamify-hud .score { color:#ffd700; font-size:16px; }
+    #gamify-hud .combo { color:#ff8a65; font-size:13px; }
+    #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
+    @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
+    #gamify-hud .rank { font-size:11px; opacity:0.7; background:rgba(255,255,255,0.12); padding:2px 7px; border-radius:10px; }
+    
+    #gamify-judge { 
+      position: absolute; 
+      top: 42%; left: 50%; 
+      transform: translate(-50%,-50%) scale(0.5); 
+      z-index: 2000; 
+      font-size: clamp(42px, 9vw, 92px); 
+      font-weight: 900; 
+      pointer-events: none; 
+      opacity: 0; 
+      transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.22s ease; 
+      text-shadow: 0 3px 0 #000, 0 0 20px rgba(0,0,0,0.8); 
+      white-space: nowrap; 
+      letter-spacing: 2px;
+      font-family: 'Arial Black', sans-serif;
+    }
+    #gamify-judge.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
+    #gamify-judge.perfect { 
+      color:#fff; 
+      -webkit-text-stroke:3px #b8860b; 
+      text-shadow: 0 0 10px #ffd700, 0 0 30px #ff9800, 0 0 60px #ffd700, 0 4px 0 #000;
+      animation: perfect-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), perfect-glow 0.6s ease-in-out infinite alternate;
+    }
+    #gamify-judge.great { 
+      color:#e8f5e9; 
+      -webkit-text-stroke:2.5px #2e7d32; 
+      text-shadow: 0 0 15px #66bb6a, 0 0 35px #43a047, 0 3px 0 #000;
+      animation: great-pop 0.4s ease-out;
+    }
+    #gamify-judge.good { 
+      color:#e1f5fe; 
+      -webkit-text-stroke:2px #0277bd; 
+      text-shadow: 0 0 12px #29b6f6, 0 2px 0 #000; 
+    }
+    #gamify-judge.miss { 
+      color:#ffebee; 
+      -webkit-text-stroke:2.5px #b71c1c; 
+      text-shadow: 0 0 20px #ef5350, 0 3px 0 #000;
+      animation: miss-shake 0.35s ease;
+    }
+    @keyframes perfect-bounce {
+      0% { transform: translate(-50%,-50%) scale(0.3) rotate(-8deg); }
+      50% { transform: translate(-50%,-50%) scale(1.25) rotate(3deg); }
+      70% { transform: translate(-50%,-50%) scale(0.95) rotate(-2deg); }
+      100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+    @keyframes perfect-glow {
+      from { filter: brightness(1) drop-shadow(0 0 10px gold); }
+      to { filter: brightness(1.35) drop-shadow(0 0 25px gold) drop-shadow(0 0 45px orange); }
+    }
+    @keyframes great-pop {
+      0% { transform: translate(-50%,-50%) scale(0.5); }
+      60% { transform: translate(-50%,-50%) scale(1.15); }
+      100% { transform: translate(-50%,-50%) scale(1); }
+    }
+    @keyframes miss-shake {
+      0%,100% { transform: translate(-50%,-50%) scale(1); }
+      20% { transform: translate(-52%,-50%) scale(1.05) rotate(-2deg); }
+      40% { transform: translate(-48%,-50%) scale(1.05) rotate(2deg); }
+      60% { transform: translate(-52%,-50%) scale(1.02) rotate(-1deg); }
+      80% { transform: translate(-48%,-50%) scale(1.02) rotate(1deg); }
+    }
+    
+    /* COMBO独立表示 - チャート上にド派手に */
+    #gamify-combo-popup {
+      position: absolute;
+      top: 62%; left: 50%;
+      transform: translate(-50%,-50%) scale(0.5);
+      z-index: 2001;
+      font-size: clamp(26px, 5.5vw, 54px);
+      font-weight: 900;
+      font-family: 'Arial Black', sans-serif;
+      pointer-events: none;
+      opacity: 0;
+      white-space: nowrap;
+      letter-spacing: 1px;
+      -webkit-text-stroke: 2px #000;
+      text-shadow: 0 2px 0 #000;
+      transition: none;
+    }
+    #gamify-combo-popup.show { opacity:1; animation: combo-popup-base 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    #gamify-combo-popup.combo-5 { color:#ff8a65; -webkit-text-stroke:2.5px #bf360c; text-shadow:0 0 10px #ff8a65, 0 3px 0 #000; }
+    #gamify-combo-popup.combo-10 { 
+      color:#ff5722; -webkit-text-stroke:3px #4e0a00; 
+      text-shadow:0 0 12px #ff5722, 0 0 28px #ff3d00, 0 3px 0 #000;
+      font-size: clamp(32px, 6.5vw, 64px);
+    }
+    #gamify-combo-popup.combo-10.show { animation: combo-popup-fire 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-fire 0.5s ease-in-out infinite alternate; }
+    #gamify-combo-popup.combo-20 { 
+      color:#ffd700; -webkit-text-stroke:3px #7a3a00; 
+      text-shadow:0 0 15px #ffd700, 0 0 35px #ff9800, 0 0 60px #ff5722, 0 4px 0 #000;
+      font-size: clamp(38px, 7.5vw, 78px);
+    }
+    #gamify-combo-popup.combo-20.show { animation: combo-popup-super 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-super 0.3s ease-in-out infinite alternate; }
+    @keyframes combo-popup-base {
+      0% { transform: translate(-50%,-30%) scale(0.3); opacity:0; }
+      50% { transform: translate(-50%,-55%) scale(1.2); opacity:1; }
+      70% { transform: translate(-50%,-48%) scale(0.95); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    }
+    @keyframes combo-popup-fire {
+      0% { transform: translate(-50%,-30%) scale(0.3) rotate(-6deg); opacity:0; }
+      40% { transform: translate(-50%,-60%) scale(1.35) rotate(4deg); opacity:1; }
+      65% { transform: translate(-50%,-45%) scale(0.9) rotate(-2deg); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1.1) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-popup-super {
+      0% { transform: translate(-50%,-40%) scale(0.2) rotate(-10deg); opacity:0; filter:brightness(1.5); }
+      30% { transform: translate(-50%,-70%) scale(1.5) rotate(6deg); opacity:1; filter:brightness(1.8); }
+      55% { transform: translate(-50%,-40%) scale(0.85) rotate(-3deg); opacity:1; }
+      75% { transform: translate(-50%,-55%) scale(1.15) rotate(2deg); opacity:1; }
+      100% { transform: translate(-50%,-50%) scale(1.15) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-popup-ultra {
+      0% { transform: translate(-50%,-50%) scale(0.1) rotate(-20deg); opacity:0; filter:brightness(2) blur(4px); }
+      25% { transform: translate(-50%,-80%) scale(1.7) rotate(10deg); opacity:1; filter:brightness(2.5) blur(0px); }
+      50% { transform: translate(-50%,-30%) scale(0.8) rotate(-5deg); }
+      70% { transform: translate(-50%,-60%) scale(1.25) rotate(3deg); }
+      100% { transform: translate(-50%,-50%) scale(1.25) rotate(0deg); opacity:1; }
+    }
+    @keyframes combo-glow-fire { from{filter:brightness(1) drop-shadow(0 0 8px #ff5722)} to{filter:brightness(1.3) drop-shadow(0 0 18px #ff5722) drop-shadow(0 0 30px #ff3d00)} }
+    @keyframes combo-glow-super { from{filter:brightness(1) drop-shadow(0 0 12px gold)} to{filter:brightness(1.5) drop-shadow(0 0 25px gold) drop-shadow(0 0 50px orange)} }
+    @keyframes combo-glow-ultra { from{filter:brightness(1.2) drop-shadow(0 0 20px #fff)} to{filter:brightness(1.8) drop-shadow(0 0 35px #fff) drop-shadow(0 0 70px gold)} }
+
+    /* MISSダメージ赤フラッシュ */
+    #gamify-damage-flash {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:1600;
+      background: radial-gradient(ellipse at center, rgba(255,0,0,0) 40%, rgba(200,0,0,0.55) 100%);
+      opacity:0; transition: opacity 0.1s ease;
+    }
+    #gamify-damage-flash.hit { animation: damage-flash-anim 0.45s ease-out; }
+    @keyframes damage-flash-anim {
+      0% { opacity:0.85; background: rgba(255,30,30,0.7); }
+      15% { opacity:0.9; background: radial-gradient(ellipse at center, rgba(255,50,50,0.4) 0%, rgba(200,0,0,0.7) 100%); }
+      100% { opacity:0; }
+    }
+    /* コンボ熱演出 */
+    #chart-area.gamify-perfect { box-shadow: inset 0 0 0 4px gold, inset 0 0 35px rgba(255,215,0,0.7), inset 0 0 70px rgba(255,165,0,0.4) !important; animation: chart-perfect-pulse 0.4s ease; }
+    #chart-area.gamify-great { box-shadow: 0 0 0 3px #66bb6a, 0 0 20px rgba(102,187,106,0.5) !important; }
+    #chart-area.gamify-miss { box-shadow: 0 0 0 3px #ef5350, 0 0 25px rgba(239,83,80,0.6) !important; animation: chart-miss-shake 0.3s ease; }
+    @keyframes chart-perfect-pulse { 0%{box-shadow:inset 0 0 0 0 rgba(255,215,0,0.8)} 50%{box-shadow:inset 0 0 50px 8px rgba(255,215,0,0.35), inset 0 0 70px gold} 100%{box-shadow:inset 0 0 0 4px gold, inset 0 0 35px rgba(255,215,0,0.7), inset 0 0 70px rgba(255,165,0,0.4)} }
+    @keyframes chart-miss-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    /* コンボ段階演出 */
+    #gamify-hud.combo-5 { background: rgba(60,30,10,0.95) !important; border-color: #ff8a65 !important; box-shadow: 0 0 15px rgba(255,138,101,0.5) !important; }
+    #gamify-hud.combo-10 { background: linear-gradient(135deg, rgba(80,20,0,0.95), rgba(120,40,0,0.95)) !important; border-color: #ff5722 !important; box-shadow: 0 0 20px rgba(255,87,34,0.6), 0 0 40px rgba(255,87,34,0.3) !important; animation: hud-fire 0.4s ease-in-out infinite alternate; }
+    #gamify-hud.combo-20 { background: linear-gradient(135deg, rgba(100,0,0,0.96), rgba(180,50,0,0.96)) !important; border-color: #ffd700 !important; border-width:2px !important; box-shadow: 0 0 25px rgba(255,215,0,0.7), 0 0 50px rgba(255,87,34,0.5) !important; animation: hud-super-fire 0.25s ease-in-out infinite alternate; }
+    #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
+    @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
+    @keyframes hud-fire { from{box-shadow:0 0 20px rgba(255,87,34,0.6)} to{box-shadow:0 0 30px rgba(255,87,34,0.9), 0 0 50px rgba(255,87,34,0.4)} }
+    @keyframes hud-super-fire { from{box-shadow:0 0 25px gold} to{box-shadow:0 0 40px gold, 0 0 70px orange} }
+    #gamify-combo.combo-10 { font-size:15px !important; text-shadow:0 0 8px currentColor; }
+    #gamify-combo.combo-20 { font-size:17px !important; text-shadow:0 0 12px gold, 0 0 20px orange; animation: combo-text-burn 0.3s ease-in-out infinite alternate; }
+    @keyframes combo-text-burn { from{filter:brightness(1)} to{filter:brightness(1.4)} }
+
+    #gamify-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1500; }
+    
+    /* --- Gamify Result: Handcrafted wooden sign --- */
+    #gamify-result-window { 
+      position: fixed; 
+      top: 50%; left: 50%; 
+      width: min(88vw, 780px); min-width: 300px;
+      max-height: 86vh;
+      transform: translate(-50%, -50%);
+      background:
+        repeating-linear-gradient(3deg, transparent 0 23px, rgba(255,215,160,0.045) 24px, transparent 27px 43px),
+        repeating-linear-gradient(91deg, rgba(50,20,8,0.06) 0 2px, transparent 3px 74px),
+        radial-gradient(ellipse at 50% 0%, rgba(255,214,153,0.14), transparent 62%),
+        linear-gradient(145deg, #6d3d22, #452716 56%, #321d17);
+      border: 5px solid #9a5d2f;
+      border-radius: 12px 18px 10px 16px / 14px 9px 16px 11px;
+      clip-path: polygon(0 2%, 3% 1.1%, 4% 1%, 11% 2.6%, 16% 0.4%, 22% 2.2%, 28% 1.1%, 31% 4%, 41% 2.2%, 45% 3.1%, 51% 0.7%, 56% 2.4%, 63% 1.2%, 69% 3.4%, 74% 1.8%, 83% 2%, 87% 1.1%, 92% 2%, 96% 0.5%, 100% 1%, 100% 100%, 97% 100%, 92% 99.4%, 90% 99.6%, 81% 98.7%, 78% 99.4%, 70% 97.8%, 67% 99.8%, 61% 97.1%, 56% 98.2%, 51% 97.9%, 48% 99.5%, 41% 97.6%, 33% 98.8%, 26% 96.9%, 19% 99.7%, 17% 97.8%, 12% 98.9%, 9% 97.7%, 5% 99.4%, 3% 97.2%, 0% 98%, 0% 2%);
+      box-shadow: inset 0 0 0 3px rgba(255,207,145,0.24), inset 0 0 24px rgba(34,14,5,0.48), 0 0 28px rgba(150,76,28,0.42), 0 18px 50px rgba(0,0,0,0.65);
+      z-index: 4000; 
+      display: none; 
+      flex-direction: column; 
+      overflow: hidden; 
+      font-family: system-ui, "Segoe UI", sans-serif;
+      color: #fff1d0;
+    }
+    #gamify-result-window.active { 
+      display: flex; 
+      animation: debug-fade-in 0.18s ease-out;
+    }
+    @keyframes debug-fade-in { from { opacity:0; transform: translate(-50%, -48%); } to { opacity:1; transform: translate(-50%, -50%); } }
+    #gamify-result-header { 
+      background: repeating-linear-gradient(2deg, transparent 0 17px, rgba(255,224,178,0.045) 18px, transparent 20px 31px), linear-gradient(90deg,rgba(73,37,19,0.92),rgba(128,73,34,0.78),rgba(73,37,19,0.92));
+      padding: 14px 22px;
+      display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+      user-select: none; 
+      border-bottom: 3px solid rgba(224,171,103,0.68);
+      cursor: default;
+    }
+    #gamify-result-header span { grid-column:2; grid-row:1; color:#fff0c6; font-weight:900; font-size:clamp(19px, 4vw, 26px); letter-spacing:0.04em; text-shadow:0 2px 0 #4d2815, 0 0 12px rgba(255,207,145,0.4); }
+    #gamify-result-header button { grid-column:3; grid-row:1; justify-self:end; background:linear-gradient(145deg,#ff7043,#c62828); border:2px solid #ffd54f; color:#fff; width:36px; height:36px; border-radius:10px 4px 10px 4px; cursor:pointer; font-size:22px; font-weight:900; box-shadow:0 3px 0 #7f1d1d; }
+    #gamify-result-header button:hover { background:linear-gradient(145deg,#ff8a65,#e53935); color:#fff; transform:scale(1.08); }
+    #gamify-result-body { flex:1 1 auto; min-height:0; padding:22px 28px 26px; color:#fff1d0; font-size:17px; line-height:1.65; overflow-y:auto; overscroll-behavior-y:contain; }
+    #gamify-result-body .result-rank-label { text-align:center; font-size:14px; font-weight:900; letter-spacing:0.16em; color:#ffd9a0; }
+    #gamify-result-body .result-rank { min-height:1.1em; font-size:clamp(52px, 11vw, 76px); line-height:1.1; font-weight:1000; text-align:center; margin:2px 0 12px; color:#ffe082; -webkit-text-stroke:1px rgba(255,255,255,0.55); text-shadow:0 4px 0 #9b3d00, 0 0 18px rgba(255,193,7,0.85), 0 0 36px rgba(255,87,34,0.55); border-bottom:2px solid rgba(255,213,79,0.42); padding-bottom:12px; }
+    #gamify-result-body .result-rank-text { display:inline-block; }
+    #gamify-result-body .result-rank-text.is-revealed { animation: result-rank-burn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    @keyframes result-rank-burn { 0% { opacity:0; transform:scale(2.2) rotate(-8deg); filter:brightness(3) blur(12px); text-shadow:0 0 48px #fff, 0 0 90px #ff3d00; } 55% { opacity:1; transform:scale(0.86) rotate(3deg); filter:brightness(1.8) blur(0); text-shadow:0 0 28px #fff, 0 0 56px #ff6d00, 0 0 88px #ff1744; } 100% { opacity:1; transform:scale(1) rotate(0); filter:brightness(1); } }
+    #gamify-result-body .result-score { font-size:clamp(24px, 5vw, 34px); font-weight:950; text-align:center; margin:12px 0; color:#fff59d; letter-spacing:0.035em; text-shadow:0 2px 0 #7c4a00, 0 0 16px rgba(255,235,59,0.55); }
+    #gamify-result-score-scale { margin:0 auto 16px; max-width:620px; }
+    #gamify-result-score-legend { display:grid; grid-template-columns:20fr 20fr 20fr 10fr 10fr 10fr 10fr; margin:0 1px 4px; color:#fff1d0; font-size:clamp(10px, 2vw, 13px); font-weight:900; line-height:1.2; text-align:center; text-shadow:0 1px 4px #321d17; }
+    #gamify-result-score-track { position:relative; height:16px; overflow:hidden; border:1px solid rgba(255,231,190,0.78); border-radius:8px; background:linear-gradient(to right, #665657 0%, #665657 20%, #6b6057 20%, #6b6057 40%, #6b6757 40%, #6b6757 60%, #5f6858 60%, #5f6858 70%, #566661 70%, #566661 80%, #555f68 80%, #555f68 90%, #62586a 90%, #62586a 100%); box-shadow:inset 0 1px 4px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.28); }
+    #gamify-result-score-fill { width:0%; height:100%; border-radius:inherit; background:linear-gradient(90deg, #fff176, #ffc107 58%, #ff6d00); box-shadow:0 0 12px rgba(255,193,7,0.9); }
+    #gamify-result-score-ticks { position:absolute; inset:0; pointer-events:none; }
+    #gamify-result-score-ticks span { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,0.82); box-shadow:0 0 2px rgba(0,0,0,0.8); }
+    #gamify-result-score-ticks span:first-child { left:20%; }
+    #gamify-result-score-ticks span:nth-child(2) { left:40%; }
+    #gamify-result-score-ticks span:nth-child(3) { left:60%; }
+    #gamify-result-score-ticks span:nth-child(4) { left:70%; }
+    #gamify-result-score-ticks span:nth-child(5) { left:80%; }
+    #gamify-result-score-ticks span:nth-child(6) { left:90%; }
+    #gamify-result-body .result-breakdown { display:grid; gap:7px; margin:14px 0 18px; }
+    #gamify-result-body .result-breakdown-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 12px; border:1px solid rgba(224,171,103,0.32); border-radius:8px 4px 9px 5px; background:rgba(40,24,17,0.62); opacity:0.55; transform:translateX(-8px); transition:opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease; }
+    #gamify-result-body .result-breakdown-row.is-visible { opacity:1; transform:translateX(0); border-color:rgba(255,213,79,0.62); }
+    #gamify-result-body .result-breakdown-row b { color:#fff59d; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    #gamify-result-body .result-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:15px; margin-top:18px; }
+    #gamify-result-body .result-stats div { background:linear-gradient(145deg,rgba(78,48,31,0.94),rgba(48,30,22,0.94)); padding:12px 14px; border-radius:10px 5px 12px 4px; border:1px solid rgba(224,171,103,0.46); box-shadow:inset 0 0 16px rgba(255,183,77,0.07), 0 4px 10px rgba(0,0,0,0.22); }
+    #gamify-result-body .result-stats b { display:inline-block; margin-top:3px; color:#80deea; font-weight:900; font-size:clamp(20px, 4vw, 26px); text-shadow:0 0 12px rgba(0,188,212,0.4); }
+    #gamify-result-body .result-comment { margin-top:18px; font-size:16px; font-weight:700; text-align:center; color:#ffe0b2; border-top:1px dashed rgba(255,213,79,0.5); padding-top:14px; text-shadow:0 1px 8px rgba(255,152,0,0.32); }
+    @media (max-width: 480px) {
+      #gamify-result-window { width:92vw; min-width:0; }
+      #gamify-result-body { padding:18px 18px 22px; }
+      #gamify-result-body .result-stats { gap:8px; font-size:13px; }
+      #gamify-result-body .result-stats div { padding:10px; }
+    }
+    #gamify-result-window.dragging { animation: none !important; }
+
+
+
+    #gamify-hud { cursor: pointer; user-select: none; }
+    #gamify-hud:hover { filter: brightness(1.1); }
+    #score, #score * { cursor: pointer; }
+    #score:hover { filter: brightness(1.2); }
+
+</style>
+
   <!-- Firebase SDK (compat版) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -1302,6 +1851,19 @@
   </script>
 </head>
 <body>
+<div id="adjustment-layer" style="width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
+
+<div id="gamify-hud"><div id="gamify-hud-main"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div><div id="gamify-combo-meter-row"><div id="gamify-combo-meter" role="progressbar" aria-label="Combo meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="gamify-combo-meter-fill"></div></div><span id="gamify-combo-flame" aria-hidden="true">🔥</span></div></div>
+<div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">焙煎結果</span><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div><div id="gamify-result-body"><div class="result-rank-label" data-i18n="GAMIFY_RESULT_RANK">RANK</div><div class="result-rank" id="gamify-result-rank" aria-live="polite"><span class="result-rank-text"></span></div><div class="result-score" id="gamify-result-score">0</div><div id="gamify-result-score-scale" role="img" aria-label="得点ランク目盛り。F:0～20、E:20～40、D:40～60、C:60～70、B:70～80、A:80～90、S:90～100"><div id="gamify-result-score-legend"><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span><span>S</span></div><div id="gamify-result-score-track"><div id="gamify-result-score-fill"></div><div id="gamify-result-score-ticks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="result-breakdown" id="gamify-result-breakdown">
+  <div class="result-breakdown-row" data-score-key="provisional"><span data-i18n="GAMIFY_SCORE_PROVISIONAL">暫定スコア</span><b><span class="result-breakdown-value">0.0</span> / 25</b></div>
+  <div class="result-breakdown-row" data-score-key="temperature"><span data-i18n="GAMIFY_SCORE_TEMP_TRACKING">温度カーブ追従</span><b><span class="result-breakdown-value">0.0</span> / 25</b></div>
+  <div class="result-breakdown-row" data-score-key="ror"><span data-i18n="GAMIFY_SCORE_ROR_TRACKING">RoR追従</span><b><span class="result-breakdown-value">0.0</span> / 20</b></div>
+  <div class="result-breakdown-row" data-score-key="maxCombo"><span data-i18n="GAMIFY_SCORE_MAX_COMBO">MAXコンボ</span><b><span class="result-breakdown-value">0.0</span> / 10</b></div>
+  <div class="result-breakdown-row" data-score-key="perfectStreak"><span data-i18n="GAMIFY_SCORE_PERFECT_STREAK">連続PERFECT</span><b><span class="result-breakdown-value">0.0</span> / 10</b></div>
+  <div class="result-breakdown-row" data-score-key="greatStreak"><span data-i18n="GAMIFY_SCORE_GREAT_STREAK">連続GREAT以上</span><b><span class="result-breakdown-value">0.0</span> / 6</b></div>
+  <div class="result-breakdown-row" data-score-key="goodStreak"><span data-i18n="GAMIFY_SCORE_GOOD_STREAK">連続GOOD以上</span><b><span class="result-breakdown-value">0.0</span> / 4</b></div>
+</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div>
+
 <!-- アイコン定義 -->
 <svg style="display: none;">
   <symbol id="icon-reload" viewBox="0 0 24 26">
@@ -1467,8 +2029,8 @@
 <!-- ========================================
      デバッグコンソール
      ======================================== -->
-<div id="debug_console">
-  <div id="draggable-zone" data-i18n="DEBUG_MODE_LABEL">SYSTEM DEBUG MODE</div>
+<div id="debug_console" class="uru-draggable">
+  <div id="draggable-zone" class="uru-draggable-handle" data-i18n="DEBUG_MODE_LABEL">SYSTEM DEBUG MODE</div>
   <div style="padding:10px;">
     <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:8px;">
       <button class="button-debug" onclick="CloseOffsetDialogBox()" style="flex:0.2; margin-right: auto; background:#800; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:0.8em;">✖</button>
@@ -1479,6 +2041,14 @@
         <option value="en">English</option>
       </select>
     </div>
+    <div style="border:1px solid #444; border-radius:6px; padding:4px; margin:4px 0; background:rgba(255,215,0,0.06);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="color:#fafaf8e7; font-size:0.8em;">GAME MODE</div>
+        </div>
+        <button id="gamify-mode-toggle-btn" class="button-debug" style="background:#222; color:#fff; border:1px solid #555; padding:1px 8px; border-radius:20px; font-size:0.8em; cursor:pointer; min-width:60px; font-weight:400; transition: all 0.2s;">OFF</button>
+      </div>
+    </div>
     <div><button class="button-debug" onclick="location.href='/update'" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.75rem; width:100%; cursor: pointer;">UPDATE</button>
     </div>
     <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:12px; border-top:1px solid #333; padding-top:12px;">
@@ -1488,23 +2058,24 @@
       <button class="button-debug" onclick="changeColorMode(4)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C4</button>
       <button class="button-debug" onclick="changeColorMode(5)" style="background:#222; color:#fff; border:1px solid #444; padding:5px 0; border-radius:4px; font-size:0.7em; cursor:pointer;">C5</button>
       <button class="button-debug" onclick="changeColorMode(6)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C6</button>
-      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C7</button>
+      <button class="button-debug" onclick="changeColorMode(7)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;">C7</button>
+      <button class="button-debug" onclick="changeColorMode(8)" style="background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:5px; border-radius:4px; font-size:0.7em; cursor:pointer;">C8</button>
       <button class="button-debug" onclick="changeColorMode(0)" style="grid-column: span 2; background:#222; color:#fff; border:1px solid #444; margin-top:3px; padding:3px; border-radius:4px; font-size:0.7em; cursor:pointer;width:100%">NORMAL</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span id="maxTempLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Temperature(℃):</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;" data-i18n="LABEL_MAX_TEMP">Temperature</span><span style="color:#aaa; font-size:0.75em; flex-shrink:0;" class="unit_temp">(℃)</span>
       <input type="number" id="maxTempInput" min="200" max="999" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveMaxTemp" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span id="maxRorLabel" style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror(℃/min):</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">Max Ror</span><span class="unit_ror" style="color:#aaa; font-size:0.75em; flex-shrink:0;">(℃/min):</span>
       <input type="number" id="MaxRorInput" min="20" max="200" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveMaxRor" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
     </div>
     <div style="display:flex; gap:5px; align-items:center;">
-      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size:</span>
+      <span style="color:#aaa; font-size:0.75em; flex-shrink:0;">RoR Window Size</span>
       <input type="number" id="rorWindowInput" min="1" max="100" 
           style="width: 50px; background:#000; border:1px solid #666; color:#0f0; outline:none; font-family:monospace; text-align:center;">
       <button id="saveRorWindow" class="button-debug" style="background:#333; color:#fff; border:1px solid #555; height:20px; margin:2px 2px; font-size:0.7em; cursor:pointer; border-radius:2px;">SET</button>
@@ -1573,7 +2144,7 @@
         <svg width="24" height="24" style="display:block;"><use href="#icon-info"/></svg>
     </button>
 
-    <button class="button" title="" data-i18n-title="TOOLTIP_MANUAL" onclick="manualButtonCommand()">
+    <button id="manual-button" class="button" title="" data-i18n-title="TOOLTIP_MANUAL" onclick="manualButtonCommand()">
         <svg width="24" height="24" style="display:block;"><use href="#icon-manual"/></svg>
     </button>
 
@@ -1590,11 +2161,11 @@
   </div>
   <div class="profile-meta">
     <div class="meta-field">
-      <label for="profileTitle" data-i18n="LABEL_TITLE">タイトル：</label>
+      <label for="profileTitle" class="uzu-label uzu-label--small" data-i18n="LABEL_TITLE">タイトル</label>
       <input type="text" id="profileTitle" style="font-size: 16px;" placeholder="" data-i18n-placeholder="PLACEHOLDER_TITLE">
     </div>
     <div class="meta-field">
-      <label for="profileMemo" data-i18n="LABEL_MEMO">メモ：</label>
+      <label for="profileMemo" class="uzu-label uzu-label--small" data-i18n="LABEL_MEMO">メモ</label>
       <textarea id="profileMemo" rows="1" style="font-size: 16px;" placeholder="" data-i18n-placeholder="PLACEHOLDER_MEMO" onClick=""></textarea>
     </div>
   </div>
@@ -1644,14 +2215,14 @@
 <div class="table-controls">
 <div class="button-container" style="border-radius: 5px;">
   <span class="profile_manupilation_title" data-i18n="PROFILE_MANIPULATION_TITLE">プロファイル</span>
-  <button type="button" class="button table_edit" title="" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
+  <button id="load-profile-button" type="button" class="button table_edit" title="" aria-keyshortcuts="L" data-i18n-title="TOOLTIP_LOAD_PROFILE" onclick="openFileDialog()" data-i18n="BUTTON_LOAD">読込</button>
   <input type="file" class="hidden-file-input" id="fileInput" multiple accept=".json, .alog, .csv">
-  <button onclick="openJSONSaveModal()" class="button table_edit" title="" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
-  <button class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="" data-i18n-title="TOOLTIP_COPY_ROAST_TO_PROFILE" data-i18n="BUTTON_COPY_FROM_ROAST">焙煎データ⇒</button>
+  <button id="save-profile-button" onclick="openJSONSaveModal()" class="button table_edit" title="" aria-keyshortcuts="S" data-i18n-title="TOOLTIP_SAVE_PROFILE" data-i18n="BUTTON_SAVE">保存</button>
+  <button id="copy-roast-data-button" class="button table_edit" onclick="overwriteTableWithLastRoast()"; title="" aria-keyshortcuts="R" data-i18n-title="TOOLTIP_COPY_ROAST_TO_PROFILE" data-i18n="BUTTON_COPY_FROM_ROAST">焙煎データ⇒</button>
   <button id="button-copy-profile" class="button table_edit" onclick="copyProfileChartToCompare()"; title="" data-i18n-title="TOOLTIP_COMPARE_PROFILE" data-i18n="BUTTON_COMPARE_PROFILE_SHOW">比較プロファイル表示</button>
   <button id="button-default-profile" class="button table_edit" onclick="showProfModal()"; title="" data-i18n-title="TOOLTIP_STANDARD_CURVE" data-i18n="BUTTON_STANDARD_CURVE">標準カーブ</button>
 </div>
-  <div id="control-buttons">
+  <div id="control-buttons" data-i18n-title="CONTROL_PANEL_CLICK_TO_MOVE">
     <div class="button-container">
       <button title="" data-i18n-title="TOOLTIP_CHART_ZOOM_IN" class="button button-chart-zoom" style="border-radius: 20px 0px 0px 20px;" onclick="shortenChart()" id="shorten-button">+</button>
       <button title="" data-i18n-title="TOOLTIP_CHART_RESET" class="button button-chart-zoom" style="border-radius: 0px 0px 0px 0px;" onclick="resetWidthChart()" id="reset-width-button">1:1</button>
@@ -1659,7 +2230,7 @@
     </div>
     <div class="phase-control-group button-container">
       <button id="phasePrevBtn" class="button button-phase-control" style="border-radius: 20px 0px 0px 20px;" onclick="handlePrevClick()" title="" data-i18n-title="TOOLTIP_PREV_PHASE">&lt;</button>
-      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="" data-i18n-title="TOOLTIP_PHASE_MARK">DE</button>
+      <button id="phaseBtn" class="button button-phase-control" style="border-radius: 0px 0px 0px 0px; min-width: 60px; line-height: 1.2; font-size: 12px;" onclick="handlePhaseClick()" title="" aria-keyshortcuts="M" data-i18n-title="TOOLTIP_PHASE_MARK">DE</button>
       <button id="phaseSkipBtn" class="button button-phase-control" style="border-radius: 0px 20px 20px 0px;" onclick="handleSkipClick()"  title="" data-i18n-title="TOOLTIP_NEXT_PHASE">&gt;</button>
     </div>
     <div class="button-container">
@@ -1677,7 +2248,7 @@
   <!-- テーブルセクション -->
   <div class="table-section" id="table_contents">
     <div class="table-container">
-      <div id="table_title" data-i18n="TABLE_TITLE">焙煎プロファイル</div>
+      <div id="table_title" class="uzu-label" style="display: block; margin: 5px 10px;" data-i18n="TABLE_TITLE">プロファイルテーブル</div>
       <table id="profileTable">
         <thead>
           <tr>
@@ -1706,8 +2277,8 @@
         </div>
         <div class="table-edit-buttons">
           <button id="guide-move-toggle-btn" class="button table_edit" style="background: #888; color: white; border: 2px solid transparent; display: none;" onclick="toggleGuideMoveMode()" data-i18n="BUTTON_GUIDE_MOVE">📐 移動</button>
-          <button id="align-button" class="button" onclick="applyCurrentProfile();" title="" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
-          <button class="button table_edit" onclick="addRowByButton();" title="" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
+          <button id="align-button" class="button" onclick="applyCurrentProfile();" title="" aria-keyshortcuts="A" data-i18n-title="TOOLTIP_ALIGN" data-i18n="BUTTON_ALIGN">整列</button>
+          <button id="add-profile-row-button" class="button table_edit" onclick="addRowByButton();" title="" aria-keyshortcuts="N" data-i18n-title="TOOLTIP_ADD_ROW" data-i18n="BUTTON_ADD_ROW">行追加</button>
           <button id="all-delete-button" class="button button-danger table_edit" onclick="const t = profileTable; while (t.rows.length > 1) {t.deleteRow(1); }" title="" data-i18n-title="TOOLTIP_DELETE_ALL" data-i18n="BUTTON_DELETE_ALL">🗑 全削除</button>
         </div>
       </div>
@@ -1716,6 +2287,7 @@
   <!-- チャートセクション -->
   <div class="chart-section no-select" id="chart-section">
     <div class="chart-container" id="chart-area">
+<div id="gamify-judge"></div><div id="gamify-combo-popup"></div><canvas id="gamify-canvas"></canvas><div id="gamify-damage-flash"></div>
       <div class="image-overlay" id="chart-point"></div>
       <div class="image-arrow" id="chart-arrow">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 24">
@@ -1724,7 +2296,7 @@
       </div>
       <canvas id="overlayCanvas"></canvas>
       <canvas id="roastChart"></canvas>
-      <div id="chart-infos-button" title="測定値表示">
+      <div id="chart-infos-button" title="測定値表示" role="button" tabindex="0" aria-keyshortcuts="D">
         <span style='color:#882222;font-size:20px;'>📊</span>
       </div>
       <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; touch-action: none; z-index: 100; background: rgba(0, 0, 0, 0.0);"></div>
@@ -1841,10 +2413,11 @@
   
   // ドラッグ可能なデバッグコンソール
   document.addEventListener('DOMContentLoaded', () => {
-    const draggableElement = debugConsole;
-    const dragHandle = debugDraggableHandle;
-    document.getElementById('rorWindowInput').value = rorWindowSize;
-    refreshDebugConsoleSettings();
+    const draggableElement = document.getElementById('debug_console');
+    const dragHandle = document.getElementById('draggable-zone');
+    const rorInput = document.getElementById('rorWindowInput');
+    if(rorInput) rorInput.value = rorWindowSize;
+    if(typeof refreshDebugConsoleSettings === 'function') refreshDebugConsoleSettings();
     document.getElementById('saveMaxTemp').addEventListener('click', () => {
             let rawVal = parseFloat(document.getElementById('maxTempInput').value);
             if (isNaN(rawVal)) {
@@ -1860,8 +2433,11 @@
             maxTemperature = newVal;
             document.getElementById('maxTempInput').value = formatDebugInputTemp(maxTemperature);
             localStorage.setItem(MAX_TEMP_KEY, maxTemperature);
-            roastChart.options.scales.y.max = maxTemperature;
-            roastChart.update();
+            if(typeof roastChart !== 'undefined' && roastChart?.options?.scales?.y){
+                roastChart.options.scales.y.max = maxTemperature;
+                roastChart.update();
+            }
+            if(window.URCStore){ window.URCStore.set({ maxTemperature: maxTemperature }); }
         });
     document.getElementById('saveRorWindow').addEventListener('click', () => {
             let newVal = parseInt(document.getElementById('rorWindowInput').value);
@@ -1871,11 +2447,11 @@
                 newVal = 100;
             }
             rorWindowSize = newVal;
-            document.getElementById('rorWindowInput').value = rorWindowSize;
+            const rorInp = document.getElementById('rorWindowInput');
+            if(rorInp) rorInp.value = rorWindowSize;
             localStorage.setItem(ROR_WINDOW_KEY, rorWindowSize);
-            alert(t('ALERT_ROR_WINDOW_SET') + rorWindowSize + t('ALERT_ROR_WINDOW_SET_SUFFIX'));
-            // roastChart.destroy();
-            // initChart();
+            if(window.URCStore){ window.URCStore.set({ rorWindowSize: rorWindowSize }); }
+            try{ if(typeof t === 'function') alert(t('ALERT_ROR_WINDOW_SET') + rorWindowSize + t('ALERT_ROR_WINDOW_SET_SUFFIX')); }catch(e){ alert('RoR Window Size: '+rorWindowSize); }
         });
     document.getElementById('saveMaxRor').addEventListener('click', () => {
             let rawVal = parseFloat(document.getElementById('MaxRorInput').value);
@@ -1892,8 +2468,11 @@
             MaxRor = newVal;
             document.getElementById('MaxRorInput').value = formatDebugInputRoR(MaxRor);
             localStorage.setItem(MAX_ROR_KEY, MaxRor);
-            roastChart.options.scales.y1.max = MaxRor;
-            roastChart.update();
+            if(typeof roastChart !== 'undefined' && roastChart?.options?.scales?.y1){
+                roastChart.options.scales.y1.max = MaxRor;
+                roastChart.update();
+            }
+            if(window.URCStore){ window.URCStore.set({ MaxRor: MaxRor }); }
         });
 
     let isDragging = false;
@@ -1981,16 +2560,24 @@ const enlargeButton = document.getElementById('enlarge-button');
 const resetWidthButton = document.getElementById('reset-width-button');
 const profileTitleInput = document.getElementById('profileTitleInput');
 const statsHudLayer = document.getElementById('statsHudLayer');
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 
 const i18n = {
   langs: ['ja', 'en'],
   texts: {
     PAGE_TITLE: ['UZU ROASTER CONTROLLER | うずロースターコントローラー（URC）', 'UZU ROASTER CONTROLLER | UZU Roaster Controller (URC)'],
     LANGUAGE_LABEL: ['言語', 'Language'],
-    CONNECTION_STATUS_DISCONNECTED: ['未接続', 'Disconnected'],
-    CONNECTION_STATUS_USB: ['接続中[USB]', 'Connected [USB]'],
-    CONNECTION_STATUS_WIFI: ['接続中[WiFi]', 'Connected [WiFi]'],
-    CONNECTION_STATUS_PYTHON: ['接続中[USB]', 'Connected [USB]'],
+    CONNECTION_STATUS_DISCONNECTED: ['未接続', 'N/C'],
+    CONNECTION_STATUS_USB: ['USB', 'USB'],
+    CONNECTION_STATUS_WIFI: ['WiFi', 'WiFi'],
+    CONNECTION_STATUS_PYTHON: ['USB', 'USB'],
     TOOLTIP_RECONNECT: ['クリックで再接続', 'Click to reconnect'],
     TOOLTIP_RELOAD: ['再読み込み', 'Reload'],
     TOOLTIP_USB_CONNECT: ['USB接続', 'USB connect'],
@@ -2006,8 +2593,8 @@ const i18n = {
     CLOUD_LOGIN_DISABLED_HINT: ['クラウド機能にはインターネット接続が必要です', 'Cloud features require an internet connection'],
     CLOUD_LOGOUT_TITLE: ['ログアウト：', 'Logout: '],
     TOOLTIP_TOGGLE_TIME_FORMAT: ['クリックで秒/分表示切替', 'Click to toggle seconds/minutes'],
-    LABEL_TITLE: ['タイトル：', 'Title:'],
-    LABEL_MEMO: ['メモ：', 'Memo:'],
+    LABEL_TITLE: ['タイトル', 'Title'],
+    LABEL_MEMO: ['メモ', 'Memo'],
     PLACEHOLDER_TITLE: ['タイトルを入力', 'Enter title'],
     PLACEHOLDER_MEMO: ['メモを入力', 'Enter memo'],
     DISPLAY_LABEL_TIME: ['経過時間', 'Elapsed time'],
@@ -2027,7 +2614,7 @@ const i18n = {
     BUTTON_COMPARE_PROFILE_SHOW: ['比較表示', 'Show comparison'],
     BUTTON_COMPARE_PROFILE_HIDE: ['比較非表示', 'Hide comparison'],
     BUTTON_STANDARD_CURVE: ['標準カーブ', 'Standard curve'],
-    TABLE_TITLE: ['焙煎プロファイルテーブル', 'Roast profile table'],
+    TABLE_TITLE: ['プロファイルテーブル', 'Profile table'],
     TABLE_HEADER_TIME_SEC: ['時間 [秒]', 'Time [sec]'],
     TABLE_HEADER_TIME_PREFIX: ['時間', 'Time'],
     TABLE_HEADER_TEMP_C: ['温度 [℃]', 'Temp [℃]'],
@@ -2046,7 +2633,7 @@ const i18n = {
     BUTTON_ALIGN: ['整列', 'Align'],
     BUTTON_ADD_ROW: ['行追加', 'Add row'],
     BUTTON_DELETE_ALL: ['🗑 全削除', '🗑 Delete all'],
-    TOOLTIP_ALIGN: ['焙煎プロファイルテーブル整列・チャート更新', 'Align profile table and update chart'],
+    TOOLTIP_ALIGN: ['プロファイルテーブル整列・チャート更新', 'Align profile table and update chart'],
     TOOLTIP_ADD_ROW: ['行の追加', 'Add row'],
     TOOLTIP_DELETE_ALL: ['全行削除', 'Delete all rows'],
     TOOLTIP_LOAD_PROFILE: ['プロファイル読み込み', 'Load profile'],
@@ -2143,6 +2730,39 @@ const i18n = {
     CLOUD_PROFILE_NONE: ['クラウドにプロファイルはありません', 'No cloud profiles found'],
     CLOUD_PROFILE_NOT_FOUND: ['該当するプロファイルがありません', 'No matching profiles found'],
     CLOUD_PROFILE_LOADING: ['読み込み中...', 'Loading...'],
+    CONTROL_PANEL_CLICK_TO_MOVE: ['操作パネル: ドラッグで移動可能（チャート全画面表示時のみ)', 'Control panel: Drag to move (only in full-screen chart mode)'],
+    ONBOARDING_SIMPLE: ['💡このボタンでシンプルな測定画面に変更できます', '💡This button allows you to switch to the simple measurement screen'],    HINT_SIMPLE_VIEW: ['💡このボタンでシンプルな測定画面に変更できます', '💡This button switches to simple measurement view'],
+    HINT_START_ROAST: ['💡ここから焙煎を開始します。温度ログがリアルタイムで表示されます', '💡Start roasting here. Temperature will be logged in real time'],
+    HINT_MANUAL: ['💡詳しくはマニュアルをご覧ください', '💡Refer to the manual for more information'],
+    HINT_NEXT: ['次へ', 'Next'],
+    HINT_DONE: ['完了', 'Done'],
+    HINT_SKIP: ['スキップ', 'Skip'],
+
+    GAMIFY_RESULT_TITLE: ['焙煎結果', 'Roast Result'],
+    GAMIFY_RESULT_RANK: ['RANK', 'RANK'],
+    GAMIFY_RESULT_CLOSE: ['閉じる', 'Close'],
+    GAMIFY_LABEL_MAX_COMBO: ['MAX COMBO', 'MAX COMBO'],
+    GAMIFY_LABEL_PERFECT_RATE: ['PERFECT率', 'PERFECT Rate'],
+    GAMIFY_LABEL_ACCURACY: ['追従精度', 'Accuracy'],
+    GAMIFY_LABEL_ROAST_TIME: ['焙煎時間', 'Roast Time'],
+    GAMIFY_SCORE_PROVISIONAL: ['暫定スコア', 'Provisional score'],
+    GAMIFY_SCORE_TEMP_TRACKING: ['温度カーブ追従', 'Temperature tracking'],
+    GAMIFY_SCORE_ROR_TRACKING: ['RoR追従', 'RoR tracking'],
+    GAMIFY_SCORE_MAX_COMBO: ['MAXコンボ', 'MAX combo'],
+    GAMIFY_SCORE_PERFECT_STREAK: ['連続PERFECT', 'Consecutive PERFECT'],
+    GAMIFY_SCORE_GREAT_STREAK: ['連続GREAT以上', 'Consecutive GREAT+'],
+    GAMIFY_SCORE_GOOD_STREAK: ['連続GOOD以上', 'Consecutive GOOD+'],
+    GAMIFY_COMMENT_DEFAULT: ['プロファイルを読み込んでゲーム開始！', 'Load a profile to start the game!'],
+    GAMIFY_COMMENT_S: ['神焙煎！プロファイル完全追従！', 'God roast! Perfect tracking!'],
+    GAMIFY_COMMENT_A: ['素晴らしい！ほぼ完璧な追従！', 'Amazing! Almost perfect tracking!'],
+    GAMIFY_COMMENT_B: ['ナイス焙煎！良い出来ばえ！', 'Nice roast! Well done!'],
+    GAMIFY_COMMENT_C: ['もう一歩！次はPERFECT狙おう！', 'One more step! Aim for PERFECT next!'],
+    GAMIFY_COMMENT_D: ['焙煎お疲れさま！次はプロファイルに寄せてみよう', 'Good effort! Try to follow the profile next time'],
+    GAMIFY_COMMENT_NONE: ['プロファイルを読み込んで再挑戦！', 'Load a profile and try again!'],
+    GAMIFY_SUFFIX_TIMES: ['回', ' times'],
+    GAMIFY_SCORE_PREFIX: ['SCORE: ', 'SCORE: '],
+
+
   }
 };
 let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || 'ja';
@@ -2310,12 +2930,49 @@ const TEMPERATURE_UNIT_KEY = 'uzu_temperature_unit';
 let isFahrenheit = localStorage.getItem(TEMPERATURE_UNIT_KEY) === 'F';
 let isDevelopmentTimeRatio = true;
 
+// ===== Phase2: Central Store (Single File, no split) =====
+const URCBus = {
+  _e: {},
+  on(evt, fn){ (this._e[evt] = this._e[evt] || []).push(fn); },
+  emit(evt, data){ (this._e[evt]||[]).forEach(fn=>{ try{fn(data);}catch(e){console.error(e);} }); }
+};
+
+const URCStore = {
+  state: {
+    isFahrenheit: isFahrenheit,
+    isDevelopmentTimeRatio: isDevelopmentTimeRatio,
+    isMinutesSecondsFormat: isMinutesSecondsFormat,
+    maxTemperature: maxTemperature,
+    MaxRor: MaxRor,
+    rorWindowSize: rorWindowSize
+  },
+  set(patch){
+    const prev = {...this.state};
+    Object.assign(this.state, patch);
+    // 既存のグローバル変数にも同期（既存コード互換）
+    if('isFahrenheit' in patch) isFahrenheit = patch.isFahrenheit;
+    if('isDevelopmentTimeRatio' in patch) isDevelopmentTimeRatio = patch.isDevelopmentTimeRatio;
+    if('isMinutesSecondsFormat' in patch) isMinutesSecondsFormat = patch.isMinutesSecondsFormat;
+    if('maxTemperature' in patch) maxTemperature = patch.maxTemperature;
+    if('MaxRor' in patch) MaxRor = patch.MaxRor;
+    if('rorWindowSize' in patch) rorWindowSize = patch.rorWindowSize;
+    // 永続化
+    if('isFahrenheit' in patch) localStorage.setItem(TEMPERATURE_UNIT_KEY, patch.isFahrenheit ? 'F' : 'C');
+    if('isMinutesSecondsFormat' in patch) localStorage.setItem(TIME_FORMAT_KEY, patch.isMinutesSecondsFormat);
+    if('maxTemperature' in patch) localStorage.setItem(MAX_TEMP_KEY, patch.maxTemperature);
+    if('MaxRor' in patch) localStorage.setItem(MAX_ROR_KEY, patch.MaxRor);
+    if('rorWindowSize' in patch) localStorage.setItem(ROR_WINDOW_KEY, patch.rorWindowSize);
+    URCBus.emit('state:changed', this.state, prev);
+  },
+  get(){ return this.state; }
+};
+// デバッグ用
+window.URCStore = URCStore;
+window.URCBus = URCBus;
+
+
 function getTimeUnitHtml() {
   return `<span class="unit_sec unit_generic">${t('UNIT_SEC')}</span>`;
-}
-
-function getDTRUnitHtml() {
-  return `<span class="unit_dtr unit_generic">${t('UNIT_PERCENT')}</span>`;
 }
 
 function getDTRLabelText() {
@@ -2332,7 +2989,7 @@ function updateDTRDisplay() {
 if (typeof PhaseManager === 'undefined' || !PhaseManager.phases) return;
 
   const currentTime = getCurrentTime();
-  if (currentTime === null) return; // ←焙煎前なら -- 表示でOK
+  //if (currentTime === null) return; // ←焙煎前なら -- 表示でOK
 
   const fc = PhaseManager.phases.FCS;
   const drop = PhaseManager.phases.DROP || currentTime;
@@ -2388,14 +3045,6 @@ function formatDebugInputRoR(celsiusRoRValue) {
 }
 
 function refreshDebugConsoleSettings() {
-  const maxTempLabel = document.getElementById('maxTempLabel');
-  if (maxTempLabel) {
-    maxTempLabel.textContent = `Max Temperature(${getUnitTempLabel()}):`;
-  }
-  const maxRorLabel = document.getElementById('maxRorLabel');
-  if (maxRorLabel) {
-    maxRorLabel.textContent = `Max Ror(${getUnitRoRLabel()}):`;
-  }
   const maxTempInput = document.getElementById('maxTempInput');
   if (maxTempInput) {
     const limits = getDebugTempInputLimits();
@@ -2561,16 +3210,76 @@ function updateTemperatureUnitDisplay() {
     roastChart.update();
   }
   refreshTemperatureDisplayBoxes();
-  updateChartDsiaplayValue();
+  updateChartDisplayValue();
 }
 
 function toggleTemperatureUnit() {
-  isFahrenheit = !isFahrenheit;
-  localStorage.setItem(TEMPERATURE_UNIT_KEY, isFahrenheit ? 'F' : 'C');
+  URCStore.set({ isFahrenheit: !URCStore.state.isFahrenheit });
   updateTemperatureUnitDisplay();
 }
 
-const URCVersionStr = "1.3.3";
+// ===== Phase3: 一括レンダリング (Single Source of Truth) =====
+// 従来: displaySecondsOrMinutes(), updateDTRDisplay(), updateChartDisplayValue() がバラバラ
+// 今後: 状態が変わったらここ一発で全部揃う
+function renderAllDisplays() {
+  try {
+    // 時間表示（メイン + chartAreaInfos内のコピーも内部で同期される）
+    if (typeof displaySecondsOrMinutes === 'function') {
+      displaySecondsOrMinutes(typeof getCurrentTime === 'function' ? getCurrentTime() : null);
+    }
+    // DTR/DT表示
+    if (typeof updateDTRDisplay === 'function') {
+      updateDTRDisplay();
+    }
+    // chartAreaInfos への同期（コピー方式の維持：Phase3では呼び忘れを防ぐため一元化）
+    if (typeof updateChartDisplayValue === 'function') {
+      updateChartDisplayValue();
+    }
+    // チャート軸タイトルもStore準拠に更新
+    if (typeof roastChart !== 'undefined' && roastChart?.options?.scales) {
+      if (roastChart.options.scales.x?.title && typeof getTimeAxisUnitLabel === 'function') {
+        roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
+      }
+      if (roastChart.options.scales.y?.title && typeof getUnitTempLabel === 'function') {
+        roastChart.options.scales.y.title.text = `${t('CHART_Y_AXIS_TITLE_TEMP')} ${getUnitTempLabel()}`;
+      }
+      if (roastChart.options.scales.y1?.title && typeof getUnitRoRLabel === 'function') {
+        roastChart.options.scales.y1.title.text = `${t('CHART_Y_AXIS_TITLE_ROR')} ${getUnitRoRLabel()}`;
+      }
+    }
+  } catch(e) {
+    console.warn('[renderAllDisplays]', e);
+  }
+}
+
+// Storeの変更を購読して自動再描画（Phase3の肝）
+if (typeof URCBus !== 'undefined') {
+  URCBus.on('state:changed', (state, prev) => {
+    try {
+      // Store経由で温度系が変わった場合、チャート軸を同期
+      if (typeof roastChart !== 'undefined' && roastChart?.options?.scales) {
+        if (prev && state.maxTemperature !== prev.maxTemperature && roastChart.options.scales.y) {
+          roastChart.options.scales.y.max = state.maxTemperature;
+        }
+        if (prev && state.MaxRor !== prev.MaxRor && roastChart.options.scales.y1) {
+          roastChart.options.scales.y1.max = state.MaxRor;
+        }
+      }
+    } catch(e){ console.warn('[URCBus] chart sync failed', e); }
+    renderAllDisplays();
+    if (typeof roastChart !== 'undefined' && roastChart) {
+      try { roastChart.update('none'); } catch(_) { try{ roastChart.update(); }catch(__){} }
+    }
+    // デバッグ入力欄もStoreに同期
+    if (prev && (state.maxTemperature !== prev.maxTemperature || state.MaxRor !== prev.MaxRor || state.isFahrenheit !== prev.isFahrenheit)) {
+      if (typeof refreshDebugConsoleSettings === 'function') refreshDebugConsoleSettings();
+    }
+  });
+}
+window.renderAllDisplays = renderAllDisplays;
+
+
+const URCVersionStr = "1.4.0";
 const URCVersionCodeNameStr = "Antigua";
 let roastChart = null;
 const PROFILE_TEMP = 0;
@@ -2646,15 +3355,19 @@ function initColorMode() {
 // ② カラーモード切り替え（isSaveは保存するかどうかのフラグ）
 function changeColorMode(modeNum, isSave = true) {
     // クラスの付け替え
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 8; i++) {
         document.body.classList.remove('mode' + i);
     }
-    
-    if (modeNum >= 1 && modeNum <= 7) {
+    if (modeNum === 7) {
+        document.getElementById('adjustment-layer').style.display = 'block';
+    } 
+    else {
+        document.getElementById('adjustment-layer').style.display = 'none';
+    }
+    if (modeNum >= 1 && modeNum <= 8) {
         document.body.classList.add('mode' + modeNum);
     }
 
-    // ③ ストレージに保存（初期化時は保存しなくていいので判定を入れる）
     if (isSave) {
         localStorage.setItem('uzu_color_mode', modeNum);
     }
@@ -2848,6 +3561,7 @@ function initApp() {
     try {
         // 正しい初期化順序: Chart -> UI基盤 -> 言語/表示 -> オプション
         chartAreaInitialize(); // initChart()を内部で最初に実行
+        // 旧オンボーディングは新システムに統合済み
         updateProfileList();
         initColorMode();
         // 言語初期化はChart生成後に実行 (以前は別DOMContentLoadedでレースしてた)
@@ -3260,7 +3974,53 @@ function receiveWebMessage(data) {
     if (data.time > -1 && isRoasting) {
       roastMessage.textContent = t('ROAST_MESSAGE_STARTED');
 
-      const current_ror = addLiveDataPoint(data.time, tempWithOffset); // グラフ追加関数
+      const current_ror = addLiveDataPoint(data.time, tempWithOffset);
+
+      // === Gamify Hook (decoupled) ===
+      try{
+        const profTempForGamify = (function(){
+          try{
+            const guideOffsetX = parseFloat(offsetInputTime.value) || 0;
+            const guideOffsetY = parseFloat(offsetInputTemp.value) || 0;
+            const profileTime = data.time - guideOffsetX;
+            const pt = getOneSecondIntervalProfile(getProfileDataFromTable());
+            if(!pt || pt.length===0) return null;
+            if(pt[0].time >= profileTime) return pt[0].temp + guideOffsetY;
+            const idx = Math.round(profileTime - pt[0].time);
+            if(idx>=0 && idx<pt.length) return pt[idx].temp + guideOffsetY;
+            return pt[pt.length-1].temp + guideOffsetY;
+          }catch(e){ return null; }
+        })();
+        const profileRoRPoints = roastChart.data.datasets[PROFILE_ROR].data;
+        let profRoRForGamify = null;
+        if (profileRoRPoints.length > 0) {
+          const time = data.time;
+          let low = 0;
+          let high = profileRoRPoints.length - 1;
+          if (time <= profileRoRPoints[low].x) {
+            profRoRForGamify = profileRoRPoints[low].y;
+          } else if (time >= profileRoRPoints[high].x) {
+            profRoRForGamify = profileRoRPoints[high].y;
+          } else {
+            while (high - low > 1) {
+              const mid = Math.floor((low + high) / 2);
+              if (profileRoRPoints[mid].x <= time) low = mid;
+              else high = mid;
+            }
+            const before = profileRoRPoints[low];
+            const after = profileRoRPoints[high];
+            const range = after.x - before.x;
+            profRoRForGamify = range > 0
+              ? before.y + (after.y - before.y) * ((time - before.x) / range)
+              : before.y;
+          }
+          if (!Number.isFinite(profRoRForGamify)) profRoRForGamify = null;
+        }
+        if(window.gamifyEvaluate){
+          window.gamifyEvaluate(parseFloat(temp), profTempForGamify, current_ror ? current_ror.y : null, profRoRForGamify);
+        }
+      }catch(e){ console.warn('gamify hook error', e); }
+ // グラフ追加関数
       roastTimeDisplay.innerHTML = formatSecondsToMinutesSeconds(data.time); 
       setDisplayTempValue(roastTemperatureDisplay, parseFloat(temp));
       if (roastChart.data.datasets[PROFILE_TEMP].data.length === 0) {
@@ -3307,7 +4067,7 @@ function receiveWebMessage(data) {
     if (isRoasting == true && data.time >= maxChartTime - 1) {
       sendStopCommand();
     }
-    updateChartDsiaplayValue();  
+    updateChartDisplayValue();  
   } 
 }
 
@@ -3508,10 +4268,17 @@ offsetInputs.forEach(input => {
 });
 
 document.addEventListener('keydown', function(event) {
-  if (['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return; // 入力中は無視
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; // 入力中は無視
 // キーごとのアクションを定義
     const keyActions = {
         ' ': () => (isRoasting ? stopButton : startButton)?.click(),
+        'f': () => fullscreenToggleBtn?.click(),
+        'l': () => document.getElementById('load-profile-button')?.click(),
+        's': () => document.getElementById('save-profile-button')?.click(),
+        'r': () => document.getElementById('copy-roast-data-button')?.click(),
+        'a': () => document.getElementById('align-button')?.click(),
+        'n': () => document.getElementById('add-profile-row-button')?.click(),
+        'd': () => chartInfosButton?.click(),
         '[': () => shortenButton?.click(),
         ']': () => enlargeButton?.click(),
         '0': () => resetWidthButton?.click(),
@@ -3522,6 +4289,7 @@ document.addEventListener('keydown', function(event) {
 
     // 大文字小文字もケアするなら .toLowerCase() を使うと完璧
     const key = event.key.toLowerCase();
+    if (/^[a-z]$/.test(key) && event.repeat) return;
     if (keyActions[key]) {
         keyActions[key]();
         event.preventDefault();
@@ -3737,7 +4505,7 @@ function toggleChartDisplay(flag) {
     }
 }
 
-function updateChartDsiaplayValue() {
+function updateChartDisplayValue() {
     const idMap = {
         'roast_time':   'currentTimeInside',
         'roast_temperature':   'currentTempInside',
@@ -5279,27 +6047,72 @@ function syncChartToTable(index, time, temp) {
 // ======================================
 // チャート全画面表示切り替え
 // ======================================
+
+// 旧オンボーディング v1.0 は新システムに統合済みのため削除
+
 function toggleChartFullscreen() {
+    const controlButtons = document.getElementById('control-buttons');
+    const chartArea = document.getElementById('chart-area');
     if (!isFullscreen) {
-      fullscreenToggleBtn.classList.add('button-mode-active'); // ボタンの色を変える
+      // スマホスクロール防止: 現在のスクロール位置を保存してbodyを固定
+      window._prevScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      document.documentElement.classList.add('chart-fullscreen-lock');
+      document.body.classList.add('chart-fullscreen-lock');
+      document.body.style.top = '-' + window._prevScrollY + 'px';
+      window.scrollTo(0, 0);
+
       animateFromElement(chartCanvas);
+      fullscreenToggleBtn.classList.add('button-mode-active');
       document.getElementById('table_contents').style.display = "none";
-      chartCanvas.style.position = "fixed";
-      chartCanvas.style.width = "100%";
-      chartCanvas.style.height = "100%";
-      chartCanvas.style.top = "0";
-      chartCanvas.style.left = "0";
-      chartCanvas.style.zIndex = "1000";
-      chartCanvas.style.display = "block";
+      if(chartArea){ chartArea.classList.add('chart-area-fullscreen'); }
+      if(controlButtons){
+        const w = controlButtons.getBoundingClientRect().width;
+        if(w>0) controlButtons.dataset.fixedW = w;
+        controlButtons.classList.add('is-floating');
+        controlButtons.style.position = 'fixed';
+        controlButtons.style.top = '8px';
+        controlButtons.style.right = '12px';
+        controlButtons.style.left = 'auto';
+        controlButtons.style.bottom = 'auto';
+        controlButtons.style.transform = '';
+        controlButtons.style.width = (w>0? w+'px':'fit-content');
+        if(window._controlPanelReset) window._controlPanelReset(true);
+      }
       isFullscreen = true;
     } else {
-      fullscreenToggleBtn.classList.remove('button-mode-active'); // ボタンの色を変える
+      fullscreenToggleBtn.classList.remove('button-mode-active');
       document.getElementById('table_contents').style.display = "flex";
-      chartCanvas.style.position = "relative";
+      if(chartArea){ chartArea.classList.remove('chart-area-fullscreen'); }
+      chartCanvas.style.position = "";
+      chartCanvas.style.width = "";
+      chartCanvas.style.height = "";
+      chartCanvas.style.top = "";
+      chartCanvas.style.left = "";
+      chartCanvas.style.zIndex = "";
+      if(controlButtons){
+        controlButtons.classList.remove('is-floating');
+        controlButtons.style.position = '';
+        controlButtons.style.top = '';
+        controlButtons.style.left = '';
+        controlButtons.style.right = '';
+        controlButtons.style.bottom = '';
+        controlButtons.style.transform = '';
+        controlButtons.style.width = '';
+        if(window._controlPanelReset) window._controlPanelReset(false);
+      }
+      // スクロールロック解除と元の位置に復帰
+      document.documentElement.classList.remove('chart-fullscreen-lock');
+      document.body.classList.remove('chart-fullscreen-lock');
+      document.body.style.top = '';
+      const prevY = window._prevScrollY || 0;
       isFullscreen = false;
+      window.scrollTo(0, prevY);
+      animateToElement(chartCanvas);
     }
-    mainAreaResize(mainArea2);
-    animateToElement(chartCanvas);
+    setTimeout(()=>{
+      mainAreaResize(mainArea2);
+      if(window.roastChart){ roastChart.resize(); }
+    }, 60);
 }
 
 // ======================================
@@ -5478,7 +6291,7 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', setupModalOverlayClickHandlers);
 } else {
   setupModalOverlayClickHandlers();
-}
+} 
 
 function showProfModal() {
   openModal('profModal');
@@ -5992,22 +6805,20 @@ function chartAreaInitialize() {
 
   if (roastTimeDisplayArea) {
     roastTimeDisplayArea.addEventListener('click', () => {
-      isMinutesSecondsFormat = !isMinutesSecondsFormat;
-      localStorage.setItem(TIME_FORMAT_KEY, isMinutesSecondsFormat);
-      roastChart.options.scales.x.title.text = `${t('CHART_X_AXIS_TITLE')} ${getTimeAxisUnitLabel()}`;
-      displaySecondsOrMinutes(getCurrentTime());
+      URCStore.set({ isMinutesSecondsFormat: !URCStore.state.isMinutesSecondsFormat });
+      // 表示更新は URCBus -> renderAllDisplays に一任
+      // テーブルヘッダーだけはプロファイル固有なので追加で更新
       updateProfileTableTimeHeader();
       refreshProfileTableTimeInputs();
-      roastChart.update();
     });
   }
   if (roastDTRArea) {
     roastDTRArea.style.cursor = 'pointer';
     roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
     roastDTRArea.addEventListener('click', () => {
-      isDevelopmentTimeRatio = !isDevelopmentTimeRatio;
+      URCStore.set({ isDevelopmentTimeRatio: !URCStore.state.isDevelopmentTimeRatio });
+      // 表示は renderAllDisplays に一任、ツールチップだけ更新
       roastDTRArea.title = t('TOOLTIP_TOGGLE_DTR_DT');
-      updateDTRDisplay();
     });
   }
   if (document.getElementById('roast_temperature_area')) {
@@ -7049,12 +7860,1297 @@ async function shareProfileToCloud() {
 // -----------------------------------------------
 // 全スクリプト・依存関係読み込み完了後の確実な初期化
 // -----------------------------------------------
+
+// === 汎用ドラッグ可能div仕組み（デバッグウィンドウと完全同一） ===
+(function(){
+  function getTranslate(el){
+    const t = el.style.transform;
+    const m = /translate3d\(\s*(-?\d+\.?\d*)px,\s*(-?\d+\.?\d*)px/.exec(t);
+    if(m) return {x: parseFloat(m[1]), y: parseFloat(m[2])};
+    return {x:0,y:0};
+  }
+  function makeDraggable(el){
+    if(el._uruDraggableInit) return;
+    el._uruDraggableInit = true;
+    const handle = el.querySelector('[data-drag-handle], .uru-draggable-handle, .draggable-handle') || el;
+    let isDragging=false, startX=0, startY=0, baseX=0, baseY=0;
+    handle.addEventListener('pointerdown', (e)=>{
+      if(e.button!==0) return;
+      if(e.target.closest('button, input, select, textarea, a, [data-no-drag]')) return;
+      const tr = getTranslate(el);
+      baseX = tr.x; baseY = tr.y;
+      startX = e.clientX; startY = e.clientY;
+      isDragging=true;
+      el.classList.add('dragging');
+      try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onEnd);
+      document.addEventListener('pointercancel', onEnd);
+      e.preventDefault();
+    });
+    function onMove(e){
+      if(!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      el.style.transform = 'translate3d(' + (baseX+dx) + 'px,' + (baseY+dy) + 'px, 0)';
+    }
+    function onEnd(e){
+      if(!isDragging) return;
+      isDragging=false;
+      el.classList.remove('dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onEnd);
+      document.removeEventListener('pointercancel', onEnd);
+    }
+  }
+  function initAll(){
+    document.querySelectorAll('.uru-draggable, .draggable-window, [data-draggable]').forEach(makeDraggable);
+  }
+  window.makeDraggable = makeDraggable;
+  window.initDraggableWindows = initAll;
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else { initAll(); }
+  var obs = new MutationObserver(function(){ initAll(); });
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+
+// === 操作パネル シンプルドラッグ化（debug_consoleと同一方式、三点ローテーション廃止） ===
+(function(){
+  const panel = document.getElementById('control-buttons');
+  if(!panel) return;
+
+  function isFs(){
+    const chartArea = document.getElementById('chart-area');
+    return chartArea && chartArea.classList.contains('chart-area-fullscreen');
+  }
+
+  // debug_consoleと同じmakeDraggableを使う
+  if(window.makeDraggable){
+    window.makeDraggable(panel);
+  } else {
+    setTimeout(function(){ if(window.makeDraggable) window.makeDraggable(panel); }, 50);
+  }
+
+  // 全画面以外ではドラッグさせない（makeDraggableより先に阻止）
+  panel.addEventListener('pointerdown', function(e){
+    if(e.button!==0) return;
+    if(e.target.closest('button, input, select, textarea, a, [data-no-drag]')) return;
+    if(!isFs()){
+      e.stopImmediatePropagation();
+    }
+  }, true);
+
+  // 全画面ON/OFF時の見た目切り替えのみ（位置は固定、ドラッグで動かす）
+  function applyFloating(){
+    if(!panel) return;
+    const w = panel.getBoundingClientRect().width;
+    if(w>0) panel.dataset.fixedW = w;
+    panel.classList.add('is-floating');
+    // 初期位置は右上固定、ユーザーがドラッグで動かす
+    panel.style.position = 'fixed';
+    panel.style.top = '8px';
+    panel.style.right = '12px';
+    panel.style.left = 'auto';
+    panel.style.bottom = 'auto';
+    // transformはmakeDraggableが管理するのでここでは触らない（既存のtranslate3dは維持）
+    if(!panel.style.transform || panel.style.transform.includes('translateX')){
+      panel.style.transform = '';
+    }
+    if(w>0){
+      panel.style.width = w + 'px';
+    }
+  }
+  function clearFloating(){
+    if(!panel) return;
+    panel.classList.remove('is-floating');
+    panel.style.position = '';
+    panel.style.top = '';
+    panel.style.left = '';
+    panel.style.right = '';
+    panel.style.bottom = '';
+    panel.style.transform = '';
+    panel.style.width = '';
+    panel.style.minWidth = '';
+    panel.style.maxWidth = '';
+  }
+  // 互換用：旧resetを呼んでる箇所があるのでダミーで残す
+  window._controlPanelReset = function(keepFloating){
+    if(keepFloating) applyFloating();
+    else clearFloating();
+  };
+
+  // toggleChartFullscreenから呼ばれる想定だが、MutationObserver的にも対応
+  const originalAdd = panel.classList.add;
+  // 外部からis-floatingが付いたら何もしない、シンプルに
+
+  // 全画面切り替えを監視して自動でfloating切り替え（toggleChartFullscreen内でもやってるが保険）
+  const chartArea = document.getElementById('chart-area');
+  if(chartArea){
+    const obs = new MutationObserver(function(){
+      if(isFs()) applyFloating();
+      else clearFloating();
+    });
+    obs.observe(chartArea, {attributes:true, attributeFilter:['class']});
+  }
+
+  // 初期状態は通常配置
+  panel.title = '';
+})();
+
+
+
+
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {
     setTimeout(initApp, 0);
 }
 
+
+// ==================================================
+// ヒント / チュートリアルシステム - テーブル管理
+// ==================================================
+/**
+ * ★ここを編集すればヒントを追加できます★
+ * - target: CSSセレクタ (例 '#fullscreen-toggle-btn' や '.button' )
+ * - textJa / textEn: 表示テキスト
+ * - pos: 'top' | 'bottom' | 'left' | 'right' | 'auto' (autoは自動判定)
+ * - highlight: trueなら対象を枠で強調
+ * - condition: (optional) 表示条件を満たさない場合はスキップする関数
+ */
+const URC_HINTS_TABLE = [
+  {
+    id: 'simple_view',
+    target: '#fullscreen-toggle-btn',
+    textId: 'HINT_SIMPLE_VIEW',
+    pos: 'top',
+    highlight: true
+  },
+  {
+    id: 'start_roast',
+    target: '#start-button',
+    textId: 'HINT_START_ROAST',
+    pos: 'bottom',
+    highlight: true
+  },
+  {
+    id: 'manual_hint',
+    target: '#manual-button',
+    textId: 'HINT_MANUAL',
+    pos: 'bottom',
+    highlight: true
+  },
+];
+const ONBOARDING_STORAGE_KEY = 'urc_onboarding_v2_completed';
+const ONBOARDING_VERSION = 'v2';
+
+let _onboardingIndex = 0;
+let _onboardingActive = false;
+
+function isJa() { try { return (localStorage.getItem('urc_lang')||'ja').startsWith('ja'); } catch(e){ return true; } }
+
+function getHintText(hint){
+  if(hint.textId){
+    return t(hint.textId);
+  }
+  if(hint.textJa || hint.textEn){
+    return isJa() ? (hint.textJa || hint.textEn) : (hint.textEn || hint.textJa);
+  }
+  if(hint.text) return hint.text;
+  return '';
+}
+
+function showOnboardingSequence(force = false){
+  try{
+    if(!force){
+      const done = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if(done === ONBOARDING_VERSION) return;
+    }
+    const availableHints = URC_HINTS_TABLE.filter(h=>{
+      if(h.condition && typeof h.condition==='function'){
+        try{ return h.condition(); }catch(e){ return true; }
+      }
+      // targetが存在しないものはスキップ
+      if(h.target){
+        const el = document.querySelector(h.target);
+        if(!el) return false;
+        // 非表示要素はスキップ
+        if(el.offsetParent===null && getComputedStyle(el).display==='none') return false;
+      }
+      return true;
+    });
+    if(availableHints.length===0) return;
+    window._onboardingQueue = availableHints;
+    _onboardingIndex = 0;
+    _onboardingActive = true;
+    _showCurrentHint();
+  }catch(e){ console.warn('[onboarding] init failed', e); }
+}
+
+function _showCurrentHint(){
+  const overlay = document.getElementById('onboarding-overlay');
+  const balloon = document.getElementById('onboarding-balloon-new');
+  const spotlight = document.getElementById('onboarding-spotlight');
+  const textEl = document.getElementById('onboarding-text');
+  const progressEl = document.getElementById('onboarding-progress');
+  const queue = window._onboardingQueue || [];
+
+  if(_onboardingIndex >= queue.length){
+    _closeOnboarding(true);
+    return;
+  }
+  const hint = queue[_onboardingIndex];
+  let targetEl = hint.target ? document.querySelector(hint.target) : null;
+
+  overlay.classList.add('is-active');
+  overlay.style.display = 'block';
+  // 背景スクロール防止はPCのみ、スマホはドロワーなので禁止しない
+  const isMobile = window.innerWidth <= 768;
+  if(!isMobile){
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+
+  textEl.textContent = getHintText(hint);
+  if(progressEl){
+    progressEl.textContent = `${_onboardingIndex+1} / ${queue.length}`;
+  }
+
+  const nextBtn = document.getElementById('onboarding-next-btn');
+  const skipBtn = document.getElementById('onboarding-skip-btn');
+  if(nextBtn){
+    nextBtn.textContent = (_onboardingIndex === queue.length-1) ? t('HINT_DONE') : t('HINT_NEXT');
+  }
+  if(skipBtn){
+    skipBtn.textContent = t('HINT_SKIP');
+  }
+
+  // ターゲットが画面外なら中央にスクロール (B+C)
+  if(targetEl){
+    const r = targetEl.getBoundingClientRect();
+    const outOfView = r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth;
+    if(outOfView || isMobile){
+      try{
+        targetEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+      }catch(e){
+        try{ targetEl.scrollIntoView(); }catch(e2){}
+      }
+    }
+  }
+
+  // スポットライトとバルーン配置 - スクロール後にレイアウト確定させるため2フレーム待つ
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      let rect = null;
+      if(targetEl){
+        // 再取得 (scrollIntoView後)
+        rect = targetEl.getBoundingClientRect();
+        if(hint.highlight){
+          spotlight.style.display = 'block';
+          // overlayは fixedなので scrollX/Y 加算しないのが正しい
+          spotlight.style.left = (rect.left - 6) + 'px';
+          spotlight.style.top = (rect.top - 6) + 'px';
+          spotlight.style.width = (rect.width + 12) + 'px';
+          spotlight.style.height = (rect.height + 12) + 'px';
+        } else {
+          spotlight.style.display = 'none';
+        }
+      } else {
+        spotlight.style.display = 'none';
+      }
+
+      // スマホはドロワー固定なので位置計算不要
+      if(isMobile){
+        balloon.className = 'pos-bottom';
+        balloon.style.top = '';
+        balloon.style.left = '';
+        // fixed bottomはCSSで決まるのでJSでは触らない
+        balloon.style.removeProperty('top');
+        balloon.style.removeProperty('left');
+        // 中央ドロワー位置はCSSに任せる
+        balloon.style.bottom = '12px';
+        // 強制的に見える位置へ
+        balloon.style.transform = '';
+        balloon.id = 'onboarding-balloon-new';
+        return;
+      }
+
+      // PC用: 従来の追従ロジック
+      const bRect = balloon.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let top, left;
+      let pos = hint.pos || 'auto';
+
+      if(pos === 'auto' && rect){
+        const spaceBottom = vh - rect.bottom;
+        pos = spaceBottom > 180 ? 'top' : 'bottom';
+      }
+
+      if(rect){
+        if(pos === 'top'){
+          top = rect.top - bRect.height - 38;
+          left = rect.left;
+          balloon.className = 'pos-top';
+        } else if(pos === 'bottom'){
+          top = rect.bottom + 18;
+          left = rect.left;
+          balloon.className = 'pos-bottom';
+        } else if(pos === 'left'){
+          top = rect.top;
+          left = rect.left - bRect.width - 18;
+          balloon.className = 'pos-left';
+        } else {
+          top = rect.top;
+          left = rect.right + 18;
+          balloon.className = 'pos-right';
+        }
+        if(left < 8) left = 8;
+        if(left + bRect.width > vw - 8) left = vw - bRect.width - 8;
+        if(top < 8) top = 8;
+        if(top + bRect.height > vh - 8) top = vh - bRect.height - 8;
+      } else {
+        top = (vh - bRect.height)/2;
+        left = (vw - bRect.width)/2;
+        balloon.className = 'pos-top';
+      }
+      balloon.style.top = top + 'px';
+      balloon.style.left = left + 'px';
+      balloon.id = 'onboarding-balloon-new';
+    });
+  });
+
+  // C: 詰み検出 - 5秒経っても次へ押されなければ自動で中央寄せ or スキップヒント
+  clearTimeout(window._onboardingSafetyTimer);
+  window._onboardingSafetyTimer = setTimeout(()=>{
+    if(!_onboardingActive) return;
+    const b = document.getElementById('onboarding-balloon-new');
+    if(!b) return;
+    const br = b.getBoundingClientRect();
+    const isOff = br.top < 0 || br.bottom > window.innerHeight + 20 || br.left < -20 || br.right > window.innerWidth + 20;
+    if(isOff){
+      console.warn('[onboarding] balloon offscreen, forcing center-bottom');
+      b.style.position = 'fixed';
+      b.style.left = '8px';
+      b.style.right = '8px';
+      b.style.bottom = '12px';
+      b.style.top = 'auto';
+      b.style.maxWidth = 'none';
+    }
+  }, 1500);
+}
+function _nextHint(){
+  _onboardingIndex++;
+  _showCurrentHint();
+}
+
+function _closeOnboarding(completed){
+  const overlay = document.getElementById('onboarding-overlay');
+  if(overlay){
+    overlay.classList.remove('is-active');
+    overlay.style.display = 'none';
+  }
+  const spotlight = document.getElementById('onboarding-spotlight');
+  if(spotlight) spotlight.style.display='none';
+  document.body.style.overflow = '';
+  document.body.style.top = '';
+  _onboardingActive = false;
+  clearTimeout(window._onboardingSafetyTimer);
+  if(completed){
+    try{ localStorage.setItem(ONBOARDING_STORAGE_KEY, ONBOARDING_VERSION); }catch(e){}
+  }
+}
+
+function initOnboardingSystem(){
+  const overlay = document.getElementById('onboarding-overlay');
+  if(!overlay) return;
+  // 背面クリックは無効 (ヒントか×しか押せない)
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay){
+      e.stopPropagation();
+      e.preventDefault();
+      const balloon = document.getElementById('onboarding-balloon-new');
+      if(balloon && balloon.animate){
+        balloon.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:200});
+      }
+    }
+  });
+  // スマホでのスクロール詰み対策: バルーン内はスクロール許可、背景は禁止
+  overlay.addEventListener('touchmove', function(e){
+    const balloon = document.getElementById('onboarding-balloon-new');
+    if(balloon && balloon.contains(e.target)){
+      // バルーン内は許可 (内部スクロールできるように)
+      // ただしバウンスしすぎないようにバブリングのみ止める
+      e.stopPropagation();
+      return;
+    }
+    // 背景はスクロール禁止
+    e.preventDefault();
+  }, {passive:false});
+
+  document.getElementById('onboarding-close-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _closeOnboarding(true); });
+  document.getElementById('onboarding-next-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _nextHint(); });
+  document.getElementById('onboarding-skip-btn')?.addEventListener('click', function(e){ e.stopPropagation(); _closeOnboarding(true); });
+  // ESCでスキップ
+  document.addEventListener('keydown', function(e){ if(_onboardingActive && e.key==='Escape'){ _closeOnboarding(true); } });
+
+  // ターゲット要素自体のクリックもブロック (ヒント表示中は押せない)
+  document.addEventListener('click', function(e){
+    if(!_onboardingActive) return;
+    const balloon = document.getElementById('onboarding-balloon-new');
+    if(balloon && balloon.contains(e.target)) return;
+    // オーバーレイ自体のクリックは既に処理済み
+    if(e.target && e.target.closest && e.target.closest('#onboarding-overlay') && !e.target.closest('#onboarding-balloon-new')){
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+
+  // リサイズ時に再配置
+  window.addEventListener('resize', function(){
+    if(_onboardingActive){
+      _showCurrentHint();
+    }
+  });
+}
+
+// 旧関数を新システムに差し替え
+function showFullscreenOnboarding(force){
+  // 旧実装は無効化、新システムを呼ぶ
+  if(force){
+    // force時はストレージクリアして再表示
+    try{ localStorage.removeItem(ONBOARDING_STORAGE_KEY); }catch(e){}
+  }
+  showOnboardingSequence(force);
+}
+
+// 初期化フックに組み込む
+(function(){
+  const origInit = window.initApp;
+  // initAppは後で定義されるので、DOMContentLoadedで遅延初期化
+  function tryInitOnboarding(){
+    initOnboardingSystem();
+    // 少し遅延させて初回表示 (UIが描画されてから)
+    setTimeout(()=>{ showOnboardingSequence(false); }, 500);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', tryInitOnboarding);
+  } else {
+    setTimeout(tryInitOnboarding, 400);
+  }
+  // デバッグ用: URLに ?onboarding で強制表示
+  try{
+    if(location.search.includes('onboarding')){
+      setTimeout(()=>{ showOnboardingSequence(true); }, 800);
+    }
+  }catch(e){}
+})();
+
+// 開発者向け: コンソールから URC_HINTS_TABLE を編集して showOnboardingSequence(true) でテスト可能
+window.URC_HINTS_TABLE = URC_HINTS_TABLE;
+window.showOnboardingSequence = showOnboardingSequence;
+window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STORAGE_KEY); localStorage.removeItem('urc_onboarding_simple_v1'); }catch(e){}; showOnboardingSequence(true); };
+
+</script>
+
+
+<!-- 新チュートリアルオーバーレイ -->
+<div id="onboarding-overlay" aria-hidden="true">
+  <div class="onboarding-spotlight" id="onboarding-spotlight" style="display:none;"></div>
+  <div id="onboarding-balloon-new" role="dialog">
+    <button class="onboarding-balloon-close" id="onboarding-close-btn" aria-label="閉じる" data-no-drag="">×</button>
+    <div class="onboarding-progress" id="onboarding-progress"></div>
+    <div id="onboarding-text"></div>
+    <div class="onboarding-actions">
+      <button class="onboarding-btn onboarding-btn-next" id="onboarding-next-btn">次へ</button>
+      <button class="onboarding-btn onboarding-btn-skip" id="onboarding-skip-btn">スキップ</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// === URC Game Mode v0.2 - Debug Console Toggle & Decoupled ===
+(function(){
+  const STORAGE_KEY_MODE = 'urc_gamify_mode';
+  const COMBO_THRESHOLDS = Object.freeze({
+    highlight: 5,
+    fire: 10,
+    super: 20,
+    disco: 30
+  });
+  const COMBO_METER_MAX = 100;
+  const GAME_JUDGE_DELAY_MS = 3000;
+  const SCORE_MAX = Object.freeze({
+    provisional: 25,
+    temperature: 25,
+    ror: 20,
+    maxCombo: 10,
+    perfectStreak: 10,
+    greatStreak: 6,
+    goodStreak: 4
+  });
+  const hud = document.getElementById('gamify-hud');
+  const scoreEl = document.getElementById('gamify-score');
+  const comboEl = document.getElementById('gamify-combo');
+  const comboMeterEl = document.getElementById('gamify-combo-meter');
+  const comboMeterFillEl = document.getElementById('gamify-combo-meter-fill');
+  const comboFlameEl = document.getElementById('gamify-combo-flame');
+  const rankEl = document.getElementById('gamify-rank');
+  const judgeEl = document.getElementById('gamify-judge');
+  const canvas = document.getElementById('gamify-canvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  const resultWindow = document.getElementById('gamify-result-window');
+  const resultRankEl = document.getElementById('gamify-result-rank');
+  const resultRankTextEl = resultRankEl ? resultRankEl.querySelector('.result-rank-text') : null;
+  const resultScoreEl = document.getElementById('gamify-result-score');
+  const resultScoreFillEl = document.getElementById('gamify-result-score-fill');
+  const resultComboEl = document.getElementById('gamify-result-combo');
+  const resultPerfectEl = document.getElementById('gamify-result-perfect');
+  const resultAccuracyEl = document.getElementById('gamify-result-accuracy');
+  const resultTimeEl = document.getElementById('gamify-result-time');
+  const resultCommentEl = document.getElementById('gamify-result-comment');
+  const resultBreakdownEl = document.getElementById('gamify-result-breakdown');
+  const scoreDisplay = document.getElementById('score');
+  let mode = 'normal';
+  let active = false;
+  let score = 0;
+  let combo = 0;
+  let lastMeterCombo = 0;
+  let maxCombo = 0;
+  let lastEvalTime = 0;
+  let perfectCount = 0;
+  let greatCount = 0;
+  let goodCount = 0;
+  let missCount = 0;
+  let judgementCount = 0;
+  let temperatureErrorTotal = 0;
+  let temperatureErrorCount = 0;
+  let rorErrorTotal = 0;
+  let rorErrorCount = 0;
+  let perfectStreak = 0;
+  let maxPerfectStreak = 0;
+  let greatStreak = 0;
+  let maxGreatStreak = 0;
+  let goodStreak = 0;
+  let maxGoodStreak = 0;
+  let rorStabilitySec = 0;
+  let lastRoR = null;
+  let particles = [];
+  let discoLights = [];
+  let rafId = null;
+  let roastStartTime = null;
+  let judgeHideTimer = null;
+  let judgeCleanupTimer = null;
+  let chartEffectTimer = null;
+  let resultAnimationFrame = null;
+  let resultAnimationDelayTimer = null;
+  let resultAnimationToken = 0;
+  let activeResultItems = null;
+  function loadMode(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_MODE);
+      if (saved === 'game' || saved === 'normal') { mode = saved; }
+    } catch(e) {}
+  }
+  function saveMode(){ try { localStorage.setItem(STORAGE_KEY_MODE, mode); } catch(e) {} }
+  function applyMode(){
+    if (mode === 'game') {
+    } else {
+      if (hud) { hud.classList.remove('active'); }
+      if (resultWindow) { resultWindow.classList.remove('active'); }
+      completeResultAnimation();
+      active = false;
+      if (rafId) { cancelAnimationFrame(rafId); }
+      clearGameEffects();
+    }
+  }
+  window.URC = window.URC || {};
+  function updateToggleUI(){
+    const btn = document.getElementById('gamify-mode-toggle-btn');
+    if (!btn) { return; }
+    if (mode === 'game') {
+      btn.textContent='ON';
+      btn.style.background='linear-gradient(135deg, #ffd700, #ff8c00)';
+      btn.style.color='#000';
+      btn.style.borderColor='gold';
+      btn.style.boxShadow='0 0 10px rgba(255,215,0,0.5)';
+    } else {
+      btn.textContent='OFF';
+      btn.style.background='#222';
+      btn.style.color='#fff';
+      btn.style.borderColor='#555';
+      btn.style.boxShadow='none';
+    }
+  }
+
+  window.URC.setMode = function(m){
+    mode = m; saveMode(); applyMode(); updateToggleUI(); console.log('[URC] mode ->', mode);
+    return mode;
+  };
+  window.URC.getMode = function(){ return mode; };
+  window.URC.toggleMode = function(){ return window.URC.setMode(mode === 'game' ? 'normal' : 'game'); };
+  window.setGamifyMode = window.URC.setMode;
+  window.getGamifyMode = window.URC.getMode;
+  window.toggleGamifyMode = window.URC.toggleMode;
+  function resizeCanvas(){
+    if (!canvas || !canvas.parentElement) { return; }
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+    if (ctx) { ctx.setTransform(dpr,0,0,dpr,0,0); }
+  }
+  if (canvas && canvas.parentElement && typeof ResizeObserver !== 'undefined') {
+    const canvasResizeObserver = new ResizeObserver(resizeCanvas);
+    canvasResizeObserver.observe(canvas.parentElement);
+  }
+  
+  let comboPopupEl = null;
+  function ensureComboEl(){ if(!comboPopupEl) comboPopupEl = document.getElementById('gamify-combo-popup'); return comboPopupEl; }
+  function showComboPopup(cnt){
+    const el = ensureComboEl();
+    if (!el || mode !== 'game') return;
+    if (cnt < 3) { hideComboPopup(); return; }
+    clearTimeout(el._hideTimer);
+    clearTimeout(el._cleanupTimer);
+    let tier = '';
+    if (cnt >= COMBO_THRESHOLDS.super) tier='combo-20';
+    else if (cnt >= COMBO_THRESHOLDS.fire) tier='combo-10';
+    else if (cnt >= COMBO_THRESHOLDS.highlight) tier='combo-5';
+    else tier='';
+    el.textContent = cnt >= COMBO_THRESHOLDS.highlight ? cnt + ' COMBO!!' : 'COMBO x' + cnt;
+    el.className = '';
+    if (tier) el.classList.add(tier);
+    void el.offsetWidth;
+    el.classList.add('show');
+    if (tier) el.classList.add(tier);
+    // 表示時間はコンボ数で伸びる
+    let dur = cnt>=COMBO_THRESHOLDS.super ? 1100 : cnt>=COMBO_THRESHOLDS.fire ? 900 : 700;
+    el._hideTimer = setTimeout(hideComboPopup, dur);
+    // ド派手追加演出
+    if (cnt >= COMBO_THRESHOLDS.fire) {
+      spawnParticles(cnt>=COMBO_THRESHOLDS.super ? '#ffd700' : '#ff5722', cnt>=COMBO_THRESHOLDS.super ? 16 : 8, 'combo');
+      if (cnt % COMBO_THRESHOLDS.highlight === 0) {
+        // 5の倍数で画面フラッシュ
+        const chartArea = document.getElementById('chart-area');
+        if (chartArea) {
+          chartArea.style.filter = 'brightness(1.2)';
+          setTimeout(()=> chartArea.style.filter='', 120);
+        }
+      }
+    }
+  }
+  function hideComboPopup(){
+    const el = ensureComboEl();
+    if (!el) return;
+    clearTimeout(el._hideTimer);
+    clearTimeout(el._cleanupTimer);
+    el.classList.remove('show');
+    el._cleanupTimer = setTimeout(function(){
+      if (!el.classList.contains('show')) {
+        el.className = '';
+        el.textContent = '';
+      }
+    }, 250);
+  }
+  function showJudge(text, cls){
+    if (!judgeEl || mode !== 'game') { return; }
+    clearTimeout(judgeHideTimer);
+    clearTimeout(judgeCleanupTimer);
+    clearTimeout(chartEffectTimer);
+    judgeEl.textContent = text; 
+    judgeEl.className = ''; 
+    judgeEl.classList.add(cls);
+    void judgeEl.offsetWidth; 
+    judgeEl.classList.add('show');
+    const chartArea = document.getElementById('chart-area');
+    const dmg = document.getElementById('gamify-damage-flash');
+    if (chartArea) {
+      chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss');
+      if (cls === 'perfect') { 
+        chartArea.classList.add('gamify-perfect'); 
+        // PERFECTは少し揺らす
+        if (navigator.vibrate) navigator.vibrate(20);
+      }
+      if (cls === 'great') { chartArea.classList.add('gamify-great'); }
+      if (cls === 'miss') { 
+        chartArea.classList.add('gamify-miss'); 
+        if (dmg) {
+          dmg.classList.remove('hit');
+          void dmg.offsetWidth;
+          dmg.classList.add('hit');
+          setTimeout(()=> dmg.classList.remove('hit'), 500);
+        }
+        if (navigator.vibrate) navigator.vibrate([50,30,80]);
+      }
+      chartEffectTimer = setTimeout(function(){ chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss'); }, cls==='perfect' ? 600 : 380);
+    }
+    // MISSは長めに表示してダメージ感
+    judgeHideTimer = setTimeout(function(){
+      judgeEl.classList.remove('show');
+      judgeCleanupTimer = setTimeout(function(){
+        judgeEl.classList.remove('perfect','great','good','miss');
+      }, 250);
+    }, text==='READY!' ? 2000 : cls==='miss' ? 900 : cls==='perfect' ? 850 : 650);
+  }
+
+  function clearGameEffects(){
+    clearTimeout(judgeHideTimer);
+    clearTimeout(judgeCleanupTimer);
+    clearTimeout(chartEffectTimer);
+    judgeHideTimer = null;
+    judgeCleanupTimer = null;
+    chartEffectTimer = null;
+    if (judgeEl) { judgeEl.className = ''; }
+    const chartArea = document.getElementById('chart-area');
+    if (chartArea) { chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss'); }
+    hideComboPopup();
+    if (comboEl) {
+      comboEl.classList.remove('combo-10','combo-20');
+      comboEl.style.animation = '';
+    }
+    if (hud) { hud.classList.remove('combo-5','combo-10','combo-20'); }
+    discoLights = [];
+  }
+
+  
+  function spawnParticles(color, count, type){
+    if (!ctx || !canvas || mode !== 'game') { return; }
+    if (particles.length > 90) {
+      particles.splice(0, particles.length - 70);
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.width * 0.5; const y = rect.height * 0.45;
+    if (type === 'perfect') {
+      count = 16;
+    } else if (type === 'miss') {
+      count = 6;
+    } else if (type === 'great') {
+      count = 10;
+    } else if (type === 'combo') {
+      count = combo >= COMBO_THRESHOLDS.super ? 4 : 6;
+    }
+    const PALETTE = ['#ffcc88', '#ffdde7', '#ffec8b'];
+    for (let i=0;i<count;i++) { 
+      if (type === 'falling') {
+        let px = Math.random()*rect.width;
+        let py = -10 - Math.random()*30;
+        let vx = (Math.random()-0.5)*1.2;
+        let vy = 0.8 + Math.random()*2.2;
+        let size = 2 + Math.random() * 20;
+        let c = PALETTE[Math.floor(Math.random() * 3)];
+        particles.push({ x:px, y:py, vx:vx, vy:vy, life:1, decay:0.008+Math.random()*0.002, color:c, size:size, type:'falling', twinkle: Math.random()*Math.PI*2 });
+      } else {
+        let vx = (Math.random()-0.5)*8;
+        let vy = (Math.random()-0.5)*8 -1;
+        let size = 2.2 + Math.random() * 5;
+        let c = color;
+        if (type==='perfect') {
+          c = i%2 === 0 ? '#fffde7' : '#ffd700';
+          size = 2.5+Math.random()*2.5;
+        }
+        particles.push({ x:x, y:y, vx:vx, vy:vy, life:1, decay:0.01 + Math.random()*0.01, color:c, size:size, type:type }); 
+      }
+    }
+    if (type==='perfect') {
+      for (let i=0;i<8;i++){
+        let ang = (i/8)*Math.PI*2;
+        particles.push({ x:x, y:y, vx:Math.cos(ang)*6, vy:Math.sin(ang)*6, life:1, decay:0.03, color:'#ffd700', size:2.5, type:'ring' });
+      }
+    }
+  }
+  function spawnFallingKira(){
+    if (!active || mode!=='game' || combo < COMBO_THRESHOLDS.super) return;
+    spawnParticles('#ffd700', 3, 'falling');
+  }
+  function getRandomDiscoPoint(width, height, radius){
+    const left = -radius - 1;
+    const top = -radius - 1;
+    const right = width + radius + 1;
+    const bottom = height + radius + 1;
+    const perimeter = 2 * (right - left + bottom - top);
+    let distance = Math.random() * perimeter;
+    if (distance < right - left) return { x:left + distance, y:top };
+    distance -= right - left;
+    if (distance < bottom - top) return { x:right, y:top + distance };
+    distance -= bottom - top;
+    if (distance < right - left) return { x:right - distance, y:bottom };
+    distance -= right - left;
+    return { x:left, y:bottom - distance };
+  }
+
+  function createDiscoLights(width, height){
+    discoLights = [];
+    for (let i=0; i<20; i++) {
+      const radius = (16 + Math.random()*30) * 4;
+      const speed = (2 + Math.random()*20) * 2;
+      const start = getRandomDiscoPoint(width, height, radius);
+      const target = getRandomDiscoPoint(width, height, radius);
+      discoLights.push({
+        x: start.x,
+        y: start.y,
+        targetX: target.x,
+        targetY: target.y,
+        speed: speed,
+        radius: radius,
+        hue: Math.floor(Math.random()*360),
+        opacity: 0.1 + Math.random()*0.3,
+        phase: Math.random()*Math.PI*2
+      });
+    }
+  }
+  function loop(){
+    if (!active || mode !== 'game' || !ctx || !canvas) { return; }
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0,0,rect.width, rect.height);
+    for (let i=particles.length-1;i>=0;i--) {
+      if (particles[i].life<=0) particles.splice(i,1);
+    }
+    let lastShadow = null;
+    for (let i=0;i<particles.length;i++){
+      let p = particles[i];
+      if (p.type === 'falling') {
+        p.x += p.vx + Math.sin(Date.now()*0.002 + p.twinkle)*0.4;
+        p.y += p.vy;
+        p.life -= p.decay;
+        p.twinkle += 0.1;
+        if (p.life<=0) continue;
+        ctx.globalAlpha = p.life * (0.7 + Math.sin(p.twinkle)*0.3);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.16; p.life -= p.decay;
+        if (p.life<=0) continue;
+        ctx.globalAlpha = Math.max(0,p.life);
+        if (p.type==='perfect' || p.type==='ring') {
+          if (lastShadow !== p.type) { ctx.shadowBlur = 8; ctx.shadowColor = p.color; lastShadow = p.type; }
+        } else { if (lastShadow !== null) { ctx.shadowBlur = 0; lastShadow = null; } }
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+      }
+    }
+    if (combo >= COMBO_THRESHOLDS.disco && discoLights.length) {
+      for (let i=0; i<discoLights.length; i++) {
+        const light = discoLights[i];
+        const dx = light.targetX - light.x;
+        const dy = light.targetY - light.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance <= light.speed) {
+          light.x = light.targetX;
+          light.y = light.targetY;
+          const nextTarget = getRandomDiscoPoint(rect.width, rect.height, light.radius);
+          light.targetX = nextTarget.x;
+          light.targetY = nextTarget.y;
+        } else {
+          light.x += dx / distance * light.speed;
+          light.y += dy / distance * light.speed;
+        }
+        light.phase += 0.035;
+        ctx.globalAlpha = 0.65 + Math.sin(light.phase)*0.2;
+        ctx.fillStyle = 'hsla('+light.hue+', 100%, 65%, '+light.opacity+')';
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = 'hsl('+light.hue+', 100%, 65%)';
+        ctx.beginPath();
+        ctx.arc(light.x, light.y, light.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'hsla('+light.hue+', 100%, 90%, 0.22)';
+        ctx.beginPath();
+        ctx.arc(light.x, light.y, light.radius*0.42, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha=1;
+    rafId = requestAnimationFrame(loop);
+  }
+  if (!window._kiraInterval) {
+    window._kiraInterval = setInterval(function(){
+      if (active && mode==='game' && combo>=COMBO_THRESHOLDS.super) {
+        spawnFallingKira();
+      }
+    }, 200);
+  }
+
+  function calculateScoreBreakdown(){
+    const averageTemperatureError = temperatureErrorCount > 0 ? temperatureErrorTotal / temperatureErrorCount : null;
+    const averageRoRError = rorErrorCount > 0 ? rorErrorTotal / rorErrorCount : null;
+    const perfectScoreMaximum = judgementCount * 100 + 10 * judgementCount * (judgementCount + 1) / 2;
+    const clampScore = (value, maximum) => Math.max(0, Math.min(maximum, value));
+    const toTenth = value => Math.round(value * 10) / 10;
+    const items = [
+      { key:'provisional', points:perfectScoreMaximum > 0 ? clampScore(score / perfectScoreMaximum, 1) * SCORE_MAX.provisional : 0 },
+      { key:'temperature', points:averageTemperatureError == null ? 0 : clampScore(1 - averageTemperatureError / 6, 1) * SCORE_MAX.temperature },
+      { key:'ror', points:averageRoRError == null ? 0 : clampScore(1 - averageRoRError / 5, 1) * SCORE_MAX.ror },
+      { key:'maxCombo', points:Math.min(maxCombo / 100, 1) * SCORE_MAX.maxCombo },
+      { key:'perfectStreak', points:Math.min(maxPerfectStreak / 50, 1) * SCORE_MAX.perfectStreak },
+      { key:'greatStreak', points:Math.min(maxGreatStreak / 80, 1) * SCORE_MAX.greatStreak },
+      { key:'goodStreak', points:Math.min(maxGoodStreak / 120, 1) * SCORE_MAX.goodStreak }
+    ].map(item => ({ key:item.key, points:toTenth(item.points) }));
+    return { items, total:items.reduce((sum, item) => sum + item.points, 0) };
+  }
+
+  function getRank(points){
+    if (points >= 90) return 'S';
+    if (points >= 80) return 'A';
+    if (points >= 70) return 'B';
+    if (points >= 60) return 'C';
+    if (points >= 40) return 'D';
+    if (points >= 20) return 'E';
+    return 'F';
+  }
+
+  function updateScoreDisplays(points){
+    const roundedScore = Math.max(0, Math.min(100, Math.round(points)));
+    const rank = getRank(roundedScore);
+    if (scoreDisplay) {
+      scoreDisplay.textContent = roundedScore + ' (' + rank + ')';
+      scoreDisplay.style.color = rank === 'S' ? '#b8860b' : rank === 'A' ? '#2e7d32' : rank === 'B' ? '#0277bd' : '';
+    }
+    return { score:roundedScore, rank };
+  }
+
+  function revealResultRank(rank){
+    if (!resultRankTextEl) return;
+    resultRankTextEl.textContent = rank;
+    resultRankTextEl.classList.remove('is-revealed');
+    void resultRankTextEl.offsetWidth;
+    resultRankTextEl.classList.add('is-revealed');
+  }
+
+  function updateResultScoreBar(points){
+    if (resultScoreFillEl) {
+      resultScoreFillEl.style.width = Math.max(0, Math.min(100, points)) + '%';
+    }
+  }
+
+  function completeResultAnimation(){
+    if (!activeResultItems) return;
+    resultAnimationToken++;
+    if (resultAnimationFrame !== null) cancelAnimationFrame(resultAnimationFrame);
+    clearTimeout(resultAnimationDelayTimer);
+    resultAnimationFrame = null;
+    resultAnimationDelayTimer = null;
+    const rows = resultBreakdownEl ? Array.from(resultBreakdownEl.querySelectorAll('.result-breakdown-row')) : [];
+    activeResultItems.forEach((item, index) => {
+      const row = rows[index];
+      if (!row) return;
+      row.classList.add('is-visible');
+      const valueEl = row.querySelector('.result-breakdown-value');
+      if (valueEl) valueEl.textContent = item.points.toFixed(1);
+    });
+    const total = activeResultItems.reduce((sum, item) => sum + item.points, 0);
+    const display = updateScoreDisplays(total);
+    if (resultScoreEl) resultScoreEl.textContent = String(display.score);
+    updateResultScoreBar(display.score);
+    revealResultRank(display.rank);
+    activeResultItems = null;
+  }
+
+  function updateHUD(){
+    if (!hud || mode !== 'game') { return; }
+    if (combo >= COMBO_THRESHOLDS.disco && discoLights.length === 0 && canvas) {
+      const rect = canvas.getBoundingClientRect();
+      createDiscoLights(rect.width, rect.height);
+    } else if (combo < COMBO_THRESHOLDS.disco && discoLights.length) {
+      discoLights = [];
+    }
+    const meterValue = Math.min(combo, COMBO_METER_MAX);
+    if (comboMeterEl) { comboMeterEl.setAttribute('aria-valuenow', String(meterValue)); }
+    if (comboMeterFillEl) {
+      comboMeterFillEl.style.setProperty('--combo-meter-width', meterValue + '%');
+      comboMeterFillEl.style.setProperty('--combo-meter-pulse-width', Math.min(meterValue + 20, COMBO_METER_MAX) + '%');
+      comboMeterFillEl.style.width = meterValue + '%';
+      if (combo > lastMeterCombo) {
+        comboMeterFillEl.classList.remove('pulse');
+        void comboMeterFillEl.offsetWidth;
+        comboMeterFillEl.classList.add('pulse');
+        if (comboFlameEl) {
+          comboFlameEl.classList.remove('pulse');
+          void comboFlameEl.offsetWidth;
+          comboFlameEl.classList.add('pulse');
+        }
+      }
+    }
+    lastMeterCombo = combo;
+    if (scoreEl) { scoreEl.textContent = Math.floor(score).toLocaleString(); }
+    if (comboEl) { 
+      comboEl.textContent='COMBO x'+combo; 
+      comboEl.classList.toggle('hot', combo>=3); 
+      comboEl.classList.remove('combo-10','combo-20');
+      if (combo>=COMBO_THRESHOLDS.super) comboEl.classList.add('combo-20');
+      else if (combo>=COMBO_THRESHOLDS.fire) comboEl.classList.add('combo-10');
+      if (combo>=COMBO_THRESHOLDS.super) { comboEl.style.color='#ffd700'; } 
+      else if (combo>=COMBO_THRESHOLDS.fire) { comboEl.style.color='#ff5722'; } 
+      else if (combo>=COMBO_THRESHOLDS.highlight) { comboEl.style.color='#ff8a65'; } 
+      else { comboEl.style.color=''; } 
+      if (combo>=COMBO_THRESHOLDS.highlight) {
+        comboEl.style.animation='none'; void comboEl.offsetWidth;
+        comboEl.style.animation = combo>=COMBO_THRESHOLDS.super ? 'combo-text-burn 0.3s ease-in-out infinite alternate, combo-pop 0.25s ease' : 'combo-pop 0.25s ease';
+      } else {
+        comboEl.style.animation = '';
+      }
+    }
+    if (hud) {
+      hud.classList.remove('combo-5','combo-10','combo-20');
+      if (combo>=COMBO_THRESHOLDS.super) hud.classList.add('combo-20');
+      else if (combo>=COMBO_THRESHOLDS.fire) hud.classList.add('combo-10');
+      else if (combo>=COMBO_THRESHOLDS.highlight) hud.classList.add('combo-5');
+    }
+    if (rankEl) rankEl.textContent = '';
+  }
+  function getComment(rank){ if (rank==='S') { return t('GAMIFY_COMMENT_S'); } if (rank==='A') { return t('GAMIFY_COMMENT_A'); } if (rank==='B') { return t('GAMIFY_COMMENT_B'); } if (rank==='C') { return t('GAMIFY_COMMENT_C'); } if (rank==='D' || rank==='E' || rank==='F') { return t('GAMIFY_COMMENT_D'); } return t('GAMIFY_COMMENT_NONE'); }
+
+  function animateResultBreakdown(items){
+    activeResultItems = items;
+    resultAnimationToken++;
+    if (resultAnimationFrame !== null) cancelAnimationFrame(resultAnimationFrame);
+    clearTimeout(resultAnimationDelayTimer);
+    resultAnimationDelayTimer = null;
+    const token = resultAnimationToken;
+    const rows = resultBreakdownEl ? Array.from(resultBreakdownEl.querySelectorAll('.result-breakdown-row')) : [];
+    rows.forEach(row => {
+      row.classList.remove('is-visible');
+      const valueEl = row.querySelector('.result-breakdown-value');
+      if (valueEl) valueEl.textContent = '0.0';
+    });
+    updateResultScoreBar(0);
+    let completedPoints = 0;
+    let index = 0;
+    const renderTotal = value => {
+      const displayScore = Math.max(0, Math.min(100, Math.round(value)));
+      if (resultScoreEl) resultScoreEl.textContent = String(displayScore);
+      updateResultScoreBar(value);
+    };
+    const animateNext = () => {
+      if (token !== resultAnimationToken) return;
+      if (index >= items.length || index >= rows.length) {
+        const total = items.reduce((sum, item) => sum + item.points, 0);
+        renderTotal(total);
+        const display = updateScoreDisplays(total);
+        revealResultRank(display.rank);
+        resultAnimationFrame = null;
+        activeResultItems = null;
+        return;
+      }
+      const item = items[index];
+      const row = rows[index];
+      const valueEl = row.querySelector('.result-breakdown-value');
+      const startTime = performance.now();
+      row.classList.add('is-visible');
+      const animateValue = now => {
+        if (token !== resultAnimationToken) return;
+        const progress = Math.min(1, (now - startTime) / 840);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        const currentPoints = item.points * easedProgress;
+        if (valueEl) valueEl.textContent = currentPoints.toFixed(1);
+        renderTotal(completedPoints + currentPoints);
+        if (progress < 1) {
+          resultAnimationFrame = requestAnimationFrame(animateValue);
+        } else {
+          completedPoints += item.points;
+          index++;
+          resultAnimationDelayTimer = setTimeout(function(){
+            resultAnimationDelayTimer = null;
+            animateNext();
+          }, 300);
+        }
+      };
+      resultAnimationFrame = requestAnimationFrame(animateValue);
+    };
+    renderTotal(0);
+    animateNext();
+  }
+
+  function showResultWindow(){
+    if (mode!=='game' || !resultWindow) { return; }
+    const breakdown = calculateScoreBreakdown();
+    const rank = getRank(Math.round(breakdown.total));
+    const total = perfectCount + greatCount + goodCount + missCount;
+    const perfectRate = total>0 ? Math.round((perfectCount/total)*100) : 0;
+    const accuracy = total>0 ? (100 - Math.min(100, Math.round((missCount/total)*100))) : 0;
+    const elapsed = roastStartTime ? Math.floor((Date.now()-roastStartTime)/1000) : 0;
+    if (resultRankEl) {
+      if (resultRankTextEl) resultRankTextEl.textContent = '';
+      if (resultRankTextEl) resultRankTextEl.classList.remove('is-revealed');
+      resultRankEl.style.color = rank==='S' ? '#ffd700' : rank==='A' ? '#aed581' : rank==='B' ? '#81d4fa' : '#fff';
+    }
+    updateResultScoreBar(0);
+    if (resultComboEl) { resultComboEl.textContent = 'x' + maxCombo; }
+    if (resultPerfectEl) { resultPerfectEl.textContent = perfectRate + '% ('+perfectCount+t('GAMIFY_SUFFIX_TIMES')+')'; }
+    if (resultAccuracyEl) { resultAccuracyEl.textContent = accuracy + '%'; }
+    if (resultTimeEl) { resultTimeEl.textContent = Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0'); }
+    if (resultCommentEl) { resultCommentEl.textContent = getComment(rank); }
+    resultWindow.classList.add('active');
+    animateResultBreakdown(breakdown.items);
+  }
+  
+  // --- Score Window: Fixed, no drag, toggle via score area ---
+  (function setupResultWindow(){
+    const win = resultWindow;
+    if (!win) return;
+    const closeBtn = document.getElementById('gamify-result-close');
+    if (closeBtn) closeBtn.addEventListener('click', ()=> {
+      win.classList.remove('active');
+      completeResultAnimation();
+    });
+    // スコア表示エリア（#score, #gamify-score, #gamify-hud, #gamify-combo, #gamify-rank）をクリックでON/OFF
+    function toggleWindow(){
+      if (!win) return;
+      win.classList.toggle('active');
+      if (!win.classList.contains('active')) completeResultAnimation();
+    }
+    const scoreEls = [
+      document.getElementById('score'),
+      document.getElementById('gamify-score'),
+      document.getElementById('gamify-combo'),
+      document.getElementById('gamify-rank'),
+      document.getElementById('gamify-hud')
+    ];
+    scoreEls.forEach(el=>{
+      if (!el) return;
+      el.style.cursor = 'pointer';
+      el.title = 'クリックで結果ウィンドウ表示切替';
+      el.addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleWindow();
+      });
+    });
+    // スコアの親要素も拾う（.display-value #score の親）
+    const scoreParent = document.getElementById('score')?.parentElement;
+    if (scoreParent) {
+      scoreParent.style.cursor = 'pointer';
+      scoreParent.addEventListener('click', function(e){
+        // ボタン以外のクリックでトグル
+        if (e.target.closest('button')) return;
+        toggleWindow();
+      });
+    }
+  })();
+
+  window.gamifyEvaluate = function(currentTemp, profileTemp, currentRoR, profileRoR){
+    if (mode !== 'game' || !active) { return; }
+    const now = Date.now();
+    if (roastStartTime != null && now - roastStartTime < GAME_JUDGE_DELAY_MS) {
+      lastRoR = currentRoR;
+      return;
+    }
+    if (now - lastEvalTime < 1500) {
+      if (currentRoR != null && lastRoR != null) {
+        if (Math.abs(currentRoR-lastRoR) < 2) { rorStabilitySec += 0.1; } else { rorStabilitySec = Math.max(0, rorStabilitySec - 0.3); }
+      }
+      lastRoR = currentRoR; return;
+    }
+    lastEvalTime = now;
+    if (!Number.isFinite(currentTemp) || profileTemp == null || !Number.isFinite(profileTemp) || profileTemp <= 0) { return; }
+    const diff = Math.abs(currentTemp - profileTemp);
+    temperatureErrorTotal += diff;
+    temperatureErrorCount++;
+    if (Number.isFinite(currentRoR) && Number.isFinite(profileRoR)) {
+      rorErrorTotal += Math.abs(currentRoR - profileRoR);
+      rorErrorCount++;
+    }
+    judgementCount++;
+    let judge, pts, color, cls;
+    if (diff <= 1.5) { judge='PERFECT!!'; pts=100; color='#ffd700'; cls='perfect'; combo++; perfectCount++; score += pts * (1 + combo*0.1); 
+      if (combo>=COMBO_THRESHOLDS.fire) { spawnParticles(color,22,'perfect'); spawnParticles(color,8,'combo'); } else { spawnParticles(color,18,'perfect'); }
+    }
+    else if (diff <= 3.0) { judge='GREAT!'; pts=50; color='#aed581'; cls='great'; combo++; greatCount++; score += pts * (1 + combo*0.05); spawnParticles(color,10,'great'); if(combo>=COMBO_THRESHOLDS.highlight) spawnParticles(color,4,'combo'); }
+    else if (diff <= 6.0) { judge='GOOD'; pts=20; color='#81d4fa'; cls='good'; /* GOODはコンボ維持(増減なし) */ goodCount++; score += pts; }
+    else { judge='MISS...'; pts=0; color='#ef9a9a'; cls='miss'; combo=0; missCount++; spawnParticles('#ff4444',6,'miss'); }
+    if (cls === 'perfect') {
+      perfectStreak++;
+      greatStreak++;
+      goodStreak++;
+    } else if (cls === 'great') {
+      perfectStreak = 0;
+      greatStreak++;
+      goodStreak++;
+    } else if (cls === 'good') {
+      perfectStreak = 0;
+      greatStreak = 0;
+      goodStreak++;
+    } else {
+      perfectStreak = 0;
+      greatStreak = 0;
+      goodStreak = 0;
+    }
+    maxPerfectStreak = Math.max(maxPerfectStreak, perfectStreak);
+    maxGreatStreak = Math.max(maxGreatStreak, greatStreak);
+    maxGoodStreak = Math.max(maxGoodStreak, goodStreak);
+    if (combo > maxCombo) { maxCombo = combo; }
+    showJudge(judge, cls); 
+    if (cls === 'miss') { hideComboPopup(); }
+    else if (cls === 'good') { /* GOODはコンボ表示維持のみ、カウントアップなし */ if (combo>=2) showComboPopup(combo); }
+    else { if (combo>=2) showComboPopup(combo); }
+    updateHUD();
+    if (rorStabilitySec >= 5 && rorStabilitySec < 5.5) { score += 10; }
+    lastRoR = currentRoR;
+  };
+  function startGame(){
+    if (mode !== 'game') { return; }
+    completeResultAnimation();
+    resultAnimationToken++;
+    if (resultAnimationFrame !== null) cancelAnimationFrame(resultAnimationFrame);
+    resultAnimationFrame = null;
+    active=true; score=0; combo=0; maxCombo=0; perfectCount=0; greatCount=0; goodCount=0; missCount=0;
+    judgementCount=0; temperatureErrorTotal=0; temperatureErrorCount=0; rorErrorTotal=0; rorErrorCount=0;
+    perfectStreak=0; maxPerfectStreak=0; greatStreak=0; maxGreatStreak=0; goodStreak=0; maxGoodStreak=0;
+    lastMeterCombo=0;
+    rorStabilitySec=0; lastEvalTime=0; particles=[]; roastStartTime=Date.now();
+    resizeCanvas(); updateHUD();
+    if (hud) { hud.classList.add('active'); }
+    if (rafId) { cancelAnimationFrame(rafId); }
+    loop(); showJudge('READY!', 'great'); console.log('[URC Game] START');
+  }
+  function stopGame(){
+    if (mode !== 'game' || !active) { return; }
+    active=false;
+    if (rafId) { cancelAnimationFrame(rafId); }
+    if (ctx) { const r=canvas.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height); }
+    if (hud) { hud.classList.remove('active'); }
+    clearGameEffects();
+    showResultWindow();
+    const finalScore = calculateScoreBreakdown().total;
+    const rank=getRank(Math.round(finalScore));
+    showJudge(rank+' RANK!', rank==='S' ? 'perfect' : rank==='A' ? 'great' : 'good');
+    console.log('[URC Game] STOP SCORE:', Math.round(finalScore), 'RANK:', rank);
+  }
+  const originalExecuteStop = window.executeStopCommand;
+  window.executeStopCommand = function(){
+    if (typeof originalExecuteStop === 'function') { originalExecuteStop.apply(this, arguments); }
+    else { try { SetRoastingState(false); HideChartIndicators(); const rm=document.getElementById('roast_message'); if (rm) { rm.textContent='焙煎停止'; } } catch(e) {} }
+    if (mode === 'game') { setTimeout(stopGame, 100); }
+  };
+  let lastIsRoasting=false;
+  setInterval(function(){
+    try {
+      const isRoastingNow = (typeof isRoasting !== 'undefined' ? isRoasting : false) || (typeof roastState !== 'undefined' && roastState==='ROASTING');
+      if (!lastIsRoasting && isRoastingNow && mode==='game') { startGame(); }
+      lastIsRoasting = !!isRoastingNow;
+    } catch(e) {}
+  }, 500);
+  window.addEventListener('resize', resizeCanvas);
+  loadMode(); applyMode();
+  
+  document.addEventListener('DOMContentLoaded', function(){
+    const btn = document.getElementById('gamify-mode-toggle-btn');
+    if (btn) {
+      btn.addEventListener('click', function(){ window.URC.toggleMode(); });
+    }
+    setTimeout(function(){ if (typeof updateToggleUI === 'function') { updateToggleUI(); } }, 600);
+  });
+  setTimeout(function(){ if (typeof updateToggleUI === 'function') { updateToggleUI(); } }, 1000);
+})();
 </script>
 
 </body>

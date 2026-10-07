@@ -1,4 +1,4 @@
-#define WEBSOCKETS_SERVER_CLIENT_MAX 16  // デフォルト4　ゾンビ対策で保険として
+#define WEBSOCKETS_SERVER_CLIENT_MAX 2  // patched: 16->2 TIME_WAIT対策  // デフォルト4　ゾンビ対策で保険として
 #define MAX_ROAST_TIME  1800
 #define MAX_TEMPERATURE 999.9
 #define MIN_TEMPERATURE -99.9
@@ -35,9 +35,10 @@ void QueueMorseFeedback(const String& message);
 // Global Variables
 //////////////////////////////////////////////////////////////////////////
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-const String version = "1.3.3";
-const String CodeName ="Antigua";
+const String version = "1.3.4-patched";
+const String CodeName ="Antigua-TIMEWAIT-Fix";
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+String SerialNumber = "";
 TaskHandle_t taskHandle;
 AsyncWebServer ServerObject(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -702,7 +703,9 @@ void setup() {
     return;
   }
     // LittleFSのファイルをWebサーバーとして提供
-  ServerObject.serveStatic("/", LittleFS, "/");
+  ServerObject.serveStatic("/", LittleFS, "/").setCacheControl("no-cache");
+  DefaultHeaders::Instance().addHeader("Cache-Control", "no-store, must-revalidate");
+  DefaultHeaders::Instance().addHeader("Pragma", "no-cache");
 
   WiFiSetup();
   ServoSetup();
@@ -728,6 +731,8 @@ void setup() {
   preferences.begin("system", false);
   int count = preferences.getInt("powerup_count", 0);
   preferences.putInt("powerup_count", (count + 1));
+  SerialNumber = preferences.getString("serialnumber", "");
+
   preferences.end();
   MySerial.println(String("Power On Count: ") + String(count));
   
@@ -744,7 +749,8 @@ void setup() {
     esp_log_level_set("wifi", ESP_LOG_NONE);
   }
 
- MySerial.println("Version: " + version + " / CodeName: " + CodeName);
+  MySerial.println("Version: " + version + " / CodeName: " + CodeName);
+  MySerial.println("Serial Number: " + SerialNumber);
 
     // オプションボタンの登録
   preferences.begin("function", true);
@@ -1151,12 +1157,11 @@ void CommandProcess(String& command, const uint8_t* params) {
   }
   else if (command == "serialnumber") {
     preferences.begin("system", true);
-    String serial = preferences.getString("serialnumber", "");
     preferences.end();
-    if (serial.length() == 0) {
+    if (SerialNumber.length() == 0) {
       MySerial.println("Serial number: (not set)");
     } else {
-      MySerial.println("Serial number: " + serial);
+      MySerial.println("Serial number: " + SerialNumber);
     }
   }
   else if (command.startsWith("serialnumber ")) {
@@ -1166,6 +1171,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     preferences.putString("serialnumber", str);
     preferences.end();
     MySerial.println("Serial number set: " + str);
+    SerialNumber = str;
   }
   else if (command == "wifi on") {
       WiFiSetup();
@@ -1777,6 +1783,7 @@ void CommandProcess(String& command, const uint8_t* params) {
     // システム
     MySerial.println("[System]");
     MySerial.println("  Version       : " + version + " / CodeName: " + CodeName);
+    MySerial.println("  Serial Number : " + SerialNumber);
     // WiFi
     MySerial.println("[WiFi]");
     MySerial.println("  AP SSID       : " + ssid);
@@ -2113,9 +2120,24 @@ void WiFiSetup() {
     request->send(200, "application/json", json);
   });
 
+  // patched: キャプティブポータル対策 - 204で返すとOSはポーリングを止める
   ServerObject.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){
-    String ip = String(IPAddressMemory[0]) + "." + String(IPAddressMemory[1]) + "." + String(IPAddressMemory[2]) + "." + String(IPAddressMemory[3]);
-    request->redirect(ip);
+    request->send(204);
+  });
+  ServerObject.on("/gen_204", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(204);
+  });
+  ServerObject.on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Microsoft Connect Test");
+  });
+  ServerObject.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+  });
+  ServerObject.on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Microsoft NCSI");
+  });
+  ServerObject.on("/fwlink", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(204);
   });
 
 // ファームウェアアップロード画面の表示
@@ -2328,17 +2350,15 @@ void SendTemperatureData(int time) {
         MySerial.println("異常な温度値のため送信中止");
         return;
     }
-    else if (AverageTemperature > 1200) AverageTemperature = 1200;  // 2026.02.18
+    else if (AverageTemperature > 1200) AverageTemperature = 1200;
     else if (AverageTemperature < 0) AverageTemperature = 0;
 
-    StaticJsonDocument<128> json;
+    if (!wifiConnected && !UsbSerial) return;
+    if (!UsbSerial && webSocket.connectedClients() == 0) return;
 
-    json["time"] = time;
-    json["temp"] = roundf(AverageTemperature * 10) / 10.0;
-    String message;
-    message.reserve(64);
-    serializeJson(json, message);
-    BroadcastMessage(message);
+    // patched: 送信はUZCP telemetry一本に集約 (Artisan互換はURC側でuzcp.btを読むので不要なら従来JSONは無効化)
+    // 旧Artisan互換が必要なら下の2行を有効化: 
+    // StaticJsonDocument<128> json; json["time"]=time; json["temp"]=roundf(AverageTemperature*10)/10.0; String msg; serializeJson(json,msg); BroadcastMessage(msg);
     SendUZCPTelemetry(time);
 }
 
@@ -2346,15 +2366,12 @@ void SendTemperatureData(int time) {
 void BroadcastMessage(String &message) {
   if (UsbSerial) {
     MySerial.println(message);
+    return;
   }
-  else {
-    if (wifiConnected) {  
-        webSocket.broadcastTXT(message);
-      } 
-      else {
-        // 送信パケットが詰まってスキップ（重くなるのを防ぐ）
-    }
-  }
+  if (!wifiConnected) return;
+  if (webSocket.connectedClients() == 0) return; // patched: 誰もいなければ送らない
+  // patched: broadcast前にloopでゴースト掃除を促すのはloop()側で行う
+  webSocket.broadcastTXT(message);
 }
   
 //////////////////////////////////////////////////////////////////////////
@@ -2385,9 +2402,12 @@ void SendUZCPTelemetry(int time) {
 void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
   if (type == WStype_CONNECTED) {
     webSocketConnected = true;
+    MySerial.printf("[WS] Client %u connected\n", num);
   }
   else if (type == WStype_DISCONNECTED) {
     webSocketConnected = false;
+    webSocket.disconnect(num); // patched: ゾンビ切断を明示的に掃除
+    MySerial.printf("[WS] Client %u disconnected cleaned\n", num);
   }
   else if (type == WStype_TEXT) {
     StaticJsonDocument<256> json;
