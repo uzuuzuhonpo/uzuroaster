@@ -1340,6 +1340,7 @@
       touch-action: none;
       height: 100% !important;
       height: 100dvh !important;
+      height: -webkit-fill-available !important;
     }
     body.chart-fullscreen-lock {
       position: fixed !important;
@@ -1351,11 +1352,20 @@
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
       width: 100vw !important;
       width: 100dvw !important;
+      /* iOS PWA対策: dvh + svh + fill-available を全て指定、最後にJSで上書き */
       height: 100vh !important;
       height: 100dvh !important;
       height: 100svh !important;
+      height: -webkit-fill-available !important;
+      /* セーフエリア考慮 */
+      padding-top: env(safe-area-inset-top, 0px) !important;
+      padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+      padding-left: env(safe-area-inset-left, 0px) !important;
+      padding-right: env(safe-area-inset-right, 0px) !important;
       z-index: 999 !important;
       background: #fff !important;
       margin: 0 !important;
@@ -1373,6 +1383,14 @@
       flex: 1 !important;
       width: 100% !important;
       height: 100% !important;
+      min-height: 0 !important;
+    }
+    #chart-area.chart-area-fullscreen #control-buttons.is-floating  {
+      position: absolute !important;
+      top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+      right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+      bottom: auto !important;
+      z-index: 1001 !important;
     }
     #control-buttons.is-floating {
       position: fixed !important;
@@ -1851,8 +1869,7 @@
   </script>
 </head>
 <body>
-<div id="adjustment-layer" style="width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
-
+<div id="adjustment-layer" style="display: none; width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
 <div id="gamify-hud"><div id="gamify-hud-main"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div><div id="gamify-combo-meter-row"><div id="gamify-combo-meter" role="progressbar" aria-label="Combo meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="gamify-combo-meter-fill"></div></div><span id="gamify-combo-flame" aria-hidden="true">🔥</span></div></div>
 <div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">焙煎結果</span><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div><div id="gamify-result-body"><div class="result-rank-label" data-i18n="GAMIFY_RESULT_RANK">RANK</div><div class="result-rank" id="gamify-result-rank" aria-live="polite"><span class="result-rank-text"></span></div><div class="result-score" id="gamify-result-score">0</div><div id="gamify-result-score-scale" role="img" aria-label="得点ランク目盛り。F:0～20、E:20～40、D:40～60、C:60～70、B:70～80、A:80～90、S:90～100"><div id="gamify-result-score-legend"><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span><span>S</span></div><div id="gamify-result-score-track"><div id="gamify-result-score-fill"></div><div id="gamify-result-score-ticks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="result-breakdown" id="gamify-result-breakdown">
   <div class="result-breakdown-row" data-score-key="provisional"><span data-i18n="GAMIFY_SCORE_PROVISIONAL">暫定スコア</span><b><span class="result-breakdown-value">0.0</span> / 25</b></div>
@@ -3560,10 +3577,9 @@ function isMobile() {
 function initApp() {
     try {
         // 正しい初期化順序: Chart -> UI基盤 -> 言語/表示 -> オプション
-        chartAreaInitialize(); // initChart()を内部で最初に実行
-        // 旧オンボーディングは新システムに統合済み
-        updateProfileList();
         initColorMode();
+        chartAreaInitialize(); 
+        updateProfileList();
         // 言語初期化はChart生成後に実行 (以前は別DOMContentLoadedでレースしてた)
         setupProfileModificationTracking();
         setupLanguageControl();
@@ -6054,12 +6070,21 @@ function toggleChartFullscreen() {
     const controlButtons = document.getElementById('control-buttons');
     const chartArea = document.getElementById('chart-area');
     if (!isFullscreen) {
-      // スマホスクロール防止: 現在のスクロール位置を保存してbodyを固定
       window._prevScrollY = window.scrollY || document.documentElement.scrollTop || 0;
       document.documentElement.classList.add('chart-fullscreen-lock');
       document.body.classList.add('chart-fullscreen-lock');
       document.body.style.top = '-' + window._prevScrollY + 'px';
-      window.scrollTo(0, 0);
+      // iOSではscrollToを遅延させないと100vh計算が狂う
+      // window.scrollTo(0, 0);
+
+      // iOS PWA対策: 実際の表示領域の高さを取得して直接指定
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+      if(chartArea){
+        chartArea.style.height = vh + 'px';
+        chartArea.style.width = vw + 'px';
+        chartArea.style.setProperty('--real-vh', vh + 'px');
+      }
 
       animateFromElement(chartCanvas);
       fullscreenToggleBtn.classList.add('button-mode-active');
@@ -6079,10 +6104,28 @@ function toggleChartFullscreen() {
         if(window._controlPanelReset) window._controlPanelReset(true);
       }
       isFullscreen = true;
+      // iOS対策: 2回リサイズをかける (100vhバグ対策)
+      setTimeout(()=>{
+        const vh2 = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        if(chartArea) chartArea.style.height = vh2 + 'px';
+        mainAreaResize(mainArea2);
+        if(window.roastChart){ roastChart.resize(); }
+      }, 80);
+      setTimeout(()=>{
+        const vh3 = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        if(chartArea) chartArea.style.height = vh3 + 'px';
+        mainAreaResize(mainArea2);
+        if(window.roastChart){ roastChart.resize(); }
+      }, 350);
     } else {
       fullscreenToggleBtn.classList.remove('button-mode-active');
       document.getElementById('table_contents').style.display = "flex";
-      if(chartArea){ chartArea.classList.remove('chart-area-fullscreen'); }
+      if(chartArea){
+        chartArea.classList.remove('chart-area-fullscreen');
+        chartArea.style.height = '';
+        chartArea.style.width = '';
+        chartArea.style.removeProperty('--real-vh');
+      }
       chartCanvas.style.position = "";
       chartCanvas.style.width = "";
       chartCanvas.style.height = "";
@@ -6100,7 +6143,6 @@ function toggleChartFullscreen() {
         controlButtons.style.width = '';
         if(window._controlPanelReset) window._controlPanelReset(false);
       }
-      // スクロールロック解除と元の位置に復帰
       document.documentElement.classList.remove('chart-fullscreen-lock');
       document.body.classList.remove('chart-fullscreen-lock');
       document.body.style.top = '';
@@ -6109,15 +6151,28 @@ function toggleChartFullscreen() {
       window.scrollTo(0, prevY);
       animateToElement(chartCanvas);
     }
+    // 念のため共通リサイズも
     setTimeout(()=>{
       mainAreaResize(mainArea2);
       if(window.roastChart){ roastChart.resize(); }
     }, 60);
 }
 
-// ======================================
-// 全画面トグルボタンアイコン更新
-// ======================================
+
+// iOS PWA用: visualViewportが変わったらチャート全画面の高さを追従
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', function(){
+    if(isFullscreen){
+      const chartArea = document.getElementById('chart-area');
+      if(chartArea){
+        chartArea.style.height = window.visualViewport.height + 'px';
+        chartArea.style.width = window.visualViewport.width + 'px';
+        if(window.roastChart){ roastChart.resize(); }
+      }
+    }
+  });
+}
+
 function updateFullscreenButtonIcon() {
     if (fullscreenToggleBtn) {
         if (isFullscreen) {
