@@ -1620,7 +1620,7 @@
       color:#fff; 
       -webkit-text-stroke:3px #b8860b; 
       text-shadow: 0 0 10px #ffd700, 0 0 30px #ff9800, 0 0 60px #ffd700, 0 4px 0 #000;
-      animation: perfect-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), perfect-glow 0.6s ease-in-out infinite alternate;
+      animation: perfect-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     #gamify-judge.great { 
       color:#e8f5e9; 
@@ -1644,10 +1644,6 @@
       50% { transform: translate(-50%,-50%) scale(1.25) rotate(3deg); }
       70% { transform: translate(-50%,-50%) scale(0.95) rotate(-2deg); }
       100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
-    }
-    @keyframes perfect-glow {
-      from { filter: brightness(1) drop-shadow(0 0 10px gold); }
-      to { filter: brightness(1.35) drop-shadow(0 0 25px gold) drop-shadow(0 0 45px orange); }
     }
     @keyframes great-pop {
       0% { transform: translate(-50%,-50%) scale(0.5); }
@@ -1686,13 +1682,13 @@
       text-shadow:0 0 12px #ff5722, 0 0 28px #ff3d00, 0 3px 0 #000;
       font-size: clamp(32px, 6.5vw, 64px);
     }
-    #gamify-combo-popup.combo-10.show { animation: combo-popup-fire 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-fire 0.5s ease-in-out infinite alternate; }
+    #gamify-combo-popup.combo-10.show { animation: combo-popup-fire 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     #gamify-combo-popup.combo-20 { 
       color:#ffd700; -webkit-text-stroke:3px #7a3a00; 
       text-shadow:0 0 15px #ffd700, 0 0 35px #ff9800, 0 0 60px #ff5722, 0 4px 0 #000;
       font-size: clamp(38px, 7.5vw, 78px);
     }
-    #gamify-combo-popup.combo-20.show { animation: combo-popup-super 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, combo-glow-super 0.3s ease-in-out infinite alternate; }
+    #gamify-combo-popup.combo-20.show { animation: combo-popup-super 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     @keyframes combo-popup-base {
       0% { transform: translate(-50%,-30%) scale(0.3); opacity:0; }
       50% { transform: translate(-50%,-55%) scale(1.2); opacity:1; }
@@ -1706,8 +1702,8 @@
       100% { transform: translate(-50%,-50%) scale(1.1) rotate(0deg); opacity:1; }
     }
     @keyframes combo-popup-super {
-      0% { transform: translate(-50%,-40%) scale(0.2) rotate(-10deg); opacity:0; filter:brightness(1.5); }
-      30% { transform: translate(-50%,-70%) scale(1.5) rotate(6deg); opacity:1; filter:brightness(1.8); }
+      0% { transform: translate(-50%,-40%) scale(0.2) rotate(-10deg); opacity:0; }
+      30% { transform: translate(-50%,-70%) scale(1.5) rotate(6deg); opacity:1; }
       55% { transform: translate(-50%,-40%) scale(0.85) rotate(-3deg); opacity:1; }
       75% { transform: translate(-50%,-55%) scale(1.15) rotate(2deg); opacity:1; }
       100% { transform: translate(-50%,-50%) scale(1.15) rotate(0deg); opacity:1; }
@@ -1719,8 +1715,6 @@
       70% { transform: translate(-50%,-60%) scale(1.25) rotate(3deg); }
       100% { transform: translate(-50%,-50%) scale(1.25) rotate(0deg); opacity:1; }
     }
-    @keyframes combo-glow-fire { from{filter:brightness(1) drop-shadow(0 0 8px #ff5722)} to{filter:brightness(1.3) drop-shadow(0 0 18px #ff5722) drop-shadow(0 0 30px #ff3d00)} }
-    @keyframes combo-glow-super { from{filter:brightness(1) drop-shadow(0 0 12px gold)} to{filter:brightness(1.5) drop-shadow(0 0 25px gold) drop-shadow(0 0 50px orange)} }
     @keyframes combo-glow-ultra { from{filter:brightness(1.2) drop-shadow(0 0 20px #fff)} to{filter:brightness(1.8) drop-shadow(0 0 35px #fff) drop-shadow(0 0 70px gold)} }
 
     /* MISSダメージ赤フラッシュ */
@@ -1748,13 +1742,31 @@
     #gamify-hud.combo-20 { background: linear-gradient(135deg, rgba(100,0,0,0.96), rgba(180,50,0,0.96)) !important; border-color: #ffd700 !important; border-width:2px !important; box-shadow: 0 0 25px rgba(255,215,0,0.7), 0 0 50px rgba(255,87,34,0.5) !important; animation: hud-super-fire 0.25s ease-in-out infinite alternate; }
     #gamify-hud .combo.hot { animation: combo-pop 0.25s ease; }
     @keyframes combo-pop { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
-    @keyframes hud-fire { from{box-shadow:0 0 20px rgba(255,87,34,0.6)} to{box-shadow:0 0 30px rgba(255,87,34,0.9), 0 0 50px rgba(255,87,34,0.4)} }
-    @keyframes hud-super-fire { from{box-shadow:0 0 25px gold} to{box-shadow:0 0 40px gold, 0 0 70px orange} }
+    @keyframes hud-fire { from{opacity:0.9} to{opacity:1} }
+    @keyframes hud-super-fire { from{opacity:0.85} to{opacity:1} }
     #gamify-combo.combo-10 { font-size:15px !important; text-shadow:0 0 8px currentColor; }
     #gamify-combo.combo-20 { font-size:17px !important; text-shadow:0 0 12px gold, 0 0 20px orange; animation: combo-text-burn 0.3s ease-in-out infinite alternate; }
-    @keyframes combo-text-burn { from{filter:brightness(1)} to{filter:brightness(1.4)} }
+    @keyframes combo-text-burn { from{opacity:0.88} to{opacity:1} }
 
     #gamify-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1500; }
+    #gamify-crowd { position:absolute; inset:0; z-index:1550; overflow:visible; pointer-events:none; display:none; }
+    #gamify-crowd.show { display:block; }
+    .gamify-crowd-item { position:absolute; left:var(--crowd-x); bottom:var(--crowd-y); width:var(--crowd-size); height:var(--crowd-height); z-index:var(--crowd-depth); animation:gamify-crowd-pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) var(--entry-delay) both; }
+    .gamify-crowd-item.face-only { overflow:hidden; }
+    .gamify-crowd-facing { display:block; transform:scaleX(var(--crowd-facing)); }
+    .gamify-crowd-item img { display:block; width:100%; height:auto; transform-origin:bottom center; animation:gamify-crowd-cheer var(--cheer-duration) ease-in-out var(--cheer-delay) infinite; }
+    @keyframes gamify-crowd-pop {
+      from { opacity:0; transform:translateY(115%) rotate(-16deg) scale(0.55); }
+      72% { opacity:1; transform:translateY(-8%) rotate(7deg) scale(1.08); }
+      to { opacity:1; transform:translateY(0) rotate(0) scale(1); }
+    }
+    @keyframes gamify-crowd-cheer {
+      0%, 100% { transform:translateY(0) rotate(var(--crowd-tilt-start)); }
+      50% { transform:translateY(var(--crowd-bob)) rotate(var(--crowd-tilt-mid)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gamify-crowd-item, .gamify-crowd-item img { animation:none; }
+    }
     
     /* --- Gamify Result: Handcrafted wooden sign --- */
     #gamify-result-window { 
@@ -1871,7 +1883,8 @@
 <body>
 <div id="adjustment-layer" style="display: none; width: 100%; height:100%; position: fixed; inset: 0; background:rgb(255, 255, 255); mix-blend-mode: difference; pointer-events: none; z-index: 999999;"></div>
 <div id="gamify-hud"><div id="gamify-hud-main"><span class="score">SCORE <b id="gamify-score">0</b></span><span class="combo" id="gamify-combo">COMBO x0</span><span class="rank" id="gamify-rank">-</span></div><div id="gamify-combo-meter-row"><div id="gamify-combo-meter" role="progressbar" aria-label="Combo meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="gamify-combo-meter-fill"></div></div><span id="gamify-combo-flame" aria-hidden="true">🔥</span></div></div>
-<div id="gamify-result-window"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">焙煎結果</span><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div><div id="gamify-result-body"><div class="result-rank-label" data-i18n="GAMIFY_RESULT_RANK">RANK</div><div class="result-rank" id="gamify-result-rank" aria-live="polite"><span class="result-rank-text"></span></div><div class="result-score" id="gamify-result-score">0</div><div id="gamify-result-score-scale" role="img" aria-label="得点ランク目盛り。F:0～20、E:20～40、D:40～60、C:60～70、B:70～80、A:80～90、S:90～100"><div id="gamify-result-score-legend"><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span><span>S</span></div><div id="gamify-result-score-track"><div id="gamify-result-score-fill"></div><div id="gamify-result-score-ticks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="result-breakdown" id="gamify-result-breakdown">
+<div id="gamify-result-overlay" class="modal-overlay" aria-hidden="true">
+<div id="gamify-result-window" role="dialog" aria-modal="true"><div id="gamify-result-header"><span data-i18n="GAMIFY_RESULT_TITLE">焙煎結果</span><button id="gamify-result-close" data-i18n-title="GAMIFY_RESULT_CLOSE" title="閉じる">×</button></div><div id="gamify-result-body"><div class="result-rank-label" data-i18n="GAMIFY_RESULT_RANK">RANK</div><div class="result-rank" id="gamify-result-rank" aria-live="polite"><span class="result-rank-text"></span></div><div class="result-score" id="gamify-result-score">0</div><div id="gamify-result-score-scale" role="img" aria-label="得点ランク目盛り。F:0～20、E:20～40、D:40～60、C:60～70、B:70～80、A:80～90、S:90～100"><div id="gamify-result-score-legend"><span>F</span><span>E</span><span>D</span><span>C</span><span>B</span><span>A</span><span>S</span></div><div id="gamify-result-score-track"><div id="gamify-result-score-fill"></div><div id="gamify-result-score-ticks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div></div></div><div class="result-breakdown" id="gamify-result-breakdown">
   <div class="result-breakdown-row" data-score-key="provisional"><span data-i18n="GAMIFY_SCORE_PROVISIONAL">暫定スコア</span><b><span class="result-breakdown-value">0.0</span> / 25</b></div>
   <div class="result-breakdown-row" data-score-key="temperature"><span data-i18n="GAMIFY_SCORE_TEMP_TRACKING">温度カーブ追従</span><b><span class="result-breakdown-value">0.0</span> / 25</b></div>
   <div class="result-breakdown-row" data-score-key="ror"><span data-i18n="GAMIFY_SCORE_ROR_TRACKING">RoR追従</span><b><span class="result-breakdown-value">0.0</span> / 20</b></div>
@@ -1879,7 +1892,7 @@
   <div class="result-breakdown-row" data-score-key="perfectStreak"><span data-i18n="GAMIFY_SCORE_PERFECT_STREAK">連続PERFECT</span><b><span class="result-breakdown-value">0.0</span> / 10</b></div>
   <div class="result-breakdown-row" data-score-key="greatStreak"><span data-i18n="GAMIFY_SCORE_GREAT_STREAK">連続GREAT以上</span><b><span class="result-breakdown-value">0.0</span> / 6</b></div>
   <div class="result-breakdown-row" data-score-key="goodStreak"><span data-i18n="GAMIFY_SCORE_GOOD_STREAK">連続GOOD以上</span><b><span class="result-breakdown-value">0.0</span> / 4</b></div>
-</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div>
+</div><div class="result-stats"><div><span data-i18n="GAMIFY_LABEL_MAX_COMBO">MAX COMBO</span><br><b id="gamify-result-combo">x0</b></div><div><span data-i18n="GAMIFY_LABEL_PERFECT_RATE">PERFECT率</span><br><b id="gamify-result-perfect">0%</b></div><div><span data-i18n="GAMIFY_LABEL_ACCURACY">追従精度</span><br><b id="gamify-result-accuracy">-</b></div><div><span data-i18n="GAMIFY_LABEL_ROAST_TIME">焙煎時間</span><br><b id="gamify-result-time">--:--</b></div></div><div class="result-comment" id="gamify-result-comment" data-i18n="GAMIFY_COMMENT_DEFAULT">プロファイルを読み込んでゲーム開始！</div></div></div></div>
 
 <!-- アイコン定義 -->
 <svg style="display: none;">
@@ -2304,7 +2317,7 @@
   <!-- チャートセクション -->
   <div class="chart-section no-select" id="chart-section">
     <div class="chart-container" id="chart-area">
-<div id="gamify-judge"></div><div id="gamify-combo-popup"></div><canvas id="gamify-canvas"></canvas><div id="gamify-damage-flash"></div>
+<div id="gamify-judge"></div><div id="gamify-combo-popup"></div><canvas id="gamify-canvas"></canvas><div id="gamify-crowd" aria-hidden="true"></div><div id="gamify-damage-flash"></div>
       <div class="image-overlay" id="chart-point"></div>
       <div class="image-arrow" id="chart-arrow">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 24">
@@ -3296,7 +3309,7 @@ if (typeof URCBus !== 'undefined') {
 window.renderAllDisplays = renderAllDisplays;
 
 
-const URCVersionStr = "1.4.0";
+const URCVersionStr = "1.4.1";
 const URCVersionCodeNameStr = "Antigua";
 let roastChart = null;
 const PROFILE_TEMP = 0;
@@ -8435,7 +8448,8 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     highlight: 5,
     fire: 10,
     super: 20,
-    disco: 30
+    disco: 30,
+    crowd: 50
   });
   const COMBO_METER_MAX = 100;
   const GAME_JUDGE_DELAY_MS = 3000;
@@ -8458,7 +8472,9 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
   const judgeEl = document.getElementById('gamify-judge');
   const canvas = document.getElementById('gamify-canvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
+  const crowdEl = document.getElementById('gamify-crowd');
   const resultWindow = document.getElementById('gamify-result-window');
+  const resultOverlay = document.getElementById('gamify-result-overlay');
   const resultRankEl = document.getElementById('gamify-result-rank');
   const resultRankTextEl = resultRankEl ? resultRankEl.querySelector('.result-rank-text') : null;
   const resultScoreEl = document.getElementById('gamify-result-score');
@@ -8517,6 +8533,11 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     } else {
       if (hud) { hud.classList.remove('active'); }
       if (resultWindow) { resultWindow.classList.remove('active'); }
+      const resultOverlay = document.getElementById('gamify-result-overlay');
+      if (resultOverlay && resultOverlay.classList.contains('active')) {
+        resultOverlay.setAttribute('aria-hidden', 'true');
+        closeModal(resultOverlay.id);
+      }
       completeResultAnimation();
       active = false;
       if (rafId) { cancelAnimationFrame(rafId); }
@@ -8653,6 +8674,51 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     }, text==='READY!' ? 2000 : cls==='miss' ? 900 : cls==='perfect' ? 850 : 650);
   }
 
+  function updateCrowd(){
+    if (!crowdEl) { return; }
+    const shouldShow = mode === 'game' && active && combo >= COMBO_THRESHOLDS.crowd;
+    if (shouldShow && crowdEl.childElementCount === 0) {
+      const flock = [
+        { x:-11, y:43, size:36 }, { x:-4, y:46, size:34 }, { x:4, y:45, size:35 }, { x:11, y:42, size:36 },
+        { x:-15, y:15, size:47 }, { x:-8, y:18, size:45 }, { x:0, y:14, size:49 }, { x:8, y:18, size:45 }, { x:15, y:15, size:47 },
+        { x:-14, y:0, size:64 }, { x:-7, y:4, size:61 }, { x:0, y:-1, size:67 }, { x:7, y:4, size:61 }, { x:14, y:0, size:64 },
+        { x:-10, y:-14, size:90, faceOnly:true }, { x:10, y:-17, size:96, faceOnly:true }
+      ];
+      const crowdScale = 1.4;
+      flock.forEach((bird, index) => {
+        const item = document.createElement('span');
+        const facing = document.createElement('span');
+        const image = document.createElement('img');
+        const xJitter = (Math.random() - 0.5) * 1.8 * crowdScale;
+        const yJitter = (Math.random() - 0.5) * 4 * crowdScale;
+        const bottom = (bird.y + yJitter) * crowdScale;
+        const size = (bird.size + (Math.random() - 0.5) * 6) * crowdScale;
+        const depth = Math.round(100 - bottom * 2);
+        item.className = bird.faceOnly ? 'gamify-crowd-item face-only' : 'gamify-crowd-item';
+        item.style.setProperty('--crowd-x', (50 + bird.x * crowdScale + xJitter) + '%');
+        item.style.setProperty('--crowd-y', bottom + 'px');
+        item.style.setProperty('--crowd-size', size + 'px');
+        item.style.setProperty('--crowd-height', (bird.faceOnly ? size * 0.72 : size) + 'px');
+        item.style.setProperty('--crowd-depth', String(depth));
+        item.style.setProperty('--entry-delay', (Math.random() * 0.45) + 's');
+        facing.className = 'gamify-crowd-facing';
+        facing.style.setProperty('--crowd-facing', Math.random() < 0.5 ? '-1' : '1');
+        image.src = './favicon-96x96.png';
+        image.alt = '';
+        image.draggable = false;
+        image.style.setProperty('--cheer-duration', (0.48 + Math.random() * 0.72) + 's');
+        image.style.setProperty('--cheer-delay', (-Math.random() * 1.2) + 's');
+        image.style.setProperty('--crowd-bob', (-3 - Math.random() * 7) * crowdScale + 'px');
+        image.style.setProperty('--crowd-tilt-start', (-9 + Math.random() * 18) + 'deg');
+        image.style.setProperty('--crowd-tilt-mid', (-12 + Math.random() * 24) + 'deg');
+        facing.appendChild(image);
+        item.appendChild(facing);
+        crowdEl.appendChild(item);
+      });
+    }
+    crowdEl.classList.toggle('show', shouldShow);
+  }
+
   function clearGameEffects(){
     clearTimeout(judgeHideTimer);
     clearTimeout(judgeCleanupTimer);
@@ -8663,6 +8729,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     if (judgeEl) { judgeEl.className = ''; }
     const chartArea = document.getElementById('chart-area');
     if (chartArea) { chartArea.classList.remove('gamify-perfect','gamify-great','gamify-miss'); }
+    if (crowdEl) { crowdEl.classList.remove('show'); }
     hideComboPopup();
     if (comboEl) {
       comboEl.classList.remove('combo-10','combo-20');
@@ -8913,6 +8980,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
 
   function updateHUD(){
     if (!hud || mode !== 'game') { return; }
+    updateCrowd();
     if (combo >= COMBO_THRESHOLDS.disco && discoLights.length === 0 && canvas) {
       const rect = canvas.getBoundingClientRect();
       createDiscoLights(rect.width, rect.height);
@@ -9004,7 +9072,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
       row.classList.add('is-visible');
       const animateValue = now => {
         if (token !== resultAnimationToken) return;
-        const progress = Math.min(1, (now - startTime) / 840);
+        const progress = Math.min(1, (now - startTime) / 600);
         const easedProgress = 1 - Math.pow(1 - progress, 3);
         const currentPoints = item.points * easedProgress;
         if (valueEl) valueEl.textContent = currentPoints.toFixed(1);
@@ -9027,7 +9095,7 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
   }
 
   function showResultWindow(){
-    if (mode!=='game' || !resultWindow) { return; }
+    if (mode!=='game' || !resultWindow || !resultOverlay) { return; }
     const breakdown = calculateScoreBreakdown();
     const rank = getRank(Math.round(breakdown.total));
     const total = perfectCount + greatCount + goodCount + missCount;
@@ -9045,6 +9113,8 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
     if (resultAccuracyEl) { resultAccuracyEl.textContent = accuracy + '%'; }
     if (resultTimeEl) { resultTimeEl.textContent = Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0'); }
     if (resultCommentEl) { resultCommentEl.textContent = getComment(rank); }
+    openModal(resultOverlay.id);
+    resultOverlay.setAttribute('aria-hidden', 'false');
     resultWindow.classList.add('active');
     animateResultBreakdown(breakdown.items);
   }
@@ -9052,17 +9122,33 @@ window.resetOnboarding = function(){ try{ localStorage.removeItem(ONBOARDING_STO
   // --- Score Window: Fixed, no drag, toggle via score area ---
   (function setupResultWindow(){
     const win = resultWindow;
-    if (!win) return;
-    const closeBtn = document.getElementById('gamify-result-close');
-    if (closeBtn) closeBtn.addEventListener('click', ()=> {
+    const overlay = resultOverlay;
+    if (!win || !overlay) return;
+    function closeResultWindow(){
       win.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
       completeResultAnimation();
+      closeModal(overlay.id);
+    }
+    overlay.addEventListener('click', event => {
+      if (event.target === overlay) {
+        win.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        completeResultAnimation();
+      }
     });
+    const closeBtn = document.getElementById('gamify-result-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeResultWindow);
     // スコア表示エリア（#score, #gamify-score, #gamify-hud, #gamify-combo, #gamify-rank）をクリックでON/OFF
     function toggleWindow(){
       if (!win) return;
-      win.classList.toggle('active');
-      if (!win.classList.contains('active')) completeResultAnimation();
+      if (win.classList.contains('active')) {
+        closeResultWindow();
+      } else {
+        openModal(overlay.id);
+        overlay.setAttribute('aria-hidden', 'false');
+        win.classList.add('active');
+      }
     }
     const scoreEls = [
       document.getElementById('score'),
